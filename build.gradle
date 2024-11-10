@@ -190,16 +190,6 @@ processResources {
 
 jar {
     duplicatesStrategy DuplicatesStrategy.EXCLUDE
-    from{
-        configurations
-                .runtimeClasspath
-                .collect {
-                    Console.println(it.name)
-                    if(it.name.equalsIgnoreCase("httpclient-4.5.14.jar") || it.name.equalsIgnoreCase("json-20240303.jar") || it.name.equalsIgnoreCase("gson-2.11.0.jar") || it.name.equalsIgnoreCase("Java-WebSocket-1.6.0-SNAPSHOT.jar")) {
-                        it.isDirectory() ? it : zipTree(it)
-                    }
-                }
-    }
     manifest {
         def attribute_map = [:]
         if (propertyBool('is_coremod')) {

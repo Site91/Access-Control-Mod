@@ -1,4 +1,4 @@
-itemGroup.advancedbasesecurity.tabbasesecurity=Advanced Base Security
+﻿itemGroup.advancedbasesecurity.tabbasesecurity=Advanced Base Security
 command.advancedbasesecurity.requestcommand.usage=/requestcommand <URL>
 command.advancedbasesecurity.timecommand.usage=/getrealtime
 command.advancedbasesecurity.websocketcommand.usage=/bswebsocket <args> <args>

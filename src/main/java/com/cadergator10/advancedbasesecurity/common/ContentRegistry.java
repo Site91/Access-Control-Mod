@@ -56,6 +56,7 @@ public class ContentRegistry { //where all new items will be added
         @Override
         public String getTranslationKey() {
             return new TextComponentTranslation("itemGroup.advancedbasesecurity.tabbasesecurity").getUnformattedText();
+            //return "itemGroup.advancedbasesecurity.tabbasesecurity";
         }
     };
 
