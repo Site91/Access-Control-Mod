@@ -1,0 +1,11 @@
+itemGroup.advancedbasesecurity.tabbasesecurity=Advanced Base Security
+command.advancedbasesecurity.requestcommand.usage=/requestcommand <URL>
+command.advancedbasesecurity.timecommand.usage=/getrealtime
+command.advancedbasesecurity.websocketcommand.usage=/bswebsocket <args> <args>
+command.advancedbasesecurity.basesecuritycommand.usage=/basesecurity <command> <args>
+
+advancedbasesecurity.gui.config.websocket.enablewebsocket=Enable WebSocket (Server Only)
+advancedbasesecurity.gui.config.websocket.url=Websocket URL (Server Only)
+advancedbasesecurity.gui.config.websocket.code=Websocket Security Code (Server Only)
+
+item.advancedbasesecurity.id_card.name=ID Card

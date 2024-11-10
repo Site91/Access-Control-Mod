@@ -6,6 +6,9 @@ bin
 .classpath
 .project
 
+#allow one jar
+!libs/Java-WebSocket-1.6.0-SNAPSHOT.jar
+
 # idea
 out
 *.ipr
@@ -20,3 +23,12 @@ build
 # other
 eclipse
 run
+
+#intellij
+*.iml
+*.idea
+/.idea/
+
+#run folder
+/run/logs/
+/run/crash-reports/
