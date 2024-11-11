@@ -6,6 +6,7 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.block.Block;
@@ -55,9 +56,9 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 		if(baubleID != -1){ //equipped in Baubles slot
 			heldItem = BaublesApi.getBaublesHandler(player).getStackInSlot(baubleID);
 		}
-		else if (!player.getHeldItemMainhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof IDCard) {
+		else if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
 			heldItem = player.getHeldItemMainhand();
-		} else if (!player.getHeldItemOffhand().isEmpty() && player.getHeldItemOffhand().getItem() instanceof IDCard) {
+		} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
 			heldItem = player.getHeldItemOffhand();
 		} else {
 			return false;
@@ -68,8 +69,11 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 			Item equipped = heldItem.getItem();
 			TileEntityCardReader tile = (TileEntityCardReader) world.getTileEntity(pos);
 
-			if (!world.isRemote && equipped instanceof IDCard) {
-				tile.doRead(heldItem, player, side);
+			if (!world.isRemote) {
+				if(equipped instanceof IDCard)
+					tile.doRead(heldItem, player, side);
+				else if(equipped instanceof ItemLinkingCard)
+					tile.setDoor(heldItem);
 			}
 			return true;
 		}

@@ -4,14 +4,17 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
+import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import com.mojang.authlib.yggdrasil.response.User;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.StructureStrongholdPieces;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
@@ -46,6 +49,8 @@ public class DoorHandler {
 
     public HashMap<UUID, IReader> allReaders = new HashMap<>();
     public HashMap<UUID, IDoor> allDoors = new HashMap<>();
+
+    public UUID editValidator;
 
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event){
@@ -83,6 +88,14 @@ public class DoorHandler {
 //    public void serverSave(WorldEvent.Save event){
 //
 //    }
+
+    public UUID getEditValidator(){
+        return editValidator = UUID.randomUUID();
+    }
+
+    public boolean checkValidator(UUID editValidator){
+        return this.editValidator == editValidator;
+    }
 
     //region Door Controls
     private void updateDoorState(Doors.OneDoor door){ //update door state of all doors that are currently loaded.
@@ -215,7 +228,37 @@ public class DoorHandler {
         }
         return doors;
     }
+    //public ones
+    //make new door and return
+    public Doors.OneDoor addNewDoor(){
+        Doors.OneDoor door = new Doors.OneDoor(true);
+        DoorGroups.doors.add(door);
+        DoorGroups.markDirty();
+        return door;
+    }
 	//endregion
+
+    //region Reader/Door Management
+    public boolean SetDevID(UUID devID, UUID doorID, boolean isDoor){
+        boolean foundRightOne = false;
+        for(Doors.OneDoor door : DoorGroups.doors){
+            if(door.doorId == doorID && !door.Readers.contains(devID)){
+                door.Readers.add(devID);
+                foundRightOne = true;
+            }
+        }
+        if(foundRightOne){
+            for(Doors.OneDoor door : DoorGroups.doors){ //make sure no other door has this reader.
+                int index = door.Readers.indexOf(devID);
+                if(index != -1 && door.doorId != doorID){
+                    door.Readers.remove(index);
+                }
+            }
+            DoorGroups.markDirty();
+        }
+        return foundRightOne;
+    }
+    //endregion
 
     //remove from timedDoors
     private void removeFromTimedDoors(UUID doorID){
@@ -235,8 +278,34 @@ public class DoorHandler {
             }
         }
         for(UUID id : door.Readers){
+            String display;
+            byte color;
+            if(door.isDoorOpen != 0){ //perform the stuff based on a closed door.
+                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText();
+                    color = 1;
+                }
+                else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
+                    color = 1;
+                }
+                else {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
+                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 2 : 0);
+                }
+            }
+            else{ //perform based on an open door
+                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
+                    color = 4;
+                }
+                else {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
+                    color = 1;
+                }
+            }
             if(allReaders.containsKey(id)){
-                allReaders.get(id).updateVisuals(door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0)), new ReaderText(door.isDoorOpen != 0 ? "Open" : "Closed", (byte) 7) );
+                allReaders.get(id).updateVisuals(door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0)), new ReaderText(display, color) );
             }
         }
     }
@@ -324,8 +393,26 @@ public class DoorHandler {
         pushDoorUpdateMult(pushUpdateDoors);
     }
 
-    public void recievedUpdate(UUID id, Doors.OneDoor door){
-
+    public void recievedUpdate(UUID validator, Doors.OneDoor door){ //if new door settings are added from outside.
+        if(checkValidator(validator)) {
+            Doors.OneDoor listDoor = null;
+            for (Doors.OneDoor door1 : DoorGroups.doors) {
+                if (door1.doorId == door.doorId) {
+                    listDoor = door1;
+                    break;
+                }
+            }
+            if (listDoor != null) {
+                listDoor.doorName = door.doorName;
+                listDoor.passes = door.passes;
+                listDoor.defaultToggle = door.defaultToggle;
+                listDoor.defaultTick = door.defaultTick;
+                listDoor.Readers = door.Readers;
+                listDoor.Doors = door.Doors;
+                listDoor.groupID = door.groupID;
+                DoorGroups.markDirty();
+            }
+        }
     }
 
     public int getReaderLight(UUID id){
@@ -378,9 +465,10 @@ public class DoorHandler {
 
     /*
     -400: error
-    -3: door doesn't exist
-    -2: user doesn't exist
-    -1: don't do anything
+    -4: door doesn't exist
+    -3: user doesn't exist
+    -2: don't do anything
+    -1: blocked user (denied)
     0: access denied
     1: access granted
      */
@@ -388,16 +476,18 @@ public class DoorHandler {
         //get the door
         Doors.OneDoor door = getDoorFromReader(readerID);
         if(door == null)
-            return -3;
+            return -4;
         //get the user's card
         Doors.Users user = getUser(userID);
         if(user == null)
-            return -2;
+            return -3;
         //check the door
         if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //if always open, don't do anything.
+            return -2;
+        if(user.blocked)
             return -1;
         else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS)
-            return 0;
+            return user.staff ? 1 : 0;
         if(door.doorStatus.getInt() >= 0) // # > 0 = can be opened by card swipe
         {
             if (checkPassList(door.passes, user)){
@@ -409,7 +499,7 @@ public class DoorHandler {
                 return 1;
             }
         }
-        return 0;
+        return user.staff ? 1 : 0;
 
         //return -400;
     }
@@ -424,10 +514,10 @@ public class DoorHandler {
         public static final String DATA_NAME = AdvBaseSecurity.MODID + "_basesecuritydoors";
         public static Doors instance;
 
-        public List<OneDoor> doors;
-        public HashMap<UUID, PassValue> passes;
-        public HashMap<UUID, Groups> groups;
-        public List<Users> users;
+        public List<OneDoor> doors = new LinkedList<>();
+        public HashMap<String, PassValue> passes = new HashMap<>();
+        public HashMap<UUID, Groups> groups = new HashMap<>();
+        public List<Users> users = new LinkedList<>();
 
         public Doors(){
             super(DATA_NAME);
@@ -454,6 +544,11 @@ public class DoorHandler {
 
             //read all pass data
             this.passes = new HashMap<>();
+            PassValue tempPass = new PassValue();
+            tempPass.passId = "staff";
+            tempPass.passName = "Staff";
+            tempPass.passType = PassValue.type.Pass;
+            passes.put("staff", new PassValue());
             if(nbt.hasKey("passes")){
                 NBTTagList tempPassList = nbt.getTagList("passes", Constants.NBT.TAG_COMPOUND);
                 for(int i=0; i<tempPassList.tagCount(); i++){
@@ -501,8 +596,9 @@ public class DoorHandler {
             //write all pass data
             if(this.passes != null){
                 NBTTagList list = new NBTTagList();
-                BiConsumer<UUID, PassValue> biConsumer = (k,v) -> {
-                    list.appendTag(v.returnNBT());
+                BiConsumer<String, PassValue> biConsumer = (k,v) -> {
+                    if(!k.equals("staff"))
+                        list.appendTag(v.returnNBT());
                 };
                 passes.forEach(biConsumer);
                 nbt.setTag("passes", list);
@@ -595,7 +691,32 @@ public class DoorHandler {
             public OneDoor(){
 
             }
-            public OneDoor(NBTTagCompound tag, HashMap<UUID, PassValue> passMap, HashMap<UUID, Groups> groupMap){
+            public OneDoor(boolean newOne){
+                if(newOne){ //set default values
+                    doorName = "new door";
+                    doorId = UUID.randomUUID();
+                    isDoorOpen = 0;
+                    doorStatus = allDoorStatuses.ACCESS;
+                    //prep one default pass
+                    passes = new LinkedList<>();
+                    OnePass pass = new OnePass();
+                    pass.id = UUID.randomUUID();
+                    pass.passID = "staff";
+                    pass.priority = 1;
+                    pass.passType = OnePass.type.Supreme;
+                    passes.add(pass);
+                    override = new LinkedList<>();
+                    currTick = 0;
+                    defaultToggle = false;
+                    defaultTick = 20 * 5;
+                    Doors = new LinkedList<>();
+                    Readers = new LinkedList<>();
+                    readerLabel = "Closed";
+                    readerLabelColor = 4;
+                    readerLights = 0;
+                }
+            }
+            public OneDoor(NBTTagCompound tag, HashMap<String, PassValue> passMap, HashMap<UUID, Groups> groupMap){
                 if(tag.hasKey("readerLabel"))
                     readerLabel = tag.getString("readerLabel");
                 else
@@ -657,7 +778,7 @@ public class DoorHandler {
                 }
             }
 
-            public NBTTagCompound returnNBT(HashMap<UUID, PassValue> passMap){
+            public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                 NBTTagCompound tag = new NBTTagCompound();
                 if(readerLabel != null)
                     tag.setString("readerLabel", readerLabel);
@@ -726,7 +847,7 @@ public class DoorHandler {
                 }
 
                 public UUID id; //The ID of this specifically
-                public UUID passID; //the ID of the pass it is referencing
+                public String passID; //the ID of the pass it is referencing
                 public type passType; //Type of pass that this is (supreme, base, etc.)
                 public short priority; //the priority of it from 1 to 5. 1 will be checked first over 5. On top of that reject passes of lower priority than a base pass don't block requests
                 public List<UUID> addPasses; //if Base pass, it will also require these.
@@ -737,15 +858,15 @@ public class DoorHandler {
 
                 }
 
-                public OnePass(NBTTagCompound tag, HashMap<UUID, PassValue> passMap){
+                public OnePass(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                     if(tag.hasKey("id"))
                         id = tag.getUniqueId("id");
                     else
                         id = UUID.randomUUID();
                     if(tag.hasKey("passId"))
-                        passID = tag.getUniqueId("passId");
+                        passID = tag.getString("passId");
                     else
-                        passID = UUID.randomUUID();
+                        passID = "NAN";
                     if(tag.hasKey("type"))
                         passType = type.fromInt(tag.getShort("type"));
                     else
@@ -774,12 +895,12 @@ public class DoorHandler {
                     }
                 }
 
-                public NBTTagCompound returnNBT(HashMap<UUID, PassValue> passMap){
+                public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                     NBTTagCompound tag = new NBTTagCompound();
                     if(id != null)
                         tag.setUniqueId("id", id);
                     if(passID != null)
-                        tag.setUniqueId("passId", passID);
+                        tag.setString("passId", passID);
                     if(passType != null)
                         tag.setShort("type", (short)passType.getInt());
                     tag.setShort("priority", priority);
@@ -831,16 +952,16 @@ public class DoorHandler {
                     }
                 }
             }
-            public UUID passId;
+            public String passId;
             public String passName;
             public type passType;
             public List<String> groupNames; //if type Group, what are the group names.
 
             public PassValue(NBTTagCompound nbt){
                 if(nbt.hasKey("id"))
-                    passId = nbt.getUniqueId("id");
+                    passId = nbt.getString("id");
                 else
-                    passId = UUID.randomUUID();
+                    passId = "NAN";
                 if(nbt.hasKey("name"))
                     passName = nbt.getString("name");
                 else
@@ -858,17 +979,17 @@ public class DoorHandler {
                     }
                 }
             }
-            public PassValue(UUID id){
+            public PassValue(String id){
                 passId = id;
             }
             public PassValue(){
-                passId = UUID.randomUUID();
+                passId = "NAN";
             }
 
             public NBTTagCompound returnNBT(){
                 NBTTagCompound tag = new NBTTagCompound();
                 if(passId != null)
-                    tag.setUniqueId("id", passId);
+                    tag.setString("id", passId);
                 if(passName != null)
                     tag.setString("name", passName);
                 if(passType != null)
@@ -890,7 +1011,7 @@ public class DoorHandler {
             public boolean staff;
             public boolean blocked;
             public HashMap<UUID, UserPass> passes;
-            public Users(NBTTagCompound tag, HashMap<UUID, PassValue> passMap){
+            public Users(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                 if(tag.hasKey("id"))
                     id = tag.getUniqueId("id");
                 else
@@ -917,7 +1038,7 @@ public class DoorHandler {
                 }
             }
 
-            public NBTTagCompound returnNBT(HashMap<UUID, PassValue> passMap){
+            public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                 if(id != null){
                     NBTTagCompound tag = new NBTTagCompound();
                     tag.setUniqueId("id", id);
@@ -942,7 +1063,7 @@ public class DoorHandler {
             public static class UserPass{
                 public UUID passId; //ID of PassValue
                 public List<String> passValue; //Any values it may be.
-                public UserPass(NBTTagCompound tag, HashMap<UUID, PassValue> passMap){
+                public UserPass(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                     //TODO: Do stuff to check if the pass still exists
                     if(tag.hasKey("id")) {
                         passId = tag.getUniqueId("id");
@@ -974,10 +1095,10 @@ public class DoorHandler {
                         }
                     }
                 }
-                public boolean stillExists(HashMap<UUID, PassValue> passMap, boolean checkValue){
+                public boolean stillExists(HashMap<String, PassValue> passMap, boolean checkValue){
                     return passMap.containsKey(passId) && ((passValue != null && !passValue.isEmpty()) || !checkValue);
                 }
-                public NBTTagCompound returnNBT(HashMap<UUID, PassValue> passMap){
+                public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                     NBTTagCompound tag = new NBTTagCompound();
                     if(passId != null && stillExists(passMap, true)){
                         tag.setUniqueId("id", passId);
@@ -1012,7 +1133,7 @@ public class DoorHandler {
             public UUID parentID;
             public OneDoor.allDoorStatuses status;
             public List<OneDoor.OnePass> override; //override passes that are passed onto doors when group status is pushed
-            public Groups(NBTTagCompound tag, HashMap<UUID, PassValue> passMap){
+            public Groups(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                 if(tag.hasKey("name"))
                     name = tag.getString("name");
                 else
@@ -1036,7 +1157,7 @@ public class DoorHandler {
                 }
 
             }
-            public NBTTagCompound returnNBT(HashMap<UUID, PassValue> passMap){
+            public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                 NBTTagCompound tag = new NBTTagCompound();
                 if(id != null) {
                     tag.setUniqueId("id", id);

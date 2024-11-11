@@ -2,6 +2,7 @@ package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.DoorListGUI;
+import com.cadergator10.advancedbasesecurity.client.gui.EditDoorGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -17,11 +18,15 @@ import java.util.UUID;
 public class OneDoorDataPacket implements IMessage {
     UUID editValidator; //Used to try and ensure that the recieved door is authorized.
     DoorHandler.Doors.OneDoor door;
+    String group;
     public OneDoorDataPacket(){
 
     }
-    public OneDoorDataPacket(DoorHandler.Doors.OneDoor door){
+    public OneDoorDataPacket(UUID editValidator, DoorHandler.Doors.OneDoor door, boolean checkGroup){
         this.door = door;
+        if(checkGroup && door.groupID != null && AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.containsKey(door.groupID)){
+            group = AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.get(door.groupID).name;
+        }
     }
     private void writePass(ByteBuf buf, List<DoorHandler.Doors.OneDoor.OnePass> passes){
         int count = passes.size();
@@ -29,7 +34,7 @@ public class OneDoorDataPacket implements IMessage {
         for(int i=0; i<count; i++){
             DoorHandler.Doors.OneDoor.OnePass pass = passes.get(i);
             ByteBufUtils.writeUTF8String(buf, pass.id.toString());
-            ByteBufUtils.writeUTF8String(buf, pass.passID.toString());
+            ByteBufUtils.writeUTF8String(buf, pass.passID);
             buf.writeByte(pass.passType.getInt());
             buf.writeShort(pass.priority);
             int aCount = pass.addPasses.size();
@@ -53,7 +58,7 @@ public class OneDoorDataPacket implements IMessage {
         for(int i=0; i<count; i++){
             DoorHandler.Doors.OneDoor.OnePass pass = new DoorHandler.Doors.OneDoor.OnePass();
             pass.id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
-            pass.passID = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            pass.passID = ByteBufUtils.readUTF8String(buf);
             pass.passType = DoorHandler.Doors.OneDoor.OnePass.type.fromInt(buf.readByte());
             pass.priority = buf.readShort();
             int aCount = buf.readInt();
@@ -89,7 +94,7 @@ public class OneDoorDataPacket implements IMessage {
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
+    public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
         ByteBufUtils.writeUTF8String(buf, editValidator.toString());
@@ -108,10 +113,17 @@ public class OneDoorDataPacket implements IMessage {
         ByteBufUtils.writeUTF8String(buf, door.readerLabel);
         buf.writeByte(door.readerLabelColor);
         buf.writeInt(door.readerLights);
+        //if group exist
+        if(group != null){
+            buf.writeBoolean(true);
+            ByteBufUtils.writeUTF8String(buf, group);
+        }
+        else
+            buf.writeBoolean(false);
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
+    public void fromBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
@@ -130,21 +142,45 @@ public class OneDoorDataPacket implements IMessage {
         door.readerLabel = ByteBufUtils.readUTF8String(buf);
         door.readerLabelColor = buf.readByte();
         door.readerLights = buf.readInt();
+        boolean hasGroup = buf.readBoolean();
+        if(hasGroup)
+            group = ByteBufUtils.readUTF8String(buf);
     }
 
     public static class Handler implements IMessageHandler<OneDoorDataPacket, IMessage> {
 
         @Override
         public IMessage onMessage(OneDoorDataPacket message, MessageContext ctx) {
-            Minecraft.getMinecraft().addScheduledTask(() -> {
-                Minecraft mc = Minecraft.getMinecraft();
-                if(mc.world.isRemote) {
-                    //open up the GUI
-                    //Minecraft.getMinecraft().displayGuiScreen(new DoorListGUI(message.door));
-                }
-                else{
-                    AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
-                }
+            if(ctx.side.isClient()){
+                Minecraft.getMinecraft().addScheduledTask(() -> {
+                    Minecraft mc = Minecraft.getMinecraft();
+                    if(mc.world.isRemote) {
+                        //open up the GUI
+                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.group));
+                    }
+                    else{
+                        //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
+                    }
+                });
+            }
+            else{ //commented out since this should never run
+//                ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+//                    AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
+//                    DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups, AdvBaseSecurity.instance.doorHandler.getEditValidator());
+//                    AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
+//                });
+            }
+            return null;
+        }
+    }
+    public static class HandlerS implements IMessageHandler<OneDoorDataPacket, IMessage> { //used for server
+
+        @Override
+        public IMessage onMessage(OneDoorDataPacket message, MessageContext ctx) {
+            ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
+                DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups, AdvBaseSecurity.instance.doorHandler.getEditValidator());
+                AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
             });
             return null;
         }

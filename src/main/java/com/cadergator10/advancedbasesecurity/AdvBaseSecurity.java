@@ -1,6 +1,5 @@
 package com.cadergator10.advancedbasesecurity;
 
-import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.commands.BaseSecurityCommand;
 import com.cadergator10.advancedbasesecurity.common.commands.RequestCommand;
 import com.cadergator10.advancedbasesecurity.common.commands.TimeCommand;
@@ -9,10 +8,12 @@ import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.client.config.WebsocketConfig;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
-import com.cadergator10.advancedbasesecurity.common.networking.handlers.ClientGenericHandler;
+import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
+import com.cadergator10.advancedbasesecurity.common.networking.DoorUpdatePacket;
+import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.handlers.DoorNamedHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.ServerGenericHandler;
 import com.cadergator10.advancedbasesecurity.util.WebsocketHandler;
-import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
@@ -54,15 +55,18 @@ public class AdvBaseSecurity
     {
         proxy.preinit(event);
         network = NetworkRegistry.INSTANCE.newSimpleChannel("AdvBaseSecurity");
-        int packetID = 1;
-        if(event.getSide() == Side.CLIENT)
-            network.registerMessage(ClientGenericHandler.class, DoorNamePacket.class, packetID, Side.CLIENT);
-        else{
-            network.registerMessage(ServerGenericHandler.class, DoorNamePacket.class, packetID, Side.CLIENT);
+        int packetID = 0;
+        if(event.getSide() == Side.CLIENT) {
+            network.registerMessage(DoorNamedHandler.class, DoorNamePacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(OneDoorDataPacket.Handler.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
         }
-        packetID++;
-
-
+        else{
+            network.registerMessage(ServerGenericHandler.class, DoorNamePacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(OneDoorDataPacket.HandlerS.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
+        }
+        network.registerMessage(OneDoorDataPacket.HandlerS.class, OneDoorDataPacket.class, packetID++, Side.SERVER);
+        network.registerMessage(DoorServerRequest.Handler.class, DoorServerRequest.class, packetID++, Side.SERVER);
+        network.registerMessage(DoorUpdatePacket.Handler.class, DoorUpdatePacket.class, packetID++, Side.SERVER);
     }
 
     @EventHandler

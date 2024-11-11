@@ -1,11 +1,28 @@
-﻿itemGroup.advancedbasesecurity.tabbasesecurity=Advanced Base Security
+﻿#creative tab
+itemGroup.advancedbasesecurity.tabbasesecurity=Advanced Base Security
+#commands
 command.advancedbasesecurity.requestcommand.usage=/requestcommand <URL>
 command.advancedbasesecurity.timecommand.usage=/getrealtime
 command.advancedbasesecurity.websocketcommand.usage=/bswebsocket <args> <args>
 command.advancedbasesecurity.basesecuritycommand.usage=/basesecurity <command> <args>
-
+#configs
 advancedbasesecurity.gui.config.websocket.enablewebsocket=Enable WebSocket (Server Only)
 advancedbasesecurity.gui.config.websocket.url=Websocket URL (Server Only)
 advancedbasesecurity.gui.config.websocket.code=Websocket Security Code (Server Only)
-
+#stuff listed on the card readers
+advancedbasesecurity.reader.text.idle=Swipe Card
+advancedbasesecurity.reader.text.lockdown=LOCKDOWN
+advancedbasesecurity.reader.text.noaccess=NO ACCESS
+advancedbasesecurity.reader.text.allaccess=All Access
+advancedbasesecurity.reader.text.denied=Denied
+advancedbasesecurity.reader.text.allowed=Granted
+advancedbasesecurity.reader.text.blocked=Blocked
+advancedbasesecurity.reader.text.staff=Staff Access
+advancedbasesecurity.reader.text.nouser=Unknown ID
+advancedbasesecurity.reader.text.nodoor=No Door Link
+advancedbasesecurity.reader.text.error=ERROR
+#items
 item.advancedbasesecurity.id_card.name=ID Card
+item.advancedbasesecurity.linking_card=Linking Card
+#blocks
+block.advancedbasesecurity.card_reader=Card Reader

@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class ClientGenericHandler implements IMessageHandler<DoorNamePacket, IMessage> {
+public class DoorNamedHandler implements IMessageHandler<DoorNamePacket, IMessage> {
     @Override
     public IMessage onMessage(DoorNamePacket messaged, MessageContext ctx) {
         if(messaged instanceof DoorNamePacket) {
@@ -15,7 +15,7 @@ public class ClientGenericHandler implements IMessageHandler<DoorNamePacket, IMe
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
                 if (mc.world.isRemote)
                     //open up the GUI
-                    mc.displayGuiScreen(new DoorListGUI(message.doors, message.groupNames));
+                    mc.displayGuiScreen(new DoorListGUI(message.editValidator, message.doors, message.groupNames));
             });
         }
         return null;

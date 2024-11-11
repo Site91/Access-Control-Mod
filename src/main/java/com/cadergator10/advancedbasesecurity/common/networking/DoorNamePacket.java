@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.util.control.Exception;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class DoorNamePacket implements IMessage {
+    public UUID editValidator;
     public List<packetDoor> doors;
     public HashMap<UUID, String> groupNames;
     public HashMap<UUID, DoorHandler.Doors.Groups> groups;
@@ -43,7 +45,8 @@ public class DoorNamePacket implements IMessage {
     public DoorNamePacket(){
 
     }
-    public DoorNamePacket(DoorHandler.Doors door){
+    public DoorNamePacket(DoorHandler.Doors door, UUID editValidator){
+        this.editValidator = editValidator;
         doors = new LinkedList<>();
         for(DoorHandler.Doors.OneDoor doore : door.doors){
             doors.add(new packetDoor(doore.doorId, doore.doorName, doore.doorStatus.getInt(), doore.Readers.size(), doore.Doors.size(), doore.groupID));
@@ -52,9 +55,10 @@ public class DoorNamePacket implements IMessage {
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
+    public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
+        ByteBufUtils.writeUTF8String(buf, editValidator.toString());
         buf.writeInt(doors.size());
         List<UUID> tempList = new LinkedList<>();
         for(packetDoor door : doors){
@@ -75,9 +79,10 @@ public class DoorNamePacket implements IMessage {
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
+    public void fromBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
+        editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         int size = buf.readInt();
         doors = new LinkedList<>();
         for(int i=0; i<size; i++){

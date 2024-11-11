@@ -34,7 +34,7 @@ public class BaseSecurityCommand extends CommandBase {
 							//send packet to user
 							switch (args[1]) {
 								case "edit":
-									DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups);
+									DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups, AdvBaseSecurity.instance.doorHandler.getEditValidator());
 									ICommandSender sendered = sender.getCommandSenderEntity();
 									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
 									{
