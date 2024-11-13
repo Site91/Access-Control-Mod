@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
@@ -69,7 +70,7 @@ public class ContentRegistry { //where all new items will be added
         for(Block block : modBlocksWithItem.keySet())
             event.getRegistry().register(block);
 
-        //registerTileEntity(TileEntityAlarm.class, BlockAlarm.NAME);
+        registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
     }
 
     private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {

@@ -23,12 +23,12 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class TileEntityCardReader extends TileEntity implements IReader, ITickable {
-	public UUID deviceId;
-	public int lightFlag;
-	public ReaderText tempText; //text local to this reader alone for some cases.
+public class TileEntityCardReader extends TileEntitySimpleBase implements IReader, ITickable {
+	public UUID deviceId = UUID.randomUUID();
+	public int lightFlag = 0;
+	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases.
 	public int tempTextDelay = 0;
-	public ReaderText currText;
+	public ReaderText currText = new ReaderText("ERROR", (byte)4);
 
 	public TileEntityCardReader(){
 		super();
@@ -57,25 +57,40 @@ public class TileEntityCardReader extends TileEntity implements IReader, ITickab
 		return "access";
 	}
 
+	@Override
 	public void setDoor(@Nonnull ItemStack heldItem) {
 		ItemLinkingCard.CardTag cardTag = new ItemLinkingCard.CardTag(heldItem);
-		if(cardTag.doorId != null)
-			AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, false);
+		if(cardTag.doorId != null){
+			boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, false);
+			if(found){
+				int lightFlagT = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
+				ReaderText currTextT= AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
+				if(lightFlagT != lightFlag || !currTextT.text.equals(currText.text) || currTextT.color != currText.color) //determine if dirty
+				{
+					this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
+					this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
+					getUpdateTag();
+					markDirty();
+				}
+			}
+		}
 	}
 
 	public void setTempText(ReaderText text, int ticks){
 		tempText = text;
 		tempTextDelay = ticks;
+		this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
+		this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
+		getUpdateTag();
 		markDirty();
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		AdvBaseSecurity.instance.logger.info("Starting Reader NBT Read: " + nbt.toString());
 		if(nbt.hasKey("deviceId"))
 			this.deviceId = nbt.getUniqueId("doordeviceId");
-		else
-			this.deviceId = null; //commented out NBT for some of it since I'm going to be using the DoorHandler values.
 		if(nbt.hasKey("temptext") && nbt.hasKey("tempcol")){
 			this.tempText = new ReaderText(nbt.getString("temptext"), nbt.getByte("temptext"));
 		}
@@ -92,11 +107,13 @@ public class TileEntityCardReader extends TileEntity implements IReader, ITickab
 		//check if in list
 		if(!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(this.deviceId))
 			AdvBaseSecurity.instance.doorHandler.allReaders.put(this.deviceId, this);
+		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Read");
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write");
 		if(this.deviceId != null)
 			nbt.setUniqueId("swipeInd", this.deviceId);
 		if(this.tempText != null){
@@ -107,12 +124,14 @@ public class TileEntityCardReader extends TileEntity implements IReader, ITickab
 //		nbt.setInteger("", this.lightFlag);
 //		if(this.currText != null)
 //			nbt.setString("textlabel",this.currText.getFormattedText());
+		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write: " + nbt.toString());
 		return nbt;
 	}
 
 	@Override
 	public void newId() {
 		this.deviceId = UUID.randomUUID();
+		markDirty();
 	}
 
 	@Override
@@ -129,6 +148,10 @@ public class TileEntityCardReader extends TileEntity implements IReader, ITickab
 	public void updateVisuals(int light, ReaderText str) {
 		lightFlag = light;
 		currText = str;
+		this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
+		this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
+		getUpdateTag();
+		markDirty();
 	}
 
 	public IBlockState getFacing()
@@ -144,9 +167,10 @@ public class TileEntityCardReader extends TileEntity implements IReader, ITickab
 
 	@Override
 	public void update() {
-		if(tempTextDelay > 0) {
-			markDirty();
-			tempTextDelay--;
-		}
+		if(!getWorld().isRemote) //make sure not client, since this isn't necessary then
+			if(tempTextDelay > 0) {
+				markDirty();
+				tempTextDelay--;
+			}
 	}
 }

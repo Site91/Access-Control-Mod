@@ -241,20 +241,39 @@ public class DoorHandler {
     //region Reader/Door Management
     public boolean SetDevID(UUID devID, UUID doorID, boolean isDoor){
         boolean foundRightOne = false;
-        for(Doors.OneDoor door : DoorGroups.doors){
-            if(door.doorId == doorID && !door.Readers.contains(devID)){
-                door.Readers.add(devID);
-                foundRightOne = true;
-            }
-        }
-        if(foundRightOne){
-            for(Doors.OneDoor door : DoorGroups.doors){ //make sure no other door has this reader.
-                int index = door.Readers.indexOf(devID);
-                if(index != -1 && door.doorId != doorID){
-                    door.Readers.remove(index);
+        if(!isDoor) {
+            for (Doors.OneDoor door : DoorGroups.doors) {
+                if (door.doorId == doorID && !door.Readers.contains(devID)) {
+                    door.Readers.add(devID);
+                    foundRightOne = true;
                 }
             }
-            DoorGroups.markDirty();
+            if (foundRightOne) {
+                for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
+                    int index = door.Readers.indexOf(devID);
+                    if (index != -1 && door.doorId != doorID) {
+                        door.Readers.remove(index);
+                    }
+                }
+                DoorGroups.markDirty();
+            }
+        }
+        else{
+            for (Doors.OneDoor door : DoorGroups.doors) {
+                if (door.doorId == doorID && !door.Doors.contains(devID)) {
+                    door.Doors.add(devID);
+                    foundRightOne = true;
+                }
+            }
+            if (foundRightOne) {
+                for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
+                    int index = door.Doors.indexOf(devID);
+                    if (index != -1 && door.doorId != doorID) {
+                        door.Doors.remove(index);
+                    }
+                }
+                DoorGroups.markDirty();
+            }
         }
         return foundRightOne;
     }
@@ -423,7 +442,7 @@ public class DoorHandler {
                 }
             }
         }
-        return -1;
+        return 0;
     }
     public ReaderText getReaderLabel(UUID id){
         for(Doors.OneDoor door : DoorGroups.doors){
@@ -433,7 +452,17 @@ public class DoorHandler {
                 }
             }
         }
-        return null;
+        return new ReaderText("Disconnected", (byte) 4);
+    }
+    public boolean getDoorState(UUID id){
+        for(Doors.OneDoor door : DoorGroups.doors){
+            for(int i=0; i<door.Doors.size(); i++){
+                if(door.Doors.get(i).equals(id)){
+                    return door.isDoorOpen != 0;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){

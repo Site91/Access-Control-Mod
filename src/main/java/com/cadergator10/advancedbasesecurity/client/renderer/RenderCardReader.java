@@ -87,7 +87,7 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 
 		long time = tileEntity.getWorld().getTotalWorldTime();
 
-		this.bindTexture(new ResourceLocation("advancedbasesecurity", "textures/blocks/machine_side.png"));
+		this.bindTexture(new ResourceLocation("advancedbasesecurity", "textures/block/machine_side.png"));
 		GlStateManager.scale(1.001, 1.001, 1.001); //just a dirty fix to avoid tiny gaps between keypad and blocks next to it
 		drawBlock(tileEntity, time);
 
@@ -99,53 +99,52 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		BufferBuilder vertexbuffer = tessellator.getBuffer();
 //commented out all insets since I don't think its all needed for what I am doing. I just need the text displayed
 		vertexbuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL); //tessellator.startDrawingQuads();
-//		//inset face
-//		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(texPixel,    1f-texPixel).normal(0f, 0f, -1f).endVertex();
-//		vertexbuffer.pos(texPixel,    texPixel*13f, texPixel).tex(texPixel,    texPixel   ).normal(0f, 0f, -1f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel*13f, texPixel).tex(1f-texPixel, texPixel   ).normal(0f, 0f, -1f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f-texPixel, 1f-texPixel).normal(0f, 0f, -1f).endVertex();
-//		//TODO: Fix this label area.
-//		//bottom lip front
-//		vertexbuffer.pos(0f,          0f,          0f).tex(0f,          0f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(texPixel,    texPixel,    0f).tex(texPixel,    texPixel   ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel,    0f).tex(1f-texPixel, texPixel   ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f,          0f,          0f).tex(1f,          0f         ).normal(0f,0f,-1f).endVertex();
-//		//top lip front
-//		vertexbuffer.pos(texPixel,    1f-texPixel, 0f).tex(texPixel,    1f-texPixel).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(0f,          1f,          0f).tex(0f,          1f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f,          1f,          0f).tex(1f,          1f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f).tex(1f-texPixel, 1f-texPixel).normal(0f,0f,-1f).endVertex();
-//		//right lip front
-//		vertexbuffer.pos(0f,          0f,          0f).tex(0f,          0f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(0f,          1f,          0f).tex(0f,          1f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(texPixel,    1f-texPixel, 0f).tex(texPixel,    1f-texPixel).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(texPixel,    texPixel,    0f).tex(texPixel,    texPixel   ).normal(0f,0f,-1f).endVertex();
-//		//left lip front
-//		vertexbuffer.pos(1f-texPixel, texPixel,    0f).tex(1f-texPixel, texPixel   ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f).tex(1f-texPixel, 1f-texPixel).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f,          1f,          0f).tex(1f,          1f         ).normal(0f,0f,-1f).endVertex();
-//		vertexbuffer.pos(1f,          0f,          0f).tex(1f,          0f         ).normal(0f,0f,-1f).endVertex();
-//
-//		//bottom lip inside
-//		vertexbuffer.pos(texPixel,    texPixel,    0f      ).tex(texPixel,    1f         ).normal(0f,1f,0f).endVertex();
-//		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(texPixel,    1f-texPixel).normal(0f,1f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f-texPixel, 1f-texPixel).normal(0f,1f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel,    0f      ).tex(1f-texPixel, 1f         ).normal(0f,1f,0f).endVertex();
-//		//top lip inside
-//		vertexbuffer.pos(texPixel,    1f-texPixel, texPixel).tex(texPixel,    texPixel).normal(0f,-1f,0f).endVertex();
-//		vertexbuffer.pos(texPixel,    1f-texPixel, 0f      ).tex(texPixel,    0f      ).normal(0f,-1f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f      ).tex(1f-texPixel, 0f      ).normal(0f,-1f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, texPixel).tex(1f-texPixel, texPixel).normal(0f,-1f,0f).endVertex();
-//		//right lip inside
-//		vertexbuffer.pos(texPixel,    texPixel,    0f      ).tex(1f-texPixel, texPixel   ).normal(1f,0f,0f).endVertex();
-//		vertexbuffer.pos(texPixel,    1f-texPixel, 0f      ).tex(1f-texPixel, 1f-texPixel).normal(1f,0f,0f).endVertex();
-//		vertexbuffer.pos(texPixel,    1f-texPixel, texPixel).tex(1f,          1f-texPixel).normal(1f,0f,0f).endVertex();
-//		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(1f,          texPixel   ).normal(1f,0f,0f).endVertex();
-//		//left lip inside
-//		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f,          texPixel   ).normal(-1f,0f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, texPixel).tex(1f,          1f-texPixel).normal(-1f,0f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f      ).tex(1f-texPixel, 1f-texPixel).normal(-1f,0f,0f).endVertex();
-//		vertexbuffer.pos(1f-texPixel, texPixel,    0f      ).tex(1f-texPixel, texPixel   ).normal(-1f,0f,0f).endVertex();
+		//inset face
+		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(texPixel,    1f-texPixel).normal(0f, 0f, -1f).endVertex();
+		vertexbuffer.pos(texPixel,    texPixel*15f, texPixel).tex(texPixel,    texPixel   ).normal(0f, 0f, -1f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel*15f, texPixel).tex(1f-texPixel, texPixel   ).normal(0f, 0f, -1f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f-texPixel, 1f-texPixel).normal(0f, 0f, -1f).endVertex();
+		//bottom lip front
+		vertexbuffer.pos(0f,          0f,          0f).tex(0f,          0f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel,    texPixel,    0f).tex(texPixel,    texPixel   ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel,    0f).tex(1f-texPixel, texPixel   ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f,          0f,          0f).tex(1f,          0f         ).normal(0f,0f,-1f).endVertex();
+		//top lip front
+		vertexbuffer.pos(texPixel,    1f-texPixel, 0f).tex(texPixel,    1f-texPixel).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(0f,          1f,          0f).tex(0f,          1f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f,          1f,          0f).tex(1f,          1f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f).tex(1f-texPixel, 1f-texPixel).normal(0f,0f,-1f).endVertex();
+		//right lip front
+		vertexbuffer.pos(0f,          0f,          0f).tex(0f,          0f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(0f,          1f,          0f).tex(0f,          1f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel,    1f-texPixel, 0f).tex(texPixel,    1f-texPixel).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel,    texPixel,    0f).tex(texPixel,    texPixel   ).normal(0f,0f,-1f).endVertex();
+		//left lip front
+		vertexbuffer.pos(1f-texPixel, texPixel,    0f).tex(1f-texPixel, texPixel   ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f).tex(1f-texPixel, 1f-texPixel).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f,          1f,          0f).tex(1f,          1f         ).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(1f,          0f,          0f).tex(1f,          0f         ).normal(0f,0f,-1f).endVertex();
+
+		//bottom lip inside
+		vertexbuffer.pos(texPixel,    texPixel,    0f      ).tex(texPixel,    1f         ).normal(0f,1f,0f).endVertex();
+		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(texPixel,    1f-texPixel).normal(0f,1f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f-texPixel, 1f-texPixel).normal(0f,1f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel,    0f      ).tex(1f-texPixel, 1f         ).normal(0f,1f,0f).endVertex();
+		//top lip inside
+		vertexbuffer.pos(texPixel,    1f-texPixel, texPixel).tex(texPixel,    texPixel).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(texPixel,    1f-texPixel, 0f      ).tex(texPixel,    0f      ).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f      ).tex(1f-texPixel, 0f      ).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, texPixel).tex(1f-texPixel, texPixel).normal(0f,-1f,0f).endVertex();
+		//right lip inside
+		vertexbuffer.pos(texPixel,    texPixel,    0f      ).tex(1f-texPixel, texPixel   ).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel,    1f-texPixel, 0f      ).tex(1f-texPixel, 1f-texPixel).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel,    1f-texPixel, texPixel).tex(1f,          1f-texPixel).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(1f,          texPixel   ).normal(1f,0f,0f).endVertex();
+		//left lip inside
+		vertexbuffer.pos(1f-texPixel, texPixel,    texPixel).tex(1f,          texPixel   ).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, texPixel).tex(1f,          1f-texPixel).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f      ).tex(1f-texPixel, 1f-texPixel).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(1f-texPixel, texPixel,    0f      ).tex(1f-texPixel, texPixel   ).normal(-1f,0f,0f).endVertex();
 
 		tessellator.draw();
 
@@ -155,11 +154,11 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		FontRenderer font=this.getFontRenderer();
 		if (font!=null)
 		{
-			String fbText = card!=null ? card.currText.text : "";
-			byte fbColor = card!=null ? card.currText.color : 7;
+			String fbText = card!=null && card.currText!=null ? card.currText.text : "";
+			byte fbColor = card!=null && card.currText!=null ? card.currText.color : 7;
 
 			if (fbText!=null && fbText.length()>0)
-				writeLabel(font, 0f, display, fbColor, fbText);
+				writeLabel(font, texPixel, display, fbColor, fbText);
 		}
 	}
 }
