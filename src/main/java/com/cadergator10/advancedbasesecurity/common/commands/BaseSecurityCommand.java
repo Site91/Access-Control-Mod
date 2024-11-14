@@ -215,6 +215,9 @@ public class BaseSecurityCommand extends CommandBase {
 									break;
 							}
 						}
+					case "info":
+						sender.sendMessage(new TextComponentString("Doors: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.doors.size() + "\nPasses: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size() + "\nGroups: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.size() + "\nUsers: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.users.size()));
+						break;
 					default:
 						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
 						break;

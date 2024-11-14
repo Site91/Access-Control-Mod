@@ -125,10 +125,26 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 	}
 
 	private void transferLight(BufferBuilder vertexbuffer, float flag){
-		vertexbuffer.pos(texPixel * 5f, texPixel,    0f).tex(1f - uvWide * 8f, texPixel * flag).normal(0f,0f,-1f).endVertex();
-		vertexbuffer.pos(texPixel * 5f, texPixel * 2f, 0f).tex(1f - uvWide * 8f,          texPixel * (flag + 1f)).normal(0f,0f,-1f).endVertex();
-		vertexbuffer.pos(texPixel * 11f, texPixel * 2f, 0f ).tex(1f - uvWide * 2f, texPixel * (flag + 1f)).normal(0f,0f,-1f).endVertex();
-		vertexbuffer.pos(texPixel * 11f, texPixel,    0f).tex(1f - uvWide * 2f, texPixel * flag ).normal(0f,0f,-1f).endVertex();
+		//front
+		vertexbuffer.pos(texPixel * 5f, texPixel,    0f).tex(1f - uvWide * 2f, texPixel * flag).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel * 5f, texPixel * 2f, 0f).tex(1f - uvWide * 2f,          texPixel * (flag + 1f)).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel * 2f, 0f ).tex(1f - uvWide * 8f, texPixel * (flag + 1f)).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel,    0f).tex(1f - uvWide * 8f, texPixel * flag ).normal(0f,0f,-1f).endVertex();
+		//top
+		vertexbuffer.pos(texPixel * 5f, texPixel * 2f,    0f).tex(1f - uvWide * 2f, texPixel * flag).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 5f, texPixel * 2f, texPixel).tex(1f - uvWide * 2f,          texPixel * (flag + 1f)).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel * 2f, texPixel ).tex(1f - uvWide * 8f, texPixel * (flag + 1f)).normal(0f,-1f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel * 2f,    0f).tex(1f - uvWide * 8f, texPixel * flag ).normal(0f,-1f,0f).endVertex();
+		//left
+		vertexbuffer.pos(texPixel * 11f, texPixel,    0f).tex(1f - uvWide * 8f, texPixel * flag).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel * 2f, 0f).tex(1f - uvWide * 8f,          texPixel * (flag + 1f)).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel * 2f, texPixel ).tex(1f - uvWide * 7f, texPixel * (flag + 1f)).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 11f, texPixel,    texPixel).tex(1f - uvWide * 7f, texPixel * flag ).normal(1f,0f,0f).endVertex();
+		//right
+		vertexbuffer.pos(texPixel * 5f, texPixel * 2f,    0f).tex(1f - uvWide * 3f, texPixel * flag).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 5f, texPixel, 0f).tex(1f - uvWide * 3f,          texPixel * (flag + 1f)).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 5f, texPixel, texPixel ).tex(1f - uvWide * 2f, texPixel * (flag + 1f)).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 5f, texPixel * 2f,    texPixel).tex(1f - uvWide * 2f, texPixel * flag ).normal(-1f,0f,0f).endVertex();
 	}
 
 	public void drawBlock(TileEntityCardReader card, long time) {
@@ -195,8 +211,8 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		FontRenderer font=this.getFontRenderer();
 		if (font!=null)
 		{
-			String fbText = card!=null && card.currText!=null ? card.currText.text : "";
-			byte fbColor = card!=null && card.currText!=null ? card.currText.color : 7;
+			String fbText = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.text : (card.currText!=null ? card.currText.text : "")) : "";
+			byte fbColor = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.color : (card.currText!=null ? card.currText.color : 7)) : 7;
 
 			if (fbText!=null && fbText.length()>0)
 				writeLabel(font, texPixel, display, fbColor, fbText);

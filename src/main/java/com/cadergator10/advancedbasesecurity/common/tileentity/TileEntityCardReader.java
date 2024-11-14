@@ -169,8 +169,12 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 	public void update() {
 		if(!getWorld().isRemote) //make sure not client, since this isn't necessary then
 			if(tempTextDelay > 0) {
-				markDirty();
 				tempTextDelay--;
+				if(tempTextDelay == 0){
+					this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
+					getUpdateTag();
+				}
+				markDirty();
 			}
 	}
 }

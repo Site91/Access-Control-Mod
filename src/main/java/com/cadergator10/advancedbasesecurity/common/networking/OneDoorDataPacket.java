@@ -23,6 +23,7 @@ public class OneDoorDataPacket implements IMessage {
 
     }
     public OneDoorDataPacket(UUID editValidator, DoorHandler.Doors.OneDoor door, boolean checkGroup){
+        this.editValidator = editValidator;
         this.door = door;
         if(checkGroup && door.groupID != null && AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.containsKey(door.groupID)){
             group = AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.get(door.groupID).name;
@@ -37,7 +38,7 @@ public class OneDoorDataPacket implements IMessage {
             ByteBufUtils.writeUTF8String(buf, pass.passID);
             buf.writeByte(pass.passType.getInt());
             buf.writeShort(pass.priority);
-            int aCount = pass.addPasses.size();
+            int aCount = pass.addPasses != null ? pass.addPasses.size() : 0;
             buf.writeInt(aCount);
             for(int j=0; j<aCount; j++){
                 ByteBufUtils.writeUTF8String(buf, pass.addPasses.get(j).toString());
@@ -103,7 +104,7 @@ public class OneDoorDataPacket implements IMessage {
         buf.writeByte(door.doorStatus.getInt());
         writePass(buf, door.passes);
         writePass(buf, door.override);
-        ByteBufUtils.writeUTF8String(buf, door.groupID.toString());
+        ByteBufUtils.writeUTF8String(buf, door.groupID != null ? door.groupID.toString() : "NUL");
         buf.writeInt(door.isDoorOpen);
         buf.writeInt(door.currTick);
         buf.writeBoolean(door.defaultToggle);
@@ -127,12 +128,15 @@ public class OneDoorDataPacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        door = new DoorHandler.Doors.OneDoor();
         door.doorId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         door.doorName = ByteBufUtils.readUTF8String(buf);
         door.doorStatus = DoorHandler.Doors.OneDoor.allDoorStatuses.fromInt(buf.readByte());
         door.passes = readPass(buf);
         door.override = readPass(buf);
-        door.groupID = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        String tempGroup = ByteBufUtils.readUTF8String(buf);
+        if(!tempGroup.equals("NUL"))
+            door.groupID = UUID.fromString(tempGroup);
         door.isDoorOpen = buf.readInt();
         door.currTick = buf.readInt();
         door.defaultToggle = buf.readBoolean();

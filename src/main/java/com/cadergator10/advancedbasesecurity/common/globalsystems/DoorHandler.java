@@ -89,7 +89,8 @@ public class DoorHandler {
 //    }
 
     public UUID getEditValidator(){
-        return editValidator = UUID.randomUUID();
+        editValidator = UUID.randomUUID();
+        return editValidator;
     }
 
     public boolean checkValidator(UUID editValidator){
