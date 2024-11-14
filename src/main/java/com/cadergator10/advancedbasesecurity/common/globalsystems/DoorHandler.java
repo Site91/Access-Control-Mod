@@ -33,16 +33,18 @@ public class DoorHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onWorldLoad(WorldEvent.Load event){
-        AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
-        DoorGroups = Doors.get(event.getWorld());
-        AdvBaseSecurity.instance.logger.info("Successfully loaded");
-        timedDoors = new LinkedList<>();
-        for(Doors.OneDoor door : DoorGroups.doors){
-            if(door.isDoorOpen == 1){ //any timed doors add to list
-                timedDoors.add(door);
+        if(!event.getWorld().isRemote && !loaded) {
+            AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
+            DoorGroups = Doors.get(event.getWorld());
+            AdvBaseSecurity.instance.logger.info("Successfully loaded");
+            timedDoors = new LinkedList<>();
+            for (Doors.OneDoor door : DoorGroups.doors) {
+                if (door.isDoorOpen == 1) { //any timed doors add to list
+                    timedDoors.add(door);
+                }
             }
+            loaded = true;
         }
-        loaded = true;
     }
     private List<Doors.OneDoor> timedDoors = new LinkedList<>(); //doors that are currently open on a timer. these are what it loops through every tick.
 
