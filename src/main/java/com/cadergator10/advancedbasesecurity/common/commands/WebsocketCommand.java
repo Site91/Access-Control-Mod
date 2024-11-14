@@ -40,7 +40,7 @@ public class WebsocketCommand extends CommandBase {
 					break;
 				case "start":
 					if(WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.DISABLED)
-						sender.sendMessage(new TextComponentString(Color.RED + "Websocket is disabled. Please enable the websocket in the config."));
+						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Websocket is disabled. Please enable the websocket in the config."));
 					else if(WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.STOPPED || WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.RETRYING){
 						AdvBaseSecurity.instance.ws.commandConnect();
 						sender.sendMessage(new TextComponentString("Attempting to reconnect to the websocket..."));
@@ -54,7 +54,7 @@ public class WebsocketCommand extends CommandBase {
 					break;
 //				case "reconnect":
 //					if(WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.DISABLED)
-//						sender.sendMessage(new TextComponentString(Color.RED + "Websocket is disabled. Please enable the websocket in the config."));
+//						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Websocket is disabled. Please enable the websocket in the config."));
 //					else if(WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.STOPPED || WebsocketHandler.socketStatus == WebsocketHandler.socketStatusEnum.RETRYING){
 //						AdvBaseSecurity.instance.ws.commandConnect();
 //						sender.sendMessage(new TextComponentString("Attempting to reconnect to the websocket..."));
@@ -65,7 +65,7 @@ public class WebsocketCommand extends CommandBase {
 //					}
 //					break;
 				default:
-					sender.sendMessage(new TextComponentString(Color.RED + "Invalid Arguments"));
+					sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
 			}
 		}
 	}

@@ -1,20 +1,15 @@
 package com.cadergator10.advancedbasesecurity.common.blocks;
 
-import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockRedstoneComparator;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;

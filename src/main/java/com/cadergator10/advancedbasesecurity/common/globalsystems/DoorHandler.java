@@ -4,24 +4,17 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
-import com.mojang.authlib.yggdrasil.response.User;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.StructureStrongholdPieces;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -153,7 +146,7 @@ public class DoorHandler {
 
 	//region Quick Item Retrieval Functions
 	//get the door from a reader ID
-    private Doors.OneDoor getDoorFromReader(UUID reader){
+    public Doors.OneDoor getDoorFromReader(UUID reader){
         for(Doors.OneDoor tempdoor : DoorGroups.doors){
             if(tempdoor.Readers.contains(reader)) {
                 return tempdoor;
@@ -163,7 +156,7 @@ public class DoorHandler {
     }
 
     //get the door by its ID
-    private Doors.OneDoor getDoorFromID(UUID doorID){
+    public Doors.OneDoor getDoorFromID(UUID doorID){
         for(Doors.OneDoor tempdoor : DoorGroups.doors){
             if(tempdoor.doorId == doorID){
                 return tempdoor;
@@ -172,8 +165,18 @@ public class DoorHandler {
         return null;
     }
 
+    //get the door by its name (first one only)
+    public Doors.OneDoor getDoorFromName(String doorName){
+        for(Doors.OneDoor tempdoor : DoorGroups.doors){
+            if(tempdoor.doorName.equalsIgnoreCase(doorName)){
+                return tempdoor;
+            }
+        }
+        return null;
+    }
+
     //get the user by user ID
-    private Doors.Users getUser(UUID userID){
+    public Doors.Users getUser(UUID userID){
         for(Doors.Users tempuser : DoorGroups.users){
             if(tempuser.id == userID) {
                 return tempuser;
@@ -183,13 +186,25 @@ public class DoorHandler {
     }
 
     //get group by ID
-    private Doors.Groups getDoorGroup(UUID groupID){
+    public Doors.Groups getDoorGroup(UUID groupID){
         if(DoorGroups.groups.containsKey(groupID))
             return DoorGroups.groups.get(groupID);
         return null;
     }
+    //get group by name
+    public Doors.Groups getDoorGroupByName(String group){
+        List<Doors.Groups> groups = new LinkedList<>();
+        BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
+            if(v.name.equalsIgnoreCase(group))
+                groups.add(v);
+        };
+        DoorGroups.groups.forEach(biConsumer);
+        if(!group.isEmpty())
+            return groups.get(0);
+        return null;
+    }
     //get children groups
-    private List<UUID> getDoorChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
+    private List<UUID> getDoorGroupChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
         List<UUID> groups = new LinkedList<>();
         //Find any that are children
         BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
@@ -200,7 +215,7 @@ public class DoorHandler {
         //if children found & cascade=true, call this on all others too
         if(cascade && !groups.isEmpty()){
             for(UUID id : groups){
-                List<UUID> newGroups = getDoorChildren(id, true);
+                List<UUID> newGroups = getDoorGroupChildren(id, true);
                 //delete duplicates
                 newGroups.removeIf(groups::contains); //u -> groups.contains(u)
                 //add to groups list
@@ -390,7 +405,7 @@ public class DoorHandler {
         List<UUID> groups = new LinkedList<>();
         groups.add(group.id);
         if(pushToChildren) //if all groups that are children will receive this state
-            groups.addAll(getDoorChildren(group.id, true));
+            groups.addAll(getDoorGroupChildren(group.id, true));
         List<Doors.OneDoor> pushUpdateDoors = getDoorsByGroup(groups); //Any doors which need a doorState push
         //get all groups and update their values correctly first
         for(UUID tempgroupID : groups){
@@ -428,8 +443,34 @@ public class DoorHandler {
                 listDoor.defaultTick = door.defaultTick;
                 listDoor.Readers = door.Readers;
                 listDoor.Doors = door.Doors;
+                //check if the group needs an update
+                boolean pushDoor = false;
+                if(listDoor.groupID != door.groupID){
+                    if(door.groupID == null){ //removing group, so revert to default access
+                        listDoor.doorStatus = Doors.OneDoor.allDoorStatuses.ACCESS;
+                        listDoor.override = null;
+//                        if(listDoor.isDoorOpen != 0){ //will need to push the door update
+//                            listDoor.isDoorOpen = 0;
+//                            listDoor.currTick = 0;
+//							timedDoors.remove(listDoor); //if it exists here
+//                            pushDoor = true;
+//                        }
+                        pushDoor = true; //commented all back stuff out since pushDoorUpdate does it all
+                    }
+                    else{ //moving to a new group
+                        Doors.Groups group = getDoorGroup(door.groupID);
+                        if (group != null) {
+                            listDoor.doorStatus = group.status;
+                            listDoor.override = group.override;
+                            pushDoor = true;
+                            //don't bother with isDoorOpen because it'll be done in pushDoorUpdate;
+                        }
+                    }
+                }
                 listDoor.groupID = door.groupID;
                 DoorGroups.markDirty();
+                if(pushDoor)
+                    pushDoorUpdate(listDoor);
             }
         }
     }
