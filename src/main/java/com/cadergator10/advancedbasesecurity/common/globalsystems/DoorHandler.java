@@ -36,6 +36,12 @@ public class DoorHandler {
         AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
         DoorGroups = Doors.get(event.getWorld());
         AdvBaseSecurity.instance.logger.info("Successfully loaded");
+        timedDoors = new LinkedList<>();
+        for(Doors.OneDoor door : DoorGroups.doors){
+            if(door.isDoorOpen == 1){ //any timed doors add to list
+                timedDoors.add(door);
+            }
+        }
         loaded = true;
     }
     private List<Doors.OneDoor> timedDoors = new LinkedList<>(); //doors that are currently open on a timer. these are what it loops through every tick.
@@ -192,11 +198,11 @@ public class DoorHandler {
         return null;
     }
     //get group by name
-    public Doors.Groups getDoorGroupByName(String group){
-        List<Doors.Groups> groups = new LinkedList<>();
+    public UUID getDoorGroupID(String group){
+        List<UUID> groups = new LinkedList<>();
         BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
             if(v.name.equalsIgnoreCase(group))
-                groups.add(v);
+                groups.add(v.id);
         };
         DoorGroups.groups.forEach(biConsumer);
         if(!group.isEmpty())
@@ -204,7 +210,7 @@ public class DoorHandler {
         return null;
     }
     //get children groups
-    private List<UUID> getDoorGroupChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
+    public List<UUID> getDoorGroupChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
         List<UUID> groups = new LinkedList<>();
         //Find any that are children
         BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
@@ -342,6 +348,13 @@ public class DoorHandler {
                 allReaders.get(id).updateVisuals(door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0)), new ReaderText(display, color) );
             }
         }
+        //timedDoors stuff
+        if(door.isDoorOpen == 1 && !timedDoors.contains(door)){
+            timedDoors.add(door);
+        }
+        else{
+            timedDoors.remove(door);
+        }
     }
 
     //push update to a group of doors
@@ -363,6 +376,7 @@ public class DoorHandler {
             door.isDoorOpen = 0;
             door.currTick = 0;
             //update tile entites
+            DoorGroups.markDirty();
             pushDoorUpdate(door);
         }
         else if(openState && door.isDoorOpen == 0){ //opening a closed door
@@ -370,6 +384,7 @@ public class DoorHandler {
             door.isDoorOpen = (ticks == 0 ? 2 : 1);
             door.currTick = ticks;
             //update tile entities
+            DoorGroups.markDirty();
             pushDoorUpdate(door);
         }
         else if(openState && door.isDoorOpen != 0){ //trying to open an already open door.
@@ -382,6 +397,7 @@ public class DoorHandler {
                     door.currTick = 0;
                 }
             }
+            DoorGroups.markDirty();
             //if (door.isDoorOpen == 2) not needed due to it being a toggle.
             //pushDoorUpdate(door) not needed since door isn't needing a new state
         }
@@ -423,6 +439,7 @@ public class DoorHandler {
                 pushUpdateDoors.add(door);
             }
         }
+        DoorGroups.markDirty();
         //push update
         pushDoorUpdateMult(pushUpdateDoors);
     }
@@ -1203,6 +1220,9 @@ public class DoorHandler {
             public UUID parentID;
             public OneDoor.allDoorStatuses status;
             public List<OneDoor.OnePass> override; //override passes that are passed onto doors when group status is pushed
+            public Groups(){
+
+            }
             public Groups(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                 if(tag.hasKey("name"))
                     name = tag.getString("name");

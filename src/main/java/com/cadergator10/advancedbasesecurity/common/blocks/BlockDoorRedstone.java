@@ -7,7 +7,9 @@ import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRed
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -47,10 +49,7 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
 
     @Override
     public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
-        if (state.getValue(POWERED))
-            return 15;
-        else
-            return 0;
+        return getStrongPower(state, world, pos, side);
     }
 
     @Override
@@ -59,6 +58,23 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
             return 15;
         else
             return 0;
+    }
+
+    @Override
+    public int getMetaFromState(final IBlockState state) {
+        return state.getValue(POWERED) ? 0:1;
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(final int meta) {
+        return this.getDefaultState().withProperty(POWERED, meta == 1);
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return new BlockStateContainer(this, new IProperty[] {
+                POWERED
+        });
     }
 
     @Override

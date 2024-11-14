@@ -25,4 +25,4 @@ advancedbasesecurity.reader.text.error=ERROR
 item.advancedbasesecurity.id_card.name=ID Card
 item.advancedbasesecurity.linking_card=Linking Card
 #blocks
-block.advancedbasesecurity.card_reader=Card Reader
+tile.advancedbasesecurity.card_reader.name=Card Reader

@@ -5,6 +5,7 @@ import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
+import net.minecraft.command.AdvancementCommand;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -14,6 +15,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+
+import java.security.acl.Group;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 public class BaseSecurityCommand extends CommandBase {
 
@@ -46,7 +52,7 @@ public class BaseSecurityCommand extends CommandBase {
 									}
 									AdvBaseSecurity.instance.network.sendTo(packet, ((EntityPlayerMP) sendered));
 									break;
-								case "add":
+								case "create":
 									OneDoorDataPacket packet2 = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), AdvBaseSecurity.instance.doorHandler.addNewDoor(), false);
 									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
 									{
@@ -97,18 +103,112 @@ public class BaseSecurityCommand extends CommandBase {
 					case "groups":
 						if (args.length > 1) {
 							switch(args[1]){
+								case "create":
+									if (args.length <= 2){
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Missing group name"));
+										break;
+									}
+									String parentName = null;
+									if(args.length > 3){
+										parentName = args[3];
+									}
+									//initialize group values
+									DoorHandler.Doors.Groups group = new DoorHandler.Doors.Groups();
+									group.id = UUID.randomUUID();
+									group.status = DoorHandler.Doors.OneDoor.allDoorStatuses.ACCESS;
+									group.name = args[2];
+									group.override = null;
+									group.parentID = null;
+									if(parentName != null){
+										//get group
+										UUID parent = AdvBaseSecurity.instance.doorHandler.getDoorGroupID(parentName);
+										if(parent != null)
+											group.parentID = parent;
+									}
+									//add to list
+									AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.put(group.id, group);
+									AdvBaseSecurity.instance.doorHandler.DoorGroups.markDirty();
+									break;
+								case "count":
+									if (args.length <= 2){
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Missing group name"));
+										break;
+									}
+									//count the number of doors with this group
+									try {
+										UUID groupID = UUID.fromString(args[2]);
+										if(AdvBaseSecurity.instance.doorHandler.getDoorGroup(groupID) == null){
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Group name doesn't exist"));
+											break;
+										}
+										List<UUID> biggroup = AdvBaseSecurity.instance.doorHandler.getDoorGroupChildren(groupID, true);
+										int smallCount = 0;
+										int bigCount = 0;
+										for(DoorHandler.Doors.OneDoor door : AdvBaseSecurity.instance.doorHandler.DoorGroups.doors){
+											if(door.groupID == groupID)
+												smallCount++;
+											if(biggroup.contains(door.groupID))
+												bigCount++;
+										}
+										sender.sendMessage(new TextComponentString(TextFormatting.AQUA + "Doors in this group: " + smallCount + "\nDoors in child groups: " + bigCount + "\nDoors together: " + (bigCount + smallCount)));
+										break;
+									}
+									catch (Exception e){
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments: " + e));
+										break;
+									}
 								case "setstatus":
 									if (args.length <= 3){
 										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Missing group name or status"));
 										break;
 									}
+									//break checks
+									int doorStatus;
+									try{
+										doorStatus = Integer.parseInt(args[3]);
+										if(doorStatus != 0 && Math.abs(doorStatus) != 2){ //override ones don't work
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid status. Must be 0 (reg. access) 2 (all access) or -2 (no access). Overrides (1 and -1) are not supported through the command line"));
+											break;
+										}
+									}
+									catch(Exception e){
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid status int"));
+										break;
+									}
 									//find group
-									DoorHandler.Doors.Groups group = AdvBaseSecurity.instance.doorHandler.getDoorGroupByName(args[2]);
-									if(group == null){
+									UUID groupID = AdvBaseSecurity.instance.doorHandler.getDoorGroupID(args[2]);
+									if(groupID == null){
 										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Group Name: does not exist"));
 										break;
 									}
-									//
+									boolean letCascade = true;
+									if(args.length > 4)
+										try {
+											letCascade = Boolean.parseBoolean(args[4]);
+										} catch(Exception e){
+											AdvBaseSecurity.instance.logger.info("Arg " + args[4] + " is not a boolean in the command BaseSecurity");
+										}
+									DoorHandler.Doors.Groups group2 = AdvBaseSecurity.instance.doorHandler.getDoorGroup(groupID);
+									group2.status = DoorHandler.Doors.OneDoor.allDoorStatuses.fromInt(doorStatus);
+									AdvBaseSecurity.instance.doorHandler.updateGroups(group2, letCascade); //auto pushes updates to doors as well, no worries! :D
+									sender.sendMessage(new TextComponentString(TextFormatting.DARK_GREEN + "Successfully updated group(s) to the status: " + doorStatus));
+//									//all groups //commented out since a function already exists for it
+//									int letCascade = 2;
+//									if(args.length > 4)
+//										try {
+//											letCascade = Integer.parseInt(args[4]);
+//										} catch(Exception e){
+//											AdvBaseSecurity.instance.logger.info("Arg " + args[4] + " is not an integer in the command BaseSecurity");
+//										}
+//									List<UUID> groups = new LinkedList<>();
+//									groups.add(groupID);
+//									if(letCascade != 0) { //0 = only selected group; 1 = direct children; 2 = all children
+//										groups.addAll(AdvBaseSecurity.instance.doorHandler.getDoorGroupChildren(groupID, letCascade != 1)); //if cascade is false, it only gets direct children. if true, all children
+//									}
+//									//update statuses
+//									for(UUID group : groups){
+//										AdvBaseSecurity.instance.doorHandler.getDoorGroup(group).status = DoorHandler.Doors.OneDoor.allDoorStatuses.fromInt(doorStatus);
+//									}
 									break;
 								default:
 									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));

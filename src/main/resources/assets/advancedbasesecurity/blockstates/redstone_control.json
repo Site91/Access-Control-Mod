@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "power=false": {
+      "model": "advancedbasesecurity:block/redstone_control_off"
+    },
+    "power=true": {
+      "model": "advancedbasesecurity:block/redstone_control_off"
+    }
+  }
+}
