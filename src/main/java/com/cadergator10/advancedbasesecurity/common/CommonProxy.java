@@ -28,8 +28,6 @@ public class CommonProxy {
 
     public void preinit(FMLPreInitializationEvent event){
         MinecraftForge.EVENT_BUS.register(new TickHandler());
-
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReader.class, new RenderCardReader());
     }
     public void init(FMLInitializationEvent event){
         System.out.println("Hey yall! Scott here! And today, we're going to be sending REQUESTS!!!");

@@ -50,8 +50,8 @@ public class EditDoorGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id=-1;
-        this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, "Back"));
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, "Save"));
+        this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 80, 16, "Back"));
+        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 80, 16, "Save"));
         nameField = new GuiTextField(id++, fontRenderer, 20, 20, 30, 16);
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors

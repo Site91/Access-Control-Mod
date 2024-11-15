@@ -70,7 +70,7 @@ public class DoorListGUI extends GuiScreen {
             int pageCount = 1;
             int thisCount = 1;
             for(DoorNamePacket.packetDoor door : doors){
-                GuiButton temp = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 50, door.name);
+                GuiButton temp = new GuiButton(id++, this.width / 2 - 100, (this.height / 8) - (thisCount * 30), door.name);
                 this.buttonList.add(temp);
                 doorButtons.add(temp);
                 buttonLevel.add(pageCount);
@@ -83,15 +83,28 @@ public class DoorListGUI extends GuiScreen {
         AdvBaseSecurity.instance.logger.info("Page size: " + ((doors.size() - 1) / maxPageLength));
     }
 
+    private void changeDoorBtn(){
+        drawString(Integer.toString(currPage), this.width - 20, 20, 0xFFFFFF);
+        //draw all door button stuff right
+        for(int i=0; i<doorButtons.size(); i++){
+            if((i / maxPageLength) + 1 == currPage){ //integer division always rounds down
+                doorButtons.get(i).visible = true;
+                doorButtons.get(i).enabled = true;
+            }
+            else{
+                doorButtons.get(i).visible = false;
+                doorButtons.get(i).enabled = false;
+            }
+        }
+    }
+
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        drawString(Integer.toString(currPage), this.width - 20, 20, 0xFFFFFF);
         if(doors.isEmpty())
             drawCenteredString("No doors created yet", this.height / 2 + 40, 0xFFFFFF);
         else{
-            //draw all door button stuff right
-
+            changeDoorBtn();
         }
     }
 
@@ -106,6 +119,7 @@ public class DoorListGUI extends GuiScreen {
         }
         else if(button == downButton && currPage > 1){
             currPage--;
+
         }
         //TODO: Set this up to do stuff and modify a door table
     }

@@ -6,6 +6,7 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.nbt.*;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -15,6 +16,12 @@ import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -33,11 +40,14 @@ public class DoorHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onWorldLoad(WorldEvent.Load event){
+        AdvBaseSecurity.instance.logger.info("got event");
         if(!event.getWorld().isRemote && !loaded) {
+            allReaders = new HashMap<>();
+            allDoors = new HashMap<>();
+            timedDoors = new LinkedList<>();
             AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
             DoorGroups = Doors.get(event.getWorld());
             AdvBaseSecurity.instance.logger.info("Successfully loaded");
-            timedDoors = new LinkedList<>();
             for (Doors.OneDoor door : DoorGroups.doors) {
                 if (door.isDoorOpen == 1) { //any timed doors add to list
                     timedDoors.add(door);
@@ -46,10 +56,23 @@ public class DoorHandler {
             loaded = true;
         }
     }
-    private List<Doors.OneDoor> timedDoors = new LinkedList<>(); //doors that are currently open on a timer. these are what it loops through every tick.
 
-    public HashMap<UUID, IReader> allReaders = new HashMap<>();
-    public HashMap<UUID, IDoor> allDoors = new HashMap<>();
+    public void onWorldUnload(FMLServerStoppedEvent event){
+        if(loaded) {
+            AdvBaseSecurity.instance.logger.info("World unloading. Removing door stuff");
+            loaded = false;
+            DoorGroups = null;
+            timedDoors = null;
+            allReaders = null;
+            allDoors = null;
+            editValidator = null;
+        }
+    }
+
+    private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
+
+    public HashMap<UUID, IReader> allReaders;
+    public HashMap<UUID, IDoor> allDoors;
 
     public UUID editValidator;
 

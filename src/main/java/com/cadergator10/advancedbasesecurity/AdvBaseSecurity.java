@@ -20,10 +20,7 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
+import net.minecraftforge.fml.common.event.*;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -116,11 +113,26 @@ public class AdvBaseSecurity
         event.registerServerCommand(new TimeCommand());
         event.registerServerCommand(new WebsocketCommand());
         event.registerServerCommand(new BaseSecurityCommand());
+        AdvBaseSecurity.instance.logger.info("In ServerStart");
+        //prep door
+        //doorHandler.onWorldLoad(event);
     }
+
+    @EventHandler
+    public void ServerStarted(FMLServerStartedEvent event){
+
+    }
+
+
     @EventHandler
     public void ServerClose(FMLServerStoppingEvent event) {
         if (WebsocketConfig.enableWebsocket && event.getSide() != Side.CLIENT) {
             ws.niceClose();
         }
+    }
+
+    @EventHandler
+    public void ServerClosed(FMLServerStoppedEvent event){
+        doorHandler.onWorldUnload(event);
     }
 }
