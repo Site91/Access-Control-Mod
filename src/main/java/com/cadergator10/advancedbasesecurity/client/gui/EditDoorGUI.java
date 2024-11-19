@@ -1,18 +1,15 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorUpdatePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
-import it.unimi.dsi.fastutil.Hash;
 import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,26 +17,29 @@ import java.util.UUID;
 public class EditDoorGUI extends GuiScreen {
     //data passed by packet
     DoorHandler.Doors.OneDoor door;
-    String group;
-    HashMap<UUID, String> groups;
+    List<ButtonEnum.groupIndex> groups;
+    int groupIndex;
+
     UUID editValidator;
     //button data
     GuiButton backButton;
     GuiButton saveButton;
+    //GUI buttons
+    GuiButton editPasses;
     //door values
     GuiTextField nameField;
     GuiButtonToggle toggleDoor;
     GuiButton doorDelayUp;
     GuiButton doorDelayDown;
     GuiTextField doorDelayInput;
-    GuiButton groupSelect;
+    ButtonEnum groupSelect;
 
     //other data
     boolean letPress;
-    public EditDoorGUI(UUID editValidator, DoorHandler.Doors.OneDoor door, String group) {
+    public EditDoorGUI(UUID editValidator, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups) {
         super();
         this.door = door;
-        this.group = group;
+        this.groups = groups;
     }
 
     void drawString(String string, int x, int y, int color){
@@ -56,10 +56,13 @@ public class EditDoorGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id=-1;
-        this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 80, 16, "Back"));
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 80, 16, "Save"));
+        this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 90, 16, "Back"));
+        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 90, 16, "Save"));
         
-        nameField = new GuiTextField(id++, fontRenderer, 20, 20, 30, 16);
+        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 100, 20, 60, 16);
+        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 100, 20, 80, 16, groups, groupindex));
+        this.buttonList.add(editPasses = new GuiButton(id++, this.width / 2, 40, 60, 16, "Edit passes"));
+
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
     }

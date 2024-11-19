@@ -9,16 +9,10 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.event.world.ChunkDataEvent;
-import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
@@ -34,7 +28,7 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 		super();
 	}
 
-	public String doRead(@Nonnull ItemStack itemStack, EntityPlayer em, EnumFacing side) {
+	public String readCard(@Nonnull ItemStack itemStack, EntityPlayer em, EnumFacing side) {
 		IDCard.CardTag cardTag = new IDCard.CardTag(itemStack);
 		//perform request to the global system
 		int value = AdvBaseSecurity.instance.doorHandler.checkSwipe(cardTag.cardId, deviceId);
