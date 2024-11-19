@@ -16,7 +16,7 @@ public class ItemLinkingCard extends ItemBase {
 	}
 
 	public static class CardTag { //inspired by OpenSecurity's approach. a lot is as I learn
-		public UUID doorId = UUID.randomUUID();
+		public UUID doorId = null;
 
 		public CardTag(ItemStack stack){
 			if(stack.getItem() instanceof ItemLinkingCard)
@@ -29,8 +29,8 @@ public class ItemLinkingCard extends ItemBase {
 
 		public void readFromNBT(NBTTagCompound nbt){
 			if(nbt != null) {
-				if (nbt.hasKey("cardId"))
-					doorId = nbt.getUniqueId("cardId");
+				if (nbt.hasUniqueId("doorId"))
+					doorId = nbt.getUniqueId("doorId");
 			}
 		}
 

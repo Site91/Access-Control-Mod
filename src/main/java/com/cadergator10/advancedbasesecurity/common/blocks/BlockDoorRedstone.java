@@ -11,20 +11,24 @@ import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 
 public class BlockDoorRedstone extends Block implements ITileEntityProvider {
     public static final String NAME = "redstone_control";
+    public static Block DEFAULTITEM;
     public static final PropertyBool POWERED = PropertyBool.create("powered");
 
     public BlockDoorRedstone() {
@@ -34,6 +38,14 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
         setRegistryName(AdvBaseSecurity.MODID, NAME);
         setHardness(0.5f);
         setCreativeTab(ContentRegistry.CREATIVETAB);
+    }
+
+    @Override
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+        TileEntityDoorRedstone tile = (TileEntityDoorRedstone) worldIn.getTileEntity(pos);
+        if(!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(tile.getId()))
+            AdvBaseSecurity.instance.doorHandler.allDoors.put(tile.getId(), tile);
     }
 
     @Nullable
@@ -75,6 +87,12 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
         return new BlockStateContainer(this, new IProperty[] {
                 POWERED
         });
+    }
+
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
+        TileEntityDoorRedstone tile = (TileEntityDoorRedstone) worldIn.getTileEntity(pos);
+        worldIn.setBlockState(pos, state.withProperty(POWERED, tile.isPowered()));
     }
 
     @Override

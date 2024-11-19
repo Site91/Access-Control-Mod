@@ -40,10 +40,10 @@ public class IDCard extends ItemBase implements IBauble {
 
 		public void readFromNBT(NBTTagCompound nbt){
 			if(nbt != null) {
-				if (nbt.hasKey("cardId"))
+				if (nbt.hasUniqueId("cardId"))
 					cardId = nbt.getUniqueId("cardId");
 
-				if (nbt.hasKey("playerId"))
+				if (nbt.hasUniqueId("playerId"))
 					playerId = nbt.getUniqueId("playerId");
 
 				if (nbt.hasKey("display", 10)) {

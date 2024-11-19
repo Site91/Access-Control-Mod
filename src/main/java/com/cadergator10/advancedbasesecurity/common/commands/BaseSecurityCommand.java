@@ -145,7 +145,7 @@ public class BaseSecurityCommand extends CommandBase {
 										int smallCount = 0;
 										int bigCount = 0;
 										for(DoorHandler.Doors.OneDoor door : AdvBaseSecurity.instance.doorHandler.DoorGroups.doors){
-											if(door.groupID == groupID)
+											if(door.groupID.equals(groupID))
 												smallCount++;
 											if(biggroup.contains(door.groupID))
 												bigCount++;

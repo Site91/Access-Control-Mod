@@ -26,3 +26,4 @@ item.advancedbasesecurity.id_card.name=ID Card
 item.advancedbasesecurity.linking_card=Linking Card
 #blocks
 tile.advancedbasesecurity.card_reader.name=Card Reader
+tile.advancedbasesecurity.redstone_control.name=Redstone Door Controller

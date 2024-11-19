@@ -1,10 +1,19 @@
 {
-  "variants": {
-    "power=false": {
-      "model": "advancedbasesecurity:block/redstone_control_off"
+  "forge_marker": 1,
+  "defaults": {
+    "textures": {
+      "top": "advancedbasesecurity:block/machine_side",
+      "front": "advancedbasesecurity:block/redstone_control_off",
+      "side": "advancedbasesecurity:block/redstone_control_off"
     },
-    "power=true": {
-      "model": "advancedbasesecurity:block/redstone_control_off"
+    "model": "minecraft:orientable"
+  },
+  "variants": {
+    "powered=false": {
+      "model": "advancedbasesecurity:redstone_control_off"
+    },
+    "powered=true": {
+      "model": "advancedbasesecurity:redstone_control_on"
     }
   }
 }

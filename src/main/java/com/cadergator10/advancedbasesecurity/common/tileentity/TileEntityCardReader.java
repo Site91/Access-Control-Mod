@@ -89,8 +89,9 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
 		AdvBaseSecurity.instance.logger.info("Starting Reader NBT Read: " + nbt.toString());
-		if(nbt.hasKey("deviceId"))
-			this.deviceId = nbt.getUniqueId("doordeviceId");
+		if(nbt.hasUniqueId("deviceId"))
+			this.deviceId = nbt.getUniqueId("deviceId");
+		AdvBaseSecurity.instance.logger.info("Device ID r: " + deviceId);
 		if(nbt.hasKey("temptext") && nbt.hasKey("tempcol")){
 			this.tempText = new ReaderText(nbt.getString("temptext"), nbt.getByte("temptext"));
 		}
@@ -115,7 +116,7 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 		super.writeToNBT(nbt);
 		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write");
 		if(this.deviceId != null)
-			nbt.setUniqueId("swipeInd", this.deviceId);
+			nbt.setUniqueId("deviceId", this.deviceId);
 		if(this.tempText != null){
 			nbt.setString("temptext", this.tempText.text);
 			nbt.setByte("tempcol", this.tempText.color);

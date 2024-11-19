@@ -2,8 +2,12 @@ package com.cadergator10.advancedbasesecurity.common;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReader;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
+import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
@@ -13,6 +17,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.client.gui.ForgeGuiFactory;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -35,10 +40,13 @@ public class ContentRegistry { //where all new items will be added
     // holds a list of normal mod items
     public static final HashSet<ItemStack> modItems = new HashSet<>();
 
+    public static final CreativeTabs CREATIVETAB = new basesecuritytab();
+
     static {
 //        modBlocks.add(BlockAlarm.DEFAULTITEM = new BlockAlarm());
 //        modBlocks.add(BlockSecurityTerminal.DEFAULTITEM = new BlockSecurityTerminal());
         modBlocks.add(BlockCardReader.DEFAULTITEM = new BlockCardReader());
+        modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
 //
 //        modBlocksWithItem.put(BlockSecureDoor.DEFAULTITEM = new BlockSecureDoor(), ItemSecureDoor.DEFAULTSTACK = new ItemStack(new ItemSecureDoor()));
 //        modBlocksWithItem.put(BlockSecurePrivateDoor.DEFAULTITEM = new BlockSecurePrivateDoor(), ItemSecurePrivateDoor.DEFAULTSTACK = new ItemStack(new ItemSecurePrivateDoor()));
@@ -46,20 +54,8 @@ public class ContentRegistry { //where all new items will be added
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
         modItems.add(IDCard.DEFAULTSTACK = new ItemStack(new IDCard()));
+        modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
     }
-
-    public static CreativeTabs CREATIVETAB = new CreativeTabs("tabBaseSecurity") {
-        @Override
-        public ItemStack createIcon() {
-            return new ItemStack(Item.getItemFromBlock(Blocks.IRON_BARS));
-        }
-
-        @Override
-        public String getTranslationKey() {
-            return new TextComponentTranslation("itemGroup.advancedbasesecurity.tabbasesecurity").getUnformattedText();
-            //return "itemGroup.advancedbasesecurity.tabbasesecurity";
-        }
-    };
 
 
     @SubscribeEvent
@@ -71,6 +67,7 @@ public class ContentRegistry { //where all new items will be added
             event.getRegistry().register(block);
 
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
+        registerTileEntity(TileEntityDoorRedstone.class, BlockDoorRedstone.NAME);
     }
 
     private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {

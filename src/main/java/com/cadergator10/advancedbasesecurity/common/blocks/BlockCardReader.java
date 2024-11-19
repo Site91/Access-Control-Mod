@@ -8,6 +8,7 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -83,6 +84,8 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		TileEntity te = worldIn.getTileEntity(pos);
+		if(!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(((TileEntityCardReader)te).getId()))
+			AdvBaseSecurity.instance.doorHandler.allReaders.put(((TileEntityCardReader)te).getId(), ((IReader) te));
 		((IReader) te).updateVisuals(7, new ReaderText("Disconnected", (byte) 4));
 	}
 

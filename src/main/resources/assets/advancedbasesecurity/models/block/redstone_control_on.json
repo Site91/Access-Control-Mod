@@ -1,0 +1,11 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "north": "advancedbasesecurity:block/redstone_control_on",
+    "east": "advancedbasesecurity:block/redstone_control_on",
+    "south": "advancedbasesecurity:block/redstone_control_on",
+    "west": "advancedbasesecurity:block/redstone_control_on",
+    "top": "advancedbasesecurity:block/machine_side",
+    "bottom": "advancedbasesecurity:block/machine_side"
+  }
+}
