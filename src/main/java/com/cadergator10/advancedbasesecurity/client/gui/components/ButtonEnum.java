@@ -35,16 +35,16 @@ public class ButtonEnum extends GuiButtonExt{
 		}
 	}
 
-	public UUID getUUID(){
+	public String getUUID(){
 		if(currentIndex != 0)
 			return map.get(currentIndex - 1).id;
-		return null;
+		return "none";
 	}
 
 	public static class groupIndex{
-		public UUID id;
+		public String id;
 		public String name;
-		public groupIndex(UUID id, String name){
+		public groupIndex(String id, String name){
 			this.id = id;
 			this.name = name;
 		}

@@ -119,12 +119,20 @@ public class OneDoorDataPacket implements IMessage {
         buf.writeByte(door.readerLabelColor);
         buf.writeInt(door.readerLights);
         //do groups
-        if(group != null){
-            buf.writeBoolean(true);
-            ByteBufUtils.writeUTF8String(buf, group);
+//        if(group != null){
+//            buf.writeBoolean(true);
+//            ByteBufUtils.writeUTF8String(buf, group);
+//        }
+//        else
+//            buf.writeBoolean(false);
+        buf.writeBoolean(checkGroup);
+        if (checkGroup) {
+            int aCount = groups.size();
+            for (int i = 0; i < aCount; i++) {
+                ByteBufUtils.writeUTF8String(buf, groups.get(i).id.toString());
+                ByteBufUtils.writeUTF8String(buf, groups.get(i).name);
+            }
         }
-        else
-            buf.writeBoolean(false);
     }
 
     @Override
@@ -150,9 +158,17 @@ public class OneDoorDataPacket implements IMessage {
         door.readerLabel = ByteBufUtils.readUTF8String(buf);
         door.readerLabelColor = buf.readByte();
         door.readerLights = buf.readInt();
-        boolean hasGroup = buf.readBoolean();
-        if(hasGroup)
-            group = ByteBufUtils.readUTF8String(buf);
+//        boolean hasGroup = buf.readBoolean();
+//        if(hasGroup)
+//            group = ByteBufUtils.readUTF8String(buf);
+        checkGroup = buf.readBoolean();
+        if(checkGroup) {
+            groups = new LinkedList<>();
+            int aCount = buf.readInt();
+            for (int i = 0; i < aCount; i++) {
+                groups.add(new ButtonEnum.groupIndex(ByteBufUtils.readUTF8String(buf), ByteBufUtils.readUTF8String(buf)));
+            }
+        }
     }
 
     public static class Handler implements IMessageHandler<OneDoorDataPacket, IMessage> {
@@ -164,7 +180,7 @@ public class OneDoorDataPacket implements IMessage {
                     Minecraft mc = Minecraft.getMinecraft();
                     if(mc.world.isRemote) {
                         //open up the GUI
-                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.group));
+                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.groups));
                     }
                     else{
                         //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);

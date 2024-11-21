@@ -1,6 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.globalsystems;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
@@ -267,6 +268,14 @@ public class DoorHandler {
                 groups.addAll(newGroups);
             }
         }
+        return groups;
+    }
+
+    //get group hashmap as list with index
+    public List<ButtonEnum.groupIndex> getGroupList(){
+        List<ButtonEnum.groupIndex> groups = new LinkedList<>();
+        BiConsumer<UUID,Doors.Groups> biConsumer = (k, v) -> groups.add(new ButtonEnum.groupIndex(k.toString(), v.name));
+        this.DoorGroups.groups.forEach(biConsumer);
         return groups;
     }
 
@@ -812,7 +821,7 @@ public class DoorHandler {
                 ALL_ACCESS(2);
 
                 private final int value;
-                private allDoorStatuses(int value) {
+                allDoorStatuses(int value) {
                     this.value = value;
                 }
 

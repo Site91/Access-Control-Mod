@@ -53,7 +53,7 @@ public class BaseSecurityCommand extends CommandBase {
 									AdvBaseSecurity.instance.network.sendTo(packet, ((EntityPlayerMP) sendered));
 									break;
 								case "create":
-									OneDoorDataPacket packet2 = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), AdvBaseSecurity.instance.doorHandler.addNewDoor(), false);
+									OneDoorDataPacket packet2 = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), AdvBaseSecurity.instance.doorHandler.addNewDoor(), true);
 									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
 									{
 										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Cannot run command in console. Must be a player"));
