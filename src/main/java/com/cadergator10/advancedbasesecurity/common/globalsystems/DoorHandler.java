@@ -131,7 +131,7 @@ public class DoorHandler {
             }
         }
     }
-
+    //TODO: make this stuff have a cache of maybe 30 seconds upon first one + an option to not update doors. This is so an overlay for the user can check ahead of time if available to display to them if looking at a reader with a card in hand
     //Check permissions list of a door
     private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
         for(int i=1; i<=5; i++){ //priorities
@@ -1039,6 +1039,18 @@ public class DoorHandler {
                                 return Add;
                             default:
                                 return Supreme;
+                        }
+                    }
+                    public String toString(){
+                        switch(value) {
+                            case 1:
+                                return "Base";
+                            case 2:
+                                return "Reject";
+                            case 3:
+                                return "Add";
+                            default:
+                                return "Supreme";
                         }
                     }
                 }

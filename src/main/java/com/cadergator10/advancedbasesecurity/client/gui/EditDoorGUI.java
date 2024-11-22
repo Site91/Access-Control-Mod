@@ -73,7 +73,7 @@ public class EditDoorGUI extends GuiScreen {
         this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 90, 16, "Save"));
         
         nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 100, 20, 60, 16);
-        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 100, 20, 80, 16, groups, groupIndex));
+        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 100, 20, 80, 16, true, groups, groupIndex));
         this.buttonList.add(editPasses = new GuiButton(id++, this.width / 2 - 100, 40, 60, 16, "Edit passes"));
         this.buttonList.add(clearDevices = new GuiButton(id++, this.width / 2 + 100, 40, 60, 16, "Clear " + (door.Readers.size() + door.Doors.size()) + " Devices"));
         this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 100, 60, 80, 16, "Stay Open", door.defaultToggle));
