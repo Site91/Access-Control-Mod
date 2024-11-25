@@ -137,6 +137,7 @@ public class EditDoorGUI extends GuiScreen {
             }
             else if(button == editPasses){
                 letPress = false;
+                door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
                 Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, door, groups));
             }
         }

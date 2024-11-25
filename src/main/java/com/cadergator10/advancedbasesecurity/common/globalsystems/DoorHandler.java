@@ -499,6 +499,30 @@ public class DoorHandler {
         changeDoorStateInternal(door, openState, ticks);
     }
 
+    public void verifyUserPasses(){
+        List<String> exists = new LinkedList<>();
+        BiConsumer<String, Doors.PassValue> bic = (s, passValue) -> exists.add(s);
+        DoorGroups.passes.forEach(bic);
+        for(Doors.Users user : DoorGroups.users){
+            List<String> exists2 = new LinkedList<>();
+            BiConsumer<String, Doors.Users.UserPass> bic2 = (s, passValue) -> exists2.add(s);
+            user.passes.forEach(bic2);
+            for (String s : exists2) { //check for deleted passes
+                if (!exists.contains(s)) {
+                    user.passes.remove(s);
+                    DoorGroups.markDirty();
+                }
+            }
+            for (String s : exists){ //check for incorrect inputs.
+                Doors.PassValue pass = DoorGroups.passes.get(s);
+                if(!exists2.contains(s) || user.passes.get(s).type != pass.passType.getInt() || (pass.passType == Doors.PassValue.type.Group && Integer.parseInt(user.passes.get(s).passValue.get(0)) > pass.groupNames.size())){
+                    user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
+                    DoorGroups.markDirty();
+                }
+            }
+        }
+    }
+
     public void updateGroups(Doors.Groups group, boolean pushToChildren){ //pushToChildren means if a change was made to a group, if it should update all child groups too (groups with parentID set to this groupID)
         //group at this point has already been updated. this function simply pushes to doors and updates children groups
         List<UUID> groups = new LinkedList<>();
@@ -1216,15 +1240,20 @@ public class DoorHandler {
 
         public static class Users{
             public UUID id; //ID used by cards to know who to look for.
+            public String name;
             public UUID owner; //in case I link a player ID to the card. Biometric?
             public boolean staff;
             public boolean blocked;
-            public HashMap<UUID, UserPass> passes;
+            public HashMap<String, UserPass> passes;
             public Users(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                 if(tag.hasUniqueId("id"))
                     id = tag.getUniqueId("id");
                 else
                     id = UUID.randomUUID();
+                if(tag.hasKey("name"))
+                    name = tag.getString("name");
+                else
+                    name = "new";
                 if(tag.hasUniqueId("owner"))
                     owner = tag.getUniqueId("owner");
                 else
@@ -1253,11 +1282,13 @@ public class DoorHandler {
                     tag.setUniqueId("id", id);
                     if(owner != null)
                         tag.setUniqueId("owner", owner);
+                    if(name != null)
+                        tag.setString("name", name);
                     tag.setBoolean("staff", staff);
                     tag.setBoolean("blocked", blocked);
                     if(passes != null){
                         NBTTagList list = new NBTTagList();
-                        BiConsumer<UUID, UserPass> biConsumer = (k,v) -> {
+                        BiConsumer<String, UserPass> biConsumer = (k,v) -> {
                             NBTTagCompound thisPass = v.returnNBT(passMap);
                             if(thisPass != null)
                                 list.appendTag(thisPass);
@@ -1270,12 +1301,18 @@ public class DoorHandler {
             }
 
             public static class UserPass{
-                public UUID passId; //ID of PassValue
+                public String passId; //ID of PassValue
                 public List<String> passValue; //Any values it may be.
+                public int type; //type set by PassValue, so when it checks it knows if invalid.\
+                public UserPass(String passId, List<String> passValue, int type){
+                    this.passId = passId;
+                    this.passValue = passValue;
+                    this.type = type;
+                }
                 public UserPass(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                     //TODO: Do stuff to check if the pass still exists
-                    if(tag.hasUniqueId("id")) {
-                        passId = tag.getUniqueId("id");
+                    if(tag.hasKey("id")) {
+                        passId = tag.getString("id");
                         if(stillExists(passMap, false))
                         {
                             if(tag.hasKey("value")) {
@@ -1301,6 +1338,8 @@ public class DoorHandler {
                                     passValue.add(((NBTTagShort) thisTag).getShort() == 1 ? "true" : "false");
                                 }
                             }
+                            if(tag.hasKey("type"))
+                                type = tag.getInteger("type");
                         }
                     }
                 }
@@ -1310,7 +1349,7 @@ public class DoorHandler {
                 public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                     NBTTagCompound tag = new NBTTagCompound();
                     if(passId != null && stillExists(passMap, true)){
-                        tag.setUniqueId("id", passId);
+                        tag.setString("id", passId);
                         PassValue.type passType = passMap.get(passId).passType;
                         if(passType == PassValue.type.MultiText){
                             NBTTagList list = new NBTTagList();
@@ -1328,6 +1367,7 @@ public class DoorHandler {
                         else if(passType == PassValue.type.Pass){
                             tag.setShort("value", (short) (passValue.get(0).equals("true") ? 1 : 0));
                         }
+                        tag.setInteger("type", type);
                     }
                     else{
                         return null; //does not exist anymore so remove
