@@ -7,10 +7,7 @@ import com.cadergator10.advancedbasesecurity.common.commands.WebsocketCommand;
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.client.config.WebsocketConfig;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorUpdatePacket;
-import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.*;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.DoorNamedHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.ServerGenericHandler;
 import com.cadergator10.advancedbasesecurity.util.WebsocketHandler;
@@ -55,10 +52,18 @@ public class AdvBaseSecurity
         int packetID = 0;
         if(event.getSide() == Side.CLIENT) {
             network.registerMessage(DoorNamedHandler.class, DoorNamePacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(RequestPassesPacket.Handler.class, RequestPassesPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(RequestPassesPacket.HandlerS.class, RequestPassesPacket.class, packetID++, Side.SERVER);
+            network.registerMessage(UserEditPacket.Handler.class, UserEditPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(UserEditPacket.HandlerS.class, UserEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(OneDoorDataPacket.Handler.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
         }
         else{
             network.registerMessage(ServerGenericHandler.class, DoorNamePacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(RequestPassesPacket.HandlerS.class, RequestPassesPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(RequestPassesPacket.HandlerS.class, RequestPassesPacket.class, packetID++, Side.SERVER);
+            network.registerMessage(UserEditPacket.HandlerS.class, UserEditPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(UserEditPacket.HandlerS.class, UserEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(OneDoorDataPacket.HandlerS.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
         }
         network.registerMessage(OneDoorDataPacket.HandlerS.class, OneDoorDataPacket.class, packetID++, Side.SERVER);

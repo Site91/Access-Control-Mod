@@ -83,20 +83,42 @@ public class RequestPassesPacket implements IMessage {
         }
         return passes;
     }
-    private void writeList(ByteBuf buf, List<UUID> passes){
-        int count = passes.size();
-        buf.writeInt(count);//size of the list
-        for(int i=0; i<count; i++){
-            ByteBufUtils.writeUTF8String(buf, passes.get(i).toString());
-        }
+    public static void writeList(ByteBuf buf){
+        buf.writeInt(AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size());
+        BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k,v) -> {
+            ByteBufUtils.writeUTF8String(buf, v.passId);
+            ByteBufUtils.writeUTF8String(buf, v.passName);
+            buf.writeShort(v.passType.getInt());
+            boolean isGood = v.groupNames != null && !v.groupNames.isEmpty();
+            buf.writeBoolean(isGood);
+            if(isGood){
+                buf.writeInt(v.groupNames.size());
+                for(String str : v.groupNames){
+                    ByteBufUtils.writeUTF8String(buf, str);
+                }
+            }
+        };
+        AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.forEach(biConsumer);
     }
-    private List<UUID> readList(ByteBuf buf){
-        List<UUID> ids = new LinkedList<>();
-        int count = buf.readInt();
-        for(int i=0; i<count; i++){
-            ids.add(UUID.fromString(ByteBufUtils.readUTF8String(buf)));
+    public static List<DoorHandler.Doors.PassValue> readList(ByteBuf buf){
+        List<DoorHandler.Doors.PassValue> passeder = new LinkedList<>();
+        int num = buf.readInt();
+        for(int i=0; i<num; i++){
+            DoorHandler.Doors.PassValue value = new DoorHandler.Doors.PassValue();
+            value.passId = ByteBufUtils.readUTF8String(buf);
+            value.passName = ByteBufUtils.readUTF8String(buf);
+            value.passType = DoorHandler.Doors.PassValue.type.fromInt(buf.readShort());
+            boolean isGood = buf.readBoolean();
+            if(isGood){
+                value.groupNames = new LinkedList<>();
+                int count = buf.readInt();
+                for(int j=0; j<count; j++){
+                    value.groupNames.add(ByteBufUtils.readUTF8String(buf));
+                }
+            }
+            passeder.add(value);
         }
-        return ids;
+        return passeder;
     }
 
     @Override
@@ -116,21 +138,7 @@ public class RequestPassesPacket implements IMessage {
 //            for(DoorHandler.Doors.PassValue pass : passes){
 //
 //            }
-            buf.writeInt(AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size());
-            BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k,v) -> {
-                ByteBufUtils.writeUTF8String(buf, v.passId);
-                ByteBufUtils.writeUTF8String(buf, v.passName);
-                buf.writeShort(v.passType.getInt());
-                boolean isGood = v.groupNames != null && !v.groupNames.isEmpty();
-                buf.writeBoolean(isGood);
-                if(isGood){
-                    buf.writeInt(v.groupNames.size());
-                    for(String str : v.groupNames){
-                        ByteBufUtils.writeUTF8String(buf, str);
-                    }
-                }
-            };
-            AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.forEach(biConsumer);
+            writeList(buf);
         }
     }
 
@@ -141,23 +149,7 @@ public class RequestPassesPacket implements IMessage {
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         isServer = buf.readBoolean();
         if(isServer){
-            passes = new LinkedList<>();
-            int num = buf.readInt();
-            for(int i=0; i<num; i++){
-                DoorHandler.Doors.PassValue value = new DoorHandler.Doors.PassValue();
-                value.passId = ByteBufUtils.readUTF8String(buf);
-                value.passName = ByteBufUtils.readUTF8String(buf);
-                value.passType = DoorHandler.Doors.PassValue.type.fromInt(buf.readShort());
-                boolean isGood = buf.readBoolean();
-                if(isGood){
-                    value.groupNames = new LinkedList<>();
-                    int count = buf.readInt();
-                    for(int j=0; j<count; j++){
-                        value.groupNames.add(ByteBufUtils.readUTF8String(buf));
-                    }
-                }
-                passes.add(value);
-            }
+            passes = readList(buf);
         }
     }
 

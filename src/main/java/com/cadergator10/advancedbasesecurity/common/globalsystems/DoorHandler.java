@@ -1245,6 +1245,9 @@ public class DoorHandler {
             public boolean staff;
             public boolean blocked;
             public HashMap<String, UserPass> passes;
+            public Users(){
+
+            }
             public Users(NBTTagCompound tag, HashMap<String, PassValue> passMap){
                 if(tag.hasUniqueId("id"))
                     id = tag.getUniqueId("id");
@@ -1304,6 +1307,10 @@ public class DoorHandler {
                 public String passId; //ID of PassValue
                 public List<String> passValue; //Any values it may be.
                 public int type; //type set by PassValue, so when it checks it knows if invalid.\
+                public UserPass(String passId, int type){
+                    this.passId = passId;
+                    this.type = type;
+                }
                 public UserPass(String passId, List<String> passValue, int type){
                     this.passId = passId;
                     this.passValue = passValue;
