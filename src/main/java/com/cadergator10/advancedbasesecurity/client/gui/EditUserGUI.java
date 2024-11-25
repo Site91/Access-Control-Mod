@@ -1,8 +1,10 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
+import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -13,10 +15,7 @@ import scala.swing.ToggleButton;
 
 import javax.jws.soap.SOAPBinding;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @SideOnly(Side.CLIENT)
 public class EditUserGUI extends GuiScreen {
@@ -141,6 +140,10 @@ public class EditUserGUI extends GuiScreen {
                 fields.add(field);
                 fieldIDs.add(pass.passId);
             }
+            //update offsets
+            xoff *= -1;
+            if(xoff < 0)
+                yoff += 20;
         }
     }
 
@@ -230,7 +233,59 @@ public class EditUserGUI extends GuiScreen {
     protected void actionPerformed(GuiButton button) throws IOException {
         if(letPress){
             if(button == saveButton){ //TODO: Finish the User gui
-
+                UserEditPacket packet = new UserEditPacket(editValidator, users, false);
+                AdvBaseSecurity.instance.network.sendToServer(packet);
+                mc.player.closeScreen();
+            }
+            else if(button == allUsers){
+                allUsers.onClick();
+                finishLastMinute();
+                updateWithPasses();
+            }
+            else if(button == addUser){
+                finishLastMinute();
+                DoorHandler.Doors.Users user1 = new DoorHandler.Doors.Users();
+                user1.name = "new";
+                user1.blocked = false;
+                user1.owner = null;
+                user1.id = UUID.randomUUID();
+                user1.staff = false;
+                user1.passes = new HashMap<>();
+                for (DoorHandler.Doors.PassValue pass : passes){ //check for incorrect inputs.
+                    user1.passes.put(pass.passId, new DoorHandler.Doors.Users.UserPass(pass.passId,pass.passType == DoorHandler.Doors.PassValue.type.Level || pass.passType == DoorHandler.Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == DoorHandler.Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
+                }
+                users.add(user1);
+                ButtonEnum.groupIndex btn = processUser(user1);
+                allUsers.insertList(btn);
+                allUsers.changeIndex(users.size() - 1);
+                updateWithPasses();
+            }
+            else if(button == delUser){
+                int index = allUsers.getIndex();
+                users.remove(index);
+                allUsers.removeList();
+                updateWithPasses();
+            }
+            else if(button == resetID){
+                user.id = UUID.randomUUID();
+            }
+            else if(button == staffButton){
+                user.staff = staffButton.onClick();
+            }
+            else if(button == blockedButton){
+                user.blocked = blockedButton.onClick();
+            }
+            else{ //go through restButtons
+                for(int i=0; i<restButtonsIDs.size(); i++){
+                    if(button == restButtons.get(i)){
+                        if(button instanceof ButtonToggle){ //pass
+                            user.passes.get(restButtonsIDs.get(i)).passValue.set(0, Boolean.toString(((ButtonToggle)button).onClick()));
+                        }
+                        else{ //group
+                            user.passes.get(restButtonsIDs.get(i)).passValue.set(0,Integer.toString(((ButtonEnum)button).getIndex()));
+                        }
+                    }
+                }
             }
         }
     }

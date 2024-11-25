@@ -29,6 +29,11 @@ public class ButtonToggle extends GuiButton {
         this.resourceLocation = resourceLocationIn;
     }
 
+    public boolean onClick(){
+        setStateTriggered(isStateTriggered());
+        return isStateTriggered();
+    }
+
     public void setStateTriggered(boolean p_191753_1_)
     {
         this.stateTriggered = p_191753_1_;

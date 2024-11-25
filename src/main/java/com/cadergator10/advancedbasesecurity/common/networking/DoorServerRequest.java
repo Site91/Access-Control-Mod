@@ -49,14 +49,24 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
             EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
             if(message.request.equals("newdoor")){ //make new door
                 if(canUse){
-                    serverPlayer.getServerWorld().addScheduledTask(() -> {
-                        DoorHandler.Doors.OneDoor door = AdvBaseSecurity.instance.doorHandler.addNewDoor();
-                        OneDoorDataPacket doorPacket = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), door, true);
-                        AdvBaseSecurity.instance.network.sendTo(doorPacket, serverPlayer);
-                    });
+                    DoorHandler.Doors.OneDoor door = AdvBaseSecurity.instance.doorHandler.addNewDoor();
+                    OneDoorDataPacket doorPacket = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), door, true);
+                    AdvBaseSecurity.instance.network.sendTo(doorPacket, serverPlayer);
                 }
                 else
                     serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (invalid session id)"));
+            }
+            else if(message.request.equals("editdoor")){//edit door with ID.
+                if(canUse) {
+                    DoorHandler.Doors.OneDoor door = AdvBaseSecurity.instance.doorHandler.getDoorFromID(UUID.fromString(message.requestData));
+                    if (door != null) {
+                        OneDoorDataPacket packet = new OneDoorDataPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), door, true);
+                        AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
+                    }
+                }
+                else{
+                    serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (invalid session id)"));
+                }
             }
             else if(message.request.equals("doorlist")){ //send them the door list (same as command)
                 DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups, AdvBaseSecurity.instance.doorHandler.getEditValidator());

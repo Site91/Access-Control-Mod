@@ -2,9 +2,12 @@ package com.cadergator10.advancedbasesecurity.common.commands;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
 import net.minecraft.command.AdvancementCommand;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -77,7 +80,7 @@ public class BaseSecurityCommand extends CommandBase {
 										//args[2] == door name
 										DoorHandler.Doors.OneDoor door1 = AdvBaseSecurity.instance.doorHandler.getDoorFromName(args[2]);
 										if(door1 == null){
-											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Door with the name" + args[2] + "does not exist"));
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Door with the name " + args[2] + " does not exist"));
 											break;
 										}
 										//set card ID
@@ -93,11 +96,11 @@ public class BaseSecurityCommand extends CommandBase {
 										break;
 									}
 								default:
-									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
 									break;
 							}
 						} else {
-							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
 						}
 						break;
 					case "groups":
@@ -211,15 +214,96 @@ public class BaseSecurityCommand extends CommandBase {
 //									}
 									break;
 								default:
-									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
 									break;
 							}
 						}
+						else{
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity groups <create/count/setstatus>"));
+						}
+						break;
+					case "users":
+						if (args.length > 1) {
+							ICommandSender sendered = sender.getCommandSenderEntity();
+							switch(args[1]){
+								case "edit":
+									UserEditPacket packet = new UserEditPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), AdvBaseSecurity.instance.doorHandler.DoorGroups.users, true);
+									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
+									{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Cannot run command in console. Must be a player"));
+										break;
+									}
+									AdvBaseSecurity.instance.network.sendTo(packet, ((EntityPlayerMP) sendered));
+									break;
+								case "link":
+									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
+									{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Cannot run command in console. Must be a player"));
+										break;
+									}
+									if(args.length <= 2){
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Please provide the user's name"));
+										break;
+									}
+									//check for item
+									ItemStack heldItem = ((EntityPlayerMP)sendered).getHeldItemMainhand();
+									if(heldItem.getItem() instanceof IDCard){
+										//args[2] == door name
+										DoorHandler.Doors.Users user = AdvBaseSecurity.instance.doorHandler.getUserByName(args[2]);
+										if(user == null){
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "User with the name " + args[2] + " does not exist"));
+											break;
+										}
+										//set card ID
+										IDCard.CardTag tag = new IDCard.CardTag(heldItem);
+										tag.cardId = user.id;
+										tag.playerId = ((EntityPlayerMP) sendered).getUniqueID();
+										tag.color = 0xFFFFFF;
+										heldItem.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
+										heldItem.setStackDisplayName(user.name);
+										sender.sendMessage(new TextComponentString(TextFormatting.DARK_GREEN + "Linked user of name " + user.name + " and uuid of " + user.id));
+										break;
+									}
+									else{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Hold ID card in your main hand to set ID"));
+										break;
+									}
+								default:
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity users <edit/link>"));
+									break;
+							}
+						}
+						else{
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity users <edit/link>"));
+						}
+						break;
+					case "passes":
+						if (args.length > 1) {
+							ICommandSender sendered = sender.getCommandSenderEntity();
+							switch(args[1]){
+								case "edit":
+									PassEditPacket packet = new PassEditPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), AdvBaseSecurity.instance.doorHandler.DoorGroups.passes);
+									if(sendered == null || !sender.getCommandSenderEntity().getClass().equals(EntityPlayerMP.class))
+									{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Cannot run command in console. Must be a player"));
+										break;
+									}
+									AdvBaseSecurity.instance.network.sendTo(packet, ((EntityPlayerMP) sendered));
+									break;
+								default:
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit>"));
+									break;
+							}
+						}
+						else{
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit>"));
+						}
+						break;
 					case "info":
 						sender.sendMessage(new TextComponentString("Doors: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.doors.size() + "\nPasses: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size() + "\nGroups: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.size() + "\nUsers: " + AdvBaseSecurity.instance.doorHandler.DoorGroups.users.size()));
 						break;
 					default:
-						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
+						sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity <info/doors/groups/users/passes> ..."));
 						break;
 				}
 			}

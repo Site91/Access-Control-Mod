@@ -230,6 +230,14 @@ public class DoorHandler {
         }
         return null;
     }
+    public Doors.Users getUserByName(String userID){
+        for(Doors.Users tempuser : DoorGroups.users){
+            if(tempuser.name.equals(userID)) {
+                return tempuser;
+            }
+        }
+        return null;
+    }
 
     //get group by ID
     public Doors.Groups getDoorGroup(UUID groupID){

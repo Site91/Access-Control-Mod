@@ -133,7 +133,7 @@ public class EditDoorGUI extends GuiScreen {
                 doorDelayInput.setText(Integer.toString(Math.min(60, Integer.parseInt(doorDelayInput.getText()) + 1)));
             }
             else if(button == toggleDoor){
-                door.defaultToggle = toggleDoor.isStateTriggered();
+                door.defaultToggle = toggleDoor.onClick();
             }
             else if(button == editPasses){
                 letPress = false;

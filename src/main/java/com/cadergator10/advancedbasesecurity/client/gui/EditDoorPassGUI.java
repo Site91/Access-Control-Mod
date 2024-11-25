@@ -167,6 +167,7 @@ public class EditDoorPassGUI extends GuiScreen {
 
 	private void updateWithPasses(){
 		if(passes.isEmpty()){
+			doorPass = null;
 			passButton.enabled = false;
 			typeButton.enabled = false;
 			priority.enabled = false;
@@ -292,10 +293,12 @@ public class EditDoorPassGUI extends GuiScreen {
 				Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, door, groups));
 			}
 			else if(button == typeButton){
+				typeButton.onClick();
 				 doorPass.passType = DoorHandler.Doors.OneDoor.OnePass.type.fromInt(Integer.parseInt(typeButton.getUUID()));
 				 updateWithPasses();
 			}
 			else if(button == passButton){
+				passButton.onClick();
 				doorPass.passID = passButton.getUUID();
 				//get pass
 				DoorHandler.Doors.PassValue pass = getPass(doorPass.passID);
@@ -318,10 +321,15 @@ public class EditDoorPassGUI extends GuiScreen {
 				updateWithPasses();
 			}
 			else if(button == priority){
+				priority.onClick();
 				doorPass.priority = Short.parseShort(priority.getUUID());
 			}
 			else if(button == passValueG){
+				passValueG.onClick();
 				doorPass.passValueI = Integer.parseInt(passValueG.getUUID());
+			}
+			else if(button == addPassList){
+				addPassList.onClick();
 			}
 			else if(button == selectAddPass){
 				addPassList.toggleValue();
@@ -335,6 +343,7 @@ public class EditDoorPassGUI extends GuiScreen {
 			}
 			else if(button == passListButton){
 				lastMinuteUpdate();
+				passListButton.onClick();
 				updateWithPasses();
 			}
 			else if(button == addPass){
