@@ -18,6 +18,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import scala.Int;
 
 import java.security.acl.Group;
 import java.util.LinkedList;
@@ -95,12 +96,46 @@ public class BaseSecurityCommand extends CommandBase {
 										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Hold linking card in your main hand to set ID"));
 										break;
 									}
+								case "open":
+									if(args.length > 3){
+										DoorHandler.Doors.OneDoor door1 = AdvBaseSecurity.instance.doorHandler.getDoorFromName(args[2]);
+										if(door1 == null){
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Door with the name " + args[2] + " does not exist"));
+										}
+										else{
+											try{
+												int num = Math.min(60,Math.max(1,Integer.parseInt(args[3])));
+												AdvBaseSecurity.instance.doorHandler.changeDoorState(door1.doorId, true, num * 20);
+											}
+											catch (Exception e){
+												sender.sendMessage(new TextComponentString(TextFormatting.RED + args[3] + " is not a number"));
+											}
+										}
+									}
+									else{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors open <doorName> <time>"));
+									}
+									break;
+								case "toggle":
+									if(args.length > 2){
+										DoorHandler.Doors.OneDoor door1 = AdvBaseSecurity.instance.doorHandler.getDoorFromName(args[2]);
+										if(door1 == null){
+											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Door with the name " + args[2] + " does not exist"));
+										}
+										else{
+											AdvBaseSecurity.instance.doorHandler.changeDoorState(door1.doorId);
+										}
+									}
+									else{
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors open <doorName> <time>"));
+									}
+									break;
 								default:
-									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link/open/toggle>"));
 									break;
 							}
 						} else {
-							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link/open/toggle>"));
 						}
 						break;
 					case "groups":

@@ -10,10 +10,14 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class TileEntitySimpleBase extends TileEntity {
+public class TileEntityDeviceBase extends TileEntity {
+
+    public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt){
+        return nbt; //overridden by the other classes
+    }
     @Override
     public NBTTagCompound getUpdateTag() {
-        return writeToNBT(super.getUpdateTag());
+        return pushMoretoUpdate(writeToNBT(super.getUpdateTag()));
     }
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {

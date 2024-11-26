@@ -5,7 +5,7 @@
     "east": "advancedbasesecurity:block/redstone_control_off",
     "south": "advancedbasesecurity:block/redstone_control_off",
     "west": "advancedbasesecurity:block/redstone_control_off",
-    "top": "advancedbasesecurity:block/machine_side",
-    "bottom": "advancedbasesecurity:block/machine_side"
+    "up": "advancedbasesecurity:block/machine_side",
+    "down": "advancedbasesecurity:block/machine_side"
   }
 }

@@ -27,3 +27,5 @@ item.advancedbasesecurity.linking_card=Linking Card
 #blocks
 tile.advancedbasesecurity.card_reader.name=Card Reader
 tile.advancedbasesecurity.redstone_control.name=Redstone Door Controller
+tile.advancedbasesecurity.door_controller.name=Door Controller
+item.tile.advancedbasesecurity.scp_door.name=SCP door

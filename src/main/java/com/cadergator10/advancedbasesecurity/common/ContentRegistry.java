@@ -2,10 +2,16 @@ package com.cadergator10.advancedbasesecurity.common;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReader;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockSCPDoor;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoor;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
 import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
 import net.minecraft.block.Block;
@@ -47,9 +53,11 @@ public class ContentRegistry { //where all new items will be added
 //        modBlocks.add(BlockSecurityTerminal.DEFAULTITEM = new BlockSecurityTerminal());
         modBlocks.add(BlockCardReader.DEFAULTITEM = new BlockCardReader());
         modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
+        modBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
 //
 //        modBlocksWithItem.put(BlockSecureDoor.DEFAULTITEM = new BlockSecureDoor(), ItemSecureDoor.DEFAULTSTACK = new ItemStack(new ItemSecureDoor()));
 //        modBlocksWithItem.put(BlockSecurePrivateDoor.DEFAULTITEM = new BlockSecurePrivateDoor(), ItemSecurePrivateDoor.DEFAULTSTACK = new ItemStack(new ItemSecurePrivateDoor()));
+        modBlocksWithItem.put(BlockSCPDoor.DEFAULTITEM = new BlockSCPDoor(), ItemSCPDoor.DEFAULTSTACK = new ItemStack(new ItemSCPDoor()));
 //
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
@@ -68,6 +76,8 @@ public class ContentRegistry { //where all new items will be added
 
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
         registerTileEntity(TileEntityDoorRedstone.class, BlockDoorRedstone.NAME);
+        registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
+        registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);
     }
 
     private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {

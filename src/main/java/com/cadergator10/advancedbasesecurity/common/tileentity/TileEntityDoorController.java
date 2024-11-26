@@ -8,17 +8,19 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.util.Constants;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 //Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
-public class TileEntityDoorController extends TileEntitySimpleBase implements IDoor {
+public class TileEntityDoorController extends TileEntityDeviceBase implements IDoor {
 	UUID deviceId = UUID.randomUUID();
 	boolean currentState;
+
+	List<BlockPos> prevPos = new LinkedList<>();
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
@@ -28,10 +30,25 @@ public class TileEntityDoorController extends TileEntitySimpleBase implements ID
 			this.deviceId = nbt.getUniqueId("deviceId");
 		else
 			this.deviceId = UUID.randomUUID();
-		if(nbt.hasKey("currentState"))
-			this.currentState = nbt.getBoolean("currentState");
-		else
-			this.currentState = false;
+		if(nbt.hasKey("doorList")){
+			NBTTagList tagList = nbt.getTagList("doorList", Constants.NBT.TAG_COMPOUND);
+			prevPos = new LinkedList<>();
+			for(int i=0; i<tagList.tagCount(); i++){
+				NBTTagCompound tag = tagList.getCompoundTagAt(i);
+				prevPos.add(new BlockPos(tag.getInteger("x"),tag.getInteger("y"),tag.getInteger("z")));
+			}
+		}
+		else{
+			prevPos = new LinkedList<>();
+		}
+		if(!world.isRemote)
+			this.currentState = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
+		else{
+			if(nbt.hasKey("currentState"))
+				this.currentState = nbt.getBoolean("currentState");
+			else
+				this.currentState = false;
+		}
 	}
 
 	@Override
@@ -39,7 +56,22 @@ public class TileEntityDoorController extends TileEntitySimpleBase implements ID
 		super.writeToNBT(nbt);
 		if(deviceId != null)
 			nbt.setUniqueId("deviceId", this.deviceId);
+		NBTTagList tagList = new NBTTagList();
+		for(int i=0; i<prevPos.size(); i++){
+			NBTTagCompound tag = new NBTTagCompound();
+			BlockPos pos1 = prevPos.get(i);
+			tag.setInteger("x", pos1.getX());
+			tag.setInteger("y", pos1.getY());
+			tag.setInteger("z", pos1.getZ());
+			tagList.appendTag(tag);
+		}
+		nbt.setTag("doorList", tagList);
+		return nbt;
+	}
 
+	@Override
+	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+		nbt.setBoolean("currentState", currentState);
 		return nbt;
 	}
 
@@ -84,10 +116,27 @@ public class TileEntityDoorController extends TileEntitySimpleBase implements ID
 				doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
 			}
 		}
+		boolean dirtyed = false;
+		for(int i=0; i<prevPos.size(); i++){
+			BlockPos pose = prevPos.get(i);
+			if(!dooreme.containsKey(pose)){ //either unloaded chunk or was broken
+				if(world.isBlockLoaded(pose) && world.getBlockState(pose).getBlock() instanceof BlockDoorBase){ //loaded and part of it. so reset the door ID
+					TileEntityDoor door = ((TileEntityDoor)world.getTileEntity(pose));
+					if(door != null)
+						door.setClonedID(null);
+					dirtyed = true;
+					prevPos.remove(i);
+					i--;
+				}
+			}
+		}
+
 		if(toggle != currentState){
 			currentState = toggle;
-			markDirty();
+			dirtyed = true;
 		}
+		if(dirtyed)
+			markDirty();
 	}
 
 	@Override

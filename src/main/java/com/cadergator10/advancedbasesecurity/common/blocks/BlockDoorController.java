@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class BlockDoorController extends Block implements ITileEntityProvider {
-	final static String NAME = "door_control";
+	public final static String NAME = "door_control";
 	public static BlockDoorController DEFAULTITEM;
 
 	public BlockDoorController() {

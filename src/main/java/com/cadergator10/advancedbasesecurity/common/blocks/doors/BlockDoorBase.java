@@ -16,7 +16,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockDoorBase extends BlockDoor {
-	protected BlockDoorBase(String name) {
+	public final static String NAME = "door_base";
+
+	public BlockDoorBase(){
+		this(NAME);
+	}
+	BlockDoorBase(String name) {
 		super(Material.IRON);
 		setRegistryName(AdvBaseSecurity.MODID, name);
 		setTranslationKey("advancedbasesecurity." + name);

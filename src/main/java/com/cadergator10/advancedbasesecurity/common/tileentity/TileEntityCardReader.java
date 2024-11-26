@@ -17,7 +17,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class TileEntityCardReader extends TileEntitySimpleBase implements IReader, ITickable {
+public class TileEntityCardReader extends TileEntityDeviceBase implements IReader, ITickable {
 	public UUID deviceId = UUID.randomUUID();
 	public int lightFlag = 0;
 	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases.
@@ -97,11 +97,28 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 //			this.lightFlag = 0;
 //		if(nbt.hasKey("textlabel"))
 //			this.currText = new TextComponentString(nbt.getString("textlabel"));
-		lightFlag = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
-		currText = AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
-		//check if in list
-		if(!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(this.deviceId))
-			AdvBaseSecurity.instance.doorHandler.allReaders.put(this.deviceId, this);
+		if(!world.isRemote) {
+			lightFlag = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
+			currText = AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
+			//check if in list
+			if (!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(this.deviceId))
+				AdvBaseSecurity.instance.doorHandler.allReaders.put(this.deviceId, this);
+		}
+		else{
+			if(nbt.hasKey("lightFlag"))
+				lightFlag = nbt.getInteger("lightFlag");
+			else
+				lightFlag = 7;
+			if(nbt.hasKey("currText")){
+				NBTTagCompound tag = nbt.getCompoundTag("currText");
+				if(tag.hasKey("text") && tag.hasKey("color"))
+					currText = new ReaderText(tag.getString("text"), tag.getByte("color"));
+				else
+					currText = new ReaderText("TAG ERROR", (byte)4);
+			}
+			else
+				currText = new ReaderText("PACKET ERROR", (byte)4);
+		}
 		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Read");
 	}
 
@@ -120,6 +137,22 @@ public class TileEntityCardReader extends TileEntitySimpleBase implements IReade
 //		if(this.currText != null)
 //			nbt.setString("textlabel",this.currText.getFormattedText());
 		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write: " + nbt.toString());
+		return nbt;
+	}
+
+	@Override
+	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+		nbt.setInteger("lightFlag", lightFlag);
+		NBTTagCompound tag = new NBTTagCompound();
+		if(currText != null && currText.text != null){
+			tag.setString("text", currText.text);
+			tag.setByte("color", currText.color);
+		}
+		else{
+			tag.setString("text", "NULL ERROR");
+			tag.setByte("color", (byte)4);
+		}
+		nbt.setTag("currText", tag);
 		return nbt;
 	}
 

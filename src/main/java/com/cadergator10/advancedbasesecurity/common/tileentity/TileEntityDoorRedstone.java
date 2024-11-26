@@ -6,13 +6,12 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class TileEntityDoorRedstone extends TileEntitySimpleBase implements IDoor, ITickable {
+public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoor, ITickable {
     UUID deviceId = UUID.randomUUID();
     boolean powered = false;
 
@@ -54,7 +53,17 @@ public class TileEntityDoorRedstone extends TileEntitySimpleBase implements IDoo
             deviceId = compound.getUniqueId("deviceId");
         AdvBaseSecurity.instance.logger.info("Device ID: " + compound);
         //get powered
-        powered = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
+        if(!world.isRemote) {
+            powered = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
+        }
+        else{
+            if(compound.hasKey("powered"))
+                powered = compound.getBoolean("powered");
+            else {
+                powered = false;
+                AdvBaseSecurity.instance.logger.warn("Failed to recieve powered state");
+            }
+        }
         AdvBaseSecurity.instance.logger.info("Powered: " + powered);
     }
 
@@ -63,6 +72,12 @@ public class TileEntityDoorRedstone extends TileEntitySimpleBase implements IDoo
         super.writeToNBT(compound);
         compound.setUniqueId("deviceId", deviceId);
         return compound;
+    }
+
+    @Override
+    public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+        nbt.setBoolean("powered", powered);
+        return nbt;
     }
 
     @Override

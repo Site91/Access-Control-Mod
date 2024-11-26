@@ -1,0 +1,7 @@
+{
+    "parent": "block/door_bottom",
+    "textures": {
+        "bottom": "advancedbasesecurity:block/door_scp_lower",
+        "top": "advancedbasesecurity:block/door_scp_upper"
+    }
+}
