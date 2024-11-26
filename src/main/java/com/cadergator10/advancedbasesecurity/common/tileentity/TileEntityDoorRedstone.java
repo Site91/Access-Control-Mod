@@ -53,7 +53,7 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
             deviceId = compound.getUniqueId("deviceId");
         AdvBaseSecurity.instance.logger.info("Device ID: " + compound);
         //get powered
-        if(!world.isRemote) {
+        if(!compound.hasKey("toclient") || !compound.getBoolean("toclient")) {
             powered = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
         }
         else{
@@ -76,6 +76,7 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
 
     @Override
     public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+        nbt.setBoolean("toclient", true);
         nbt.setBoolean("powered", powered);
         return nbt;
     }

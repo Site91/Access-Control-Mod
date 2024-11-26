@@ -1,9 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.EditDoorGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassGUI;
-import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -12,7 +10,6 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import scala.util.control.Exception;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -86,6 +83,7 @@ public class RequestPassesPacket implements IMessage {
     public static void writeList(ByteBuf buf){
         buf.writeInt(AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size());
         BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k,v) -> {
+            AdvBaseSecurity.instance.logger.info(v.passId + " : " + v.passName);
             ByteBufUtils.writeUTF8String(buf, v.passId);
             ByteBufUtils.writeUTF8String(buf, v.passName);
             buf.writeShort(v.passType.getInt());

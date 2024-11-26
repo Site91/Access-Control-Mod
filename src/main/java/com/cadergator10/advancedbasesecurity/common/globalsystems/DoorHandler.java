@@ -7,7 +7,6 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.nbt.*;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -17,12 +16,7 @@ import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -750,10 +744,10 @@ public class DoorHandler {
 
             //read all pass data
             this.passes = new HashMap<>();
-            PassValue tempPass = new PassValue();
-            tempPass.passId = "staff";
+            PassValue tempPass = new PassValue("staff");
             tempPass.passName = "Staff";
             tempPass.passType = PassValue.type.Pass;
+            tempPass.groupNames = null;
             passes.put("staff", new PassValue());
             if(nbt.hasKey("passes")){
                 NBTTagList tempPassList = nbt.getTagList("passes", Constants.NBT.TAG_COMPOUND);

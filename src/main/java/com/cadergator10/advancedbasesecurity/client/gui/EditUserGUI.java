@@ -11,9 +11,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.swing.ToggleButton;
 
-import javax.jws.soap.SOAPBinding;
 import java.io.IOException;
 import java.util.*;
 
@@ -22,7 +20,7 @@ public class EditUserGUI extends GuiScreen {
     UUID editValidator;
     List<DoorHandler.Doors.Users> users;
     List<DoorHandler.Doors.PassValue> passes;
-    boolean letPress = false;
+    boolean letPress = true;
 
     DoorHandler.Doors.Users user;
 

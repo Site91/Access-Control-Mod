@@ -7,10 +7,12 @@ import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.Int;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -69,6 +71,7 @@ public class EditDoorGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id=-1;
+        letPress = true;
         this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 90, 16, "Back"));
         this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 90, 16, "Save"));
         

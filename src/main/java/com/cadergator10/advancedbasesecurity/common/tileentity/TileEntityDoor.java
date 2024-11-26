@@ -3,7 +3,6 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 		else
 			clonedID = null;
 		if(clonedID != null) {
-			if (!world.isRemote) {
+			if (!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
 				boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorState(clonedID);
 				if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
 					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
@@ -47,6 +46,7 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 
 	@Override
 	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+		nbt.setBoolean("toclient", true);
 		nbt.setBoolean("devState", AdvBaseSecurity.instance.doorHandler.getDoorState(clonedID));
 		return nbt;
 	}

@@ -3,7 +3,6 @@ package com.cadergator10.advancedbasesecurity.client.gui.components;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 
 import java.util.List;
-import java.util.UUID;
 
 public class ButtonEnum extends GuiButtonExt{
 	int currentIndex = 0;
@@ -12,7 +11,7 @@ public class ButtonEnum extends GuiButtonExt{
 	List<groupIndex> map;
 
 	public ButtonEnum(int buttonId, int x, int y, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, includeNone ? map.get(index).name : "none");
+		super(buttonId, x, y, includeNone && !map.isEmpty() ? map.get(index).name : "none");
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;
@@ -20,7 +19,7 @@ public class ButtonEnum extends GuiButtonExt{
 	}
 
 	public ButtonEnum(int buttonId, int x, int y, int widthIn, int heightIn, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, widthIn, heightIn, includeNone ? map.get(index).name : "none");
+		super(buttonId, x, y, widthIn, heightIn, includeNone && !map.isEmpty() ? map.get(index).name : "none");
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;

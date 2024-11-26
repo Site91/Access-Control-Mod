@@ -91,13 +91,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 		}
 		if(nbt.hasKey("temptick"))
 			this.tempTextDelay = nbt.getInteger("temptick");
-//		if(nbt.hasKey("lights"))
-//			this.lightFlag = nbt.getInteger("lights");
-//		else
-//			this.lightFlag = 0;
-//		if(nbt.hasKey("textlabel"))
-//			this.currText = new TextComponentString(nbt.getString("textlabel"));
-		if(!world.isRemote) {
+		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
 			lightFlag = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
 			currText = AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
 			//check if in list
@@ -142,6 +136,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 
 	@Override
 	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+		nbt.setBoolean("toclient", true);
 		nbt.setInteger("lightFlag", lightFlag);
 		NBTTagCompound tag = new NBTTagCompound();
 		if(currText != null && currText.text != null){

@@ -1,7 +1,6 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.DoorListGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.EditDoorGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
@@ -15,6 +14,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 public class OneDoorDataPacket implements IMessage {
     UUID editValidator; //Used to try and ensure that the recieved door is authorized.
@@ -31,7 +31,9 @@ public class OneDoorDataPacket implements IMessage {
     }
     private void formatGroups(){
         //use groups from doorhandler. DO NOT CHECK IF NOT SERVER
-        
+        groups = new LinkedList<>();
+        BiConsumer<UUID, DoorHandler.Doors.Groups> grouper = (s,v) -> groups.add(new ButtonEnum.groupIndex(s.toString(), v.name));
+        AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.forEach(grouper);
     }
     private void writePass(ByteBuf buf, List<DoorHandler.Doors.OneDoor.OnePass> passes){
         int count = passes.size();
@@ -127,7 +129,9 @@ public class OneDoorDataPacket implements IMessage {
 //            buf.writeBoolean(false);
         buf.writeBoolean(checkGroup);
         if (checkGroup) {
+            formatGroups();
             int aCount = groups.size();
+            buf.writeInt(aCount);
             for (int i = 0; i < aCount; i++) {
                 ByteBufUtils.writeUTF8String(buf, groups.get(i).id.toString());
                 ByteBufUtils.writeUTF8String(buf, groups.get(i).name);

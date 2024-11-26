@@ -41,7 +41,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		else{
 			prevPos = new LinkedList<>();
 		}
-		if(!world.isRemote)
+		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient"))
 			this.currentState = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
 		else{
 			if(nbt.hasKey("currentState"))
@@ -71,6 +71,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 
 	@Override
 	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
+		nbt.setBoolean("toclient", true);
 		nbt.setBoolean("currentState", currentState);
 		return nbt;
 	}

@@ -1,26 +1,17 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
-import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiLabel;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.GuiScrollingList;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.Int;
 
-import java.io.Console;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,6 +53,8 @@ public class DoorListGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id=-1;
+        doorButtons = new LinkedList<>();
+        buttonLevel = new LinkedList<>();
         this.buttonList.add(closeButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, "Close"));
         this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, "New Door"));
         this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));

@@ -1,15 +1,9 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
-import com.cadergator10.advancedbasesecurity.client.gui.DoorListGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.util.control.Exception;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -67,6 +61,7 @@ public class DoorNamePacket implements IMessage {
             buf.writeInt(door.status);
             buf.writeInt(door.readerCount);
             buf.writeInt(door.doorCount);
+            buf.writeBoolean(door.groupID != null && groups.containsKey(door.groupID) && !tempList.contains(door.groupID));
             if(door.groupID != null && groups.containsKey(door.groupID) && !tempList.contains(door.groupID)){
                 tempList.add(door.groupID);
             }
@@ -86,7 +81,7 @@ public class DoorNamePacket implements IMessage {
         int size = buf.readInt();
         doors = new LinkedList<>();
         for(int i=0; i<size; i++){
-            doors.add(new packetDoor(UUID.fromString(ByteBufUtils.readUTF8String(buf)), ByteBufUtils.readUTF8String(buf), buf.readInt(), buf.readInt(), buf.readInt(), UUID.fromString(ByteBufUtils.readUTF8String(buf))));
+            doors.add(new packetDoor(UUID.fromString(ByteBufUtils.readUTF8String(buf)), ByteBufUtils.readUTF8String(buf), buf.readInt(), buf.readInt(), buf.readInt(), buf.readBoolean() ? UUID.fromString(ByteBufUtils.readUTF8String(buf)) : null));
         }
         size = buf.readInt();
         groupNames = new HashMap<>();
