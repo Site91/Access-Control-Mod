@@ -8,7 +8,6 @@ import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
 import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
-import net.minecraft.command.AdvancementCommand;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -18,12 +17,10 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
-import scala.Int;
 
-import java.security.acl.Group;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 public class BaseSecurityCommand extends CommandBase {
 
@@ -325,13 +322,24 @@ public class BaseSecurityCommand extends CommandBase {
 									}
 									AdvBaseSecurity.instance.network.sendTo(packet, ((EntityPlayerMP) sendered));
 									break;
+								case "list":
+									StringBuilder comb;
+									if(AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.isEmpty())
+										comb = new StringBuilder("no passes");
+									else
+									{
+										comb = new StringBuilder();
+										BiConsumer<String, DoorHandler.Doors.PassValue> pars = (s,v) -> comb.append(String.format("(%s | %s)", v.passName, v.passId));
+										AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.forEach(pars);
+									}
+									sender.sendMessage(new TextComponentString("Passes: " + comb));
 								default:
-									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit>"));
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit/list>"));
 									break;
 							}
 						}
 						else{
-							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit>"));
+							sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity passes <edit/list>"));
 						}
 						break;
 					case "info":

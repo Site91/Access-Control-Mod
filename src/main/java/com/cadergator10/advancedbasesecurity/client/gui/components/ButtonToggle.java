@@ -14,20 +14,20 @@ public class ButtonToggle extends GuiButton {
 
     public ButtonToggle(int buttonId, int xIn, int yIn, int widthIn, int heightIn, String buttonText, boolean toggled)
     {
-        super(buttonId, xIn, yIn, widthIn, heightIn, buttonText + " (false)");
+        super(buttonId, xIn, yIn, widthIn, heightIn, buttonText + (toggled ? " (true)" : " (false)"));
         buttonName = buttonText;
         this.stateTriggered = toggled;
     }
 
     public boolean onClick(){
-        setStateTriggered(isStateTriggered());
+        setStateTriggered(!isStateTriggered());
         return isStateTriggered();
     }
 
-    public void setStateTriggered(boolean p_191753_1_)
+    public void setStateTriggered(boolean toggle)
     {
-        this.stateTriggered = p_191753_1_;
-        displayString = buttonName + (p_191753_1_ ? " (true)" : " (false)");
+        this.stateTriggered = toggle;
+        displayString = buttonName + (toggle ? " (true)" : " (false)");
     }
 
     public boolean isStateTriggered()

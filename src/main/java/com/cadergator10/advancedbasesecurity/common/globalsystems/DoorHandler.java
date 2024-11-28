@@ -571,27 +571,25 @@ public class DoorHandler {
                 listDoor.Doors = door.Doors;
                 //check if the group needs an update
                 boolean pushDoor = false;
-                if(!listDoor.groupID.equals(door.groupID)){
-                    if(door.groupID == null){ //removing group, so revert to default access
-                        listDoor.doorStatus = Doors.OneDoor.allDoorStatuses.ACCESS;
-                        listDoor.override = null;
+                if((listDoor.groupID != null && door.groupID != null && !listDoor.groupID.equals(door.groupID)) || (listDoor.groupID == null && door.groupID != null)) {
+                    Doors.Groups group = getDoorGroup(door.groupID);
+                    if (group != null) {
+                        listDoor.doorStatus = group.status;
+                        listDoor.override = group.override;
+                        pushDoor = true;
+                        //don't bother with isDoorOpen because it'll be done in pushDoorUpdate;
+                    }
+                }
+                else if(door.groupID == null && listDoor.groupID != null) { //remove group, so revert to default access
+                    listDoor.doorStatus = Doors.OneDoor.allDoorStatuses.ACCESS;
+                    listDoor.override = null;
 //                        if(listDoor.isDoorOpen != 0){ //will need to push the door update
 //                            listDoor.isDoorOpen = 0;
 //                            listDoor.currTick = 0;
 //							timedDoors.remove(listDoor); //if it exists here
 //                            pushDoor = true;
 //                        }
-                        pushDoor = true; //commented all back stuff out since pushDoorUpdate does it all
-                    }
-                    else{ //moving to a new group
-                        Doors.Groups group = getDoorGroup(door.groupID);
-                        if (group != null) {
-                            listDoor.doorStatus = group.status;
-                            listDoor.override = group.override;
-                            pushDoor = true;
-                            //don't bother with isDoorOpen because it'll be done in pushDoorUpdate;
-                        }
-                    }
+                    pushDoor = true; //commented all back stuff out since pushDoorUpdate does it all
                 }
                 listDoor.groupID = door.groupID;
                 DoorGroups.markDirty();
@@ -748,7 +746,7 @@ public class DoorHandler {
             tempPass.passName = "Staff";
             tempPass.passType = PassValue.type.Pass;
             tempPass.groupNames = null;
-            passes.put("staff", new PassValue());
+            passes.put("staff", tempPass);
             if(nbt.hasKey("passes")){
                 NBTTagList tempPassList = nbt.getTagList("passes", Constants.NBT.TAG_COMPOUND);
                 for(int i=0; i<tempPassList.tagCount(); i++){
