@@ -340,7 +340,7 @@ public class DoorHandler {
                 index = 0;
                 for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
                     for(int j=0; j<door.Readers.size(); j++){
-                        if(foundRightOne != index && door.Readers.get(j).equals(doorID)){
+                        if(foundRightOne != index && door.Readers.get(j).equals(devID)){
                             door.Readers.remove(j);
                             break;
                         }
@@ -371,7 +371,7 @@ public class DoorHandler {
                 index = 0;
                 for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
                     for(int j=0; j<door.Doors.size(); j++){
-                        if(foundRightOne != index && door.Doors.get(j).equals(doorID)){
+                        if(foundRightOne != index && door.Doors.get(j).equals(devID)){
                             door.Doors.remove(j);
                             break;
                         }
@@ -512,17 +512,16 @@ public class DoorHandler {
             for (String s : exists2) { //check for deleted passes
                 if (!exists.contains(s)) {
                     user.passes.remove(s);
-                    DoorGroups.markDirty();
                 }
             }
             for (String s : exists){ //check for incorrect inputs.
                 Doors.PassValue pass = DoorGroups.passes.get(s);
                 if(!exists2.contains(s) || user.passes.get(s).type != pass.passType.getInt() || (pass.passType == Doors.PassValue.type.Group && Integer.parseInt(user.passes.get(s).passValue.get(0)) > pass.groupNames.size())){
                     user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
-                    DoorGroups.markDirty();
                 }
             }
         }
+        DoorGroups.markDirty();
     }
 
     public void updateGroups(Doors.Groups group, boolean pushToChildren){ //pushToChildren means if a change was made to a group, if it should update all child groups too (groups with parentID set to this groupID)
@@ -635,11 +634,11 @@ public class DoorHandler {
         if(DoorGroups.passes.containsKey(pass.passID)){
             Doors.PassValue passValue = DoorGroups.passes.get(pass.passID);
             if(passValue.passType == Doors.PassValue.type.Level){
-                if(pass.passValueI >= Integer.getInteger(user.passValue.get(0)))
+                if(pass.passValueI >= Integer.parseInt(user.passValue.get(0)))
                     return true;
             }
             else if(passValue.passType == Doors.PassValue.type.Group){
-                if(pass.passValueI == Integer.getInteger(user.passValue.get(0)))
+                if(pass.passValueI == Integer.parseInt(user.passValue.get(0)))
                     return true;
             }
             else if(passValue.passType == Doors.PassValue.type.Text){
@@ -885,6 +884,11 @@ public class DoorHandler {
             public String readerLabel; //label that the readers may display soon.
             public byte readerLabelColor; //color of label
             public int readerLights; //light status on the readers to display access.
+
+            @Override
+            public String toString() {
+                return String.format("%s | %s : %s T| %d Tck| %d O | %d St", doorName, doorId.toString(), defaultToggle, defaultTick, isDoorOpen, doorStatus.getInt());
+            }
 
             public OneDoor(){
 
@@ -1190,6 +1194,11 @@ public class DoorHandler {
             public type passType;
             public List<String> groupNames; //if type Group, what are the group names.
 
+            @Override
+            public String toString() {
+                return String.format("%s | %s : %d Type", passName, passId, passType.getInt());
+            }
+
             public PassValue(NBTTagCompound nbt){
                 if(nbt.hasKey("id"))
                     passId = nbt.getString("id");
@@ -1299,6 +1308,7 @@ public class DoorHandler {
                         passes.forEach(biConsumer);
                         tag.setTag("passes", list);
                     }
+                    return tag;
                 }
                 return null;
             }
@@ -1307,6 +1317,16 @@ public class DoorHandler {
                 public String passId; //ID of PassValue
                 public List<String> passValue; //Any values it may be.
                 public int type; //type set by PassValue, so when it checks it knows if invalid.\
+
+                @Override
+                public String toString() {
+                    return "UserPass{" +
+                            "passId='" + passId + '\'' +
+                            ", passValue=" + passValue +
+                            ", type=" + type +
+                            '}';
+                }
+
                 public UserPass(String passId, int type){
                     this.passId = passId;
                     this.type = type;
@@ -1354,6 +1374,7 @@ public class DoorHandler {
                     return passMap.containsKey(passId) && ((passValue != null && !passValue.isEmpty()) || !checkValue);
                 }
                 public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
+                    AdvBaseSecurity.instance.logger.info(this.toString());
                     NBTTagCompound tag = new NBTTagCompound();
                     if(passId != null && stillExists(passMap, true)){
                         tag.setString("id", passId);
@@ -1369,7 +1390,7 @@ public class DoorHandler {
                             tag.setString("value", passValue.get(0));
                         }
                         else if(passType == PassValue.type.Group || passType == PassValue.type.Level){
-                            tag.setInteger("value", Integer.getInteger(passValue.get(0)));
+                            tag.setInteger("value", Integer.parseInt(passValue.get(0)));
                         }
                         else if(passType == PassValue.type.Pass){
                             tag.setShort("value", (short) (passValue.get(0).equals("true") ? 1 : 0));
@@ -1437,6 +1458,7 @@ public class DoorHandler {
                         }
                         tag.setTag("override", tagList);
                     }
+                    return tag;
                 }
                 return null;
             }

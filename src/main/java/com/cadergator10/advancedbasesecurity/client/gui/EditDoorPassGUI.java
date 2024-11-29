@@ -10,13 +10,14 @@ import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 import scala.Int;
 
 import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditDoorPassGUI extends GuiScreen {
+public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
 	UUID editValidator;
 	DoorHandler.Doors.OneDoor door;
 	List<ButtonEnum.groupIndex> groups; //just used to preserve it for going back to the other door.
@@ -130,18 +131,19 @@ public class EditDoorPassGUI extends GuiScreen {
 		passes = new LinkedList<>();
 		int id = -1;
 		//gen edit buttons first
-		this.buttonList.add(backButton = new GuiButton(id++, this.width / 2, this.height - (this.height / 4) + 10, 90, 16, "Back"));
-		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 100, 60, 80, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 100, 60, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
-		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 100, 80, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
-		passValueI = new GuiTextField(id++, fontRenderer, this.width / 2 + 100, 80, 80, 16);
-		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 100, 80, 80, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 100, 100, 80, 16, new LinkedList<>(),0));
-		this.buttonList.add(selectAddPass = new GuiButton(id++, this.width / 2 + 100, 100, 80, 16, "Toggle Add Pass"));
+		this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Back"));
+		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 20, 60, 80, 16, false, new LinkedList<>(),0));
+		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 120, 60, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
+		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 20, 80, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
+		passValueI = new GuiTextField(id++, fontRenderer, this.width / 2 + 120, 80, 80, 16);
+		passValueI.setGuiResponder(this);
+		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 120, 80, 80, 16, false, new LinkedList<>(),0));
+		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 20, 100, 80, 16, new LinkedList<>(),0));
+		this.buttonList.add(selectAddPass = new GuiButton(id++, this.width / 2 + 120, 100, 80, 16, "Toggle Add Pass"));
 		//pass modify buttons
-		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 150, 80, 120, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(addPass = new GuiButton(id++, this.width / 2 + 30, 100, 30, 16, "Add Pass"));
-		this.buttonList.add(delPass = new GuiButton(id++, this.width / 2 + 70, 100, 30, 16, "Delete Pass"));
+		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 200, 80, 120, 16, false, new LinkedList<>(),0));
+		this.buttonList.add(addPass = new GuiButton(id++, this.width / 2 + 80, 100, 30, 16, "Add Pass"));
+		this.buttonList.add(delPass = new GuiButton(id++, this.width / 2 + 120, 100, 30, 16, "Delete Pass"));
 		//set default while waiting for finish
 		updateWithPasses();
 		passListButton.enabled = false;
@@ -163,6 +165,23 @@ public class EditDoorPassGUI extends GuiScreen {
 		else{
 			drawCenteredString(passSelected.passName, 40, 0xFFFFFF);
 		}
+		passValueI.drawTextBox();
+	}
+
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException {
+		if (keyCode != Keyboard.KEY_ESCAPE) {
+			if(passValueI.isFocused()) {
+				passValueI.textboxKeyTyped(typedChar, keyCode);
+			}
+		}
+		else
+			super.keyTyped(typedChar, keyCode);
+	}
+	@Override
+	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+		super.mouseClicked(mouseX, mouseY, mouseButton);
+		passValueI.mouseClicked(mouseX, mouseY, mouseButton);
 	}
 
 	private void updateWithPasses(){
@@ -217,8 +236,12 @@ public class EditDoorPassGUI extends GuiScreen {
 						passValueI.setText(Integer.toString(doorPass.passValueI));
 						passValueI.setValidator((s) -> {
 							try{
-								int i = Integer.parseInt(s);
-                                return i >= 0 && i < 100;
+								if(!s.isEmpty()) {
+									int i = Integer.parseInt(s);
+									return i >= 0 && i < 100;
+								}
+								else
+									return true;
 							}
 							catch(Exception e){
 								return false;
@@ -233,6 +256,8 @@ public class EditDoorPassGUI extends GuiScreen {
 				}
 				//handling add passes
 				if(doorPass.passType == DoorHandler.Doors.OneDoor.OnePass.type.Base) {
+					if(doorPass.addPasses == null)
+						doorPass.addPasses = new LinkedList<>();
 					List<ButtonEnum.groupIndex> btns = processAddPasses();
 					HashMap<String, Boolean> selected = new HashMap<>();
 					for (ButtonEnum.groupIndex btn : btns) {
@@ -247,6 +272,7 @@ public class EditDoorPassGUI extends GuiScreen {
 					selectAddPass.visible = true;
 				}
 				else{
+					doorPass.addPasses = null;
 					addPassList.enabled = false;
 					addPassList.visible = false;
 					selectAddPass.enabled = false;
@@ -280,7 +306,7 @@ public class EditDoorPassGUI extends GuiScreen {
 			doorPass.passValueS = passValueI.getText();
 		}
 		else if(pass.passType == DoorHandler.Doors.PassValue.type.Level){
-			doorPass.passValueI = Integer.parseInt(passValueI.getText());
+			doorPass.passValueI = !passValueI.getText().isEmpty() ? Integer.parseInt(passValueI.getText()) : 0;
 		}
 	}
 
@@ -295,6 +321,7 @@ public class EditDoorPassGUI extends GuiScreen {
 			else if(button == typeButton){
 				typeButton.onClick();
 				 doorPass.passType = DoorHandler.Doors.OneDoor.OnePass.type.fromInt(Integer.parseInt(typeButton.getUUID()));
+				 passListButton.changeCurrentName(processDoorPass(doorPass, false).name);
 				 updateWithPasses();
 			}
 			else if(button == passButton){
@@ -318,11 +345,13 @@ public class EditDoorPassGUI extends GuiScreen {
 					doorPass.passValueI = -1;
 					doorPass.passValueS = null;
 				}
+				passListButton.changeCurrentName(processDoorPass(doorPass, false).name);
 				updateWithPasses();
 			}
 			else if(button == priority){
 				priority.onClick();
 				doorPass.priority = Short.parseShort(priority.getUUID());
+				passListButton.changeCurrentName(processDoorPass(doorPass, false).name);
 			}
 			else if(button == passValueG){
 				passValueG.onClick();
@@ -368,5 +397,20 @@ public class EditDoorPassGUI extends GuiScreen {
 				updateWithPasses();
 			}
 		}
+	}
+
+	@Override
+	public void setEntryValue(int id, boolean value) {
+
+	}
+
+	@Override
+	public void setEntryValue(int id, float value) {
+
+	}
+
+	@Override
+	public void setEntryValue(int id, String value) {
+
 	}
 }

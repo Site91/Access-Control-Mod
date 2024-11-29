@@ -74,7 +74,9 @@ public class UserEditPacket implements IMessage {
         for(int i=0; i<users.size(); i++){
             ByteBufUtils.writeUTF8String(buf, users.get(i).id.toString());
             ByteBufUtils.writeUTF8String(buf, users.get(i).name);
-            ByteBufUtils.writeUTF8String(buf, users.get(i).owner.toString());
+            buf.writeBoolean(users.get(i).owner != null);
+            if(users.get(i).owner != null)
+                ByteBufUtils.writeUTF8String(buf, users.get(i).owner.toString());
             buf.writeBoolean(users.get(i).staff);
             buf.writeBoolean(users.get(i).blocked);
             writeList(buf, users.get(i).passes);
@@ -96,7 +98,11 @@ public class UserEditPacket implements IMessage {
             DoorHandler.Doors.Users user = new DoorHandler.Doors.Users();
             user.id = UUID.fromString(ByteBufUtils.readUTF8String(buf));
             user.name = ByteBufUtils.readUTF8String(buf);
-            user.owner = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            boolean owner = buf.readBoolean();
+            if(owner)
+                user.owner = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            else
+                user.owner = null;
             user.staff = buf.readBoolean();
             user.blocked = buf.readBoolean();
             user.passes = readList(buf);
@@ -104,7 +110,7 @@ public class UserEditPacket implements IMessage {
         }
         isServer = buf.readBoolean();
         if(isServer){
-            RequestPassesPacket.readList(buf);
+            passes = RequestPassesPacket.readList(buf);
         }
     }
 

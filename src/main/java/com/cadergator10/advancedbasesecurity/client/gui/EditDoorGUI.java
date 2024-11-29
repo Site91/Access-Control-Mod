@@ -71,18 +71,18 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         int id=-1;
         letPress = true;
         this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 90, 16, "Back"));
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, 90, 16, "Save"));
+        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 10, this.height - (this.height / 4) + 10, 90, 16, "Save"));
 
-        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 100, 20, 60, 16);
+        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 60, 16);
         nameField.setGuiResponder(this);
         nameField.setText(door.doorName);
-        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 100, 20, 80, 16, true, groups, groupIndex));
-        this.buttonList.add(editPasses = new GuiButton(id++, this.width / 2 - 100, 40, 60, 16, "Edit passes"));
-        this.buttonList.add(clearDevices = new GuiButton(id++, this.width / 2 + 100, 40, 60, 16, "Clear " + (door.Readers.size() + door.Doors.size()) + " Devices"));
-        this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 100, 60, 80, 16, "Stay Open", door.defaultToggle));
+        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 20, 20, 80, 16, true, groups, groupIndex));
+        this.buttonList.add(editPasses = new GuiButton(id++, this.width / 2 - 120, 40, 60, 16, "Edit passes"));
+        this.buttonList.add(clearDevices = new GuiButton(id++, this.width / 2 + 20, 40, 60, 16, "Clear " + (door.Readers.size() + door.Doors.size()) + " Devices"));
+        this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 120, 60, 80, 16, "Stay Open", door.defaultToggle));
         this.buttonList.add(doorDelayDown = new GuiButton(id++, this.width / 2 + 20, 60, 16, 16, "<"));
-        this.buttonList.add(doorDelayUp = new GuiButton(id++, this.width / 2 + 76, 60, 16, 16, ">"));
-        doorDelayInput = new GuiTextField(id++, fontRenderer, this.width / 2 + 40, 60, 30, 16);
+        this.buttonList.add(doorDelayUp = new GuiButton(id++, this.width / 2 + 94, 60, 16, 16, ">"));
+        doorDelayInput = new GuiTextField(id++, fontRenderer, this.width / 2 + 50, 60, 30, 16);
         doorDelayInput.setText(Integer.toString(door.defaultTick / 20));
         doorDelayInput.setGuiResponder(this);
         doorDelayInput.setValidator((r) -> {
@@ -99,7 +99,6 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
                 return false;
             }
         });
-
 
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
@@ -155,7 +154,7 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
             }
             else if(button == saveButton){
                 letPress = false;
-                door.defaultTick = Integer.parseInt(doorDelayInput.getText()) * 20;
+                door.defaultTick = !doorDelayInput.getText().equals("") ? Math.max(1, Integer.parseInt(doorDelayInput.getText())) * 20 : 100;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
                 OneDoorDataPacket packet = new OneDoorDataPacket(editValidator, door, false);
                 AdvBaseSecurity.instance.network.sendToServer(packet);
@@ -171,10 +170,10 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
                 clearDevices.displayString = "Clear 0 Devices";
             }
             else if(button == doorDelayDown){
-                doorDelayInput.setText(Integer.toString(Math.max(0, Integer.parseInt(doorDelayInput.getText()) - 1)));
+                doorDelayInput.setText(!doorDelayInput.getText().isEmpty() ? Integer.toString(Math.max(0, Integer.parseInt(doorDelayInput.getText()) - 1)) : "0");
             }
             else if(button == doorDelayUp){
-                doorDelayInput.setText(Integer.toString(Math.min(60, Integer.parseInt(doorDelayInput.getText()) + 1)));
+                doorDelayInput.setText(!doorDelayInput.getText().isEmpty() ? Integer.toString(Math.min(60, Integer.parseInt(doorDelayInput.getText()) + 1)) : "1");
             }
             else if(button == toggleDoor){
                 door.defaultToggle = toggleDoor.onClick();

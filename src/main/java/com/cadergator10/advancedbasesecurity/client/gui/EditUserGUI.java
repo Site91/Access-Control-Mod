@@ -5,26 +5,22 @@ import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditUserGUI extends GuiScreen {
+public class EditUserGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
     List<DoorHandler.Doors.Users> users;
     List<DoorHandler.Doors.PassValue> passes;
     boolean letPress = true;
 
     DoorHandler.Doors.Users user;
-
-    DoorHandler.Doors.Users selected;
     //buttons
     GuiButton saveButton;
     ButtonEnum allUsers;
@@ -94,59 +90,64 @@ public class EditUserGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id = -1;
-        int xoff = 100;
+        int xoff = -70;
         int yoff = 60;
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2, this.height - (this.height / 4) + 10, 90, 16, "Save & Exit"));
-        this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 200, 20, 80, 16, false, processUsers(), 0));
-        this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 240, 40, 30, 16, "Add Pass"));
-        this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 160, 40, 30, 16, "Delete Pass"));
-        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 100, 20, 80, 16);
-        this.buttonList.add(staffButton = new ButtonToggle(id++, this.width / 2 - 100, 40, 80, 16, "Stay Open", false));
-        this.buttonList.add(resetID =  new GuiButton(id++, this.width / 2 + 100, 40, 80, 16, "reset ID"));
-        this.buttonList.add(blockedButton = new ButtonToggle(id++, this.width / 2 - 100, 60, 80, 16, "Blocked", false));
+        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Save & Exit"));
+        this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 250, 20, 80, 16, false, processUsers(), 0));
+        this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 290, 40, 35, 16, "Add User"));
+        this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 210, 40, 35, 16, "Delete User"));
+        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 80, 16);
+        nameField.setGuiResponder(this);
+        this.buttonList.add(staffButton = new ButtonToggle(id++, this.width / 2 - 120, 40, 100, 16, "Staff", false));
+        this.buttonList.add(resetID =  new GuiButton(id++, this.width / 2 + 20, 40, 80, 16, "reset ID"));
+        this.buttonList.add(blockedButton = new ButtonToggle(id++, this.width / 2 - 120, 60, 100, 16, "Blocked", false));
         //add to lists
         restButtons = new LinkedList<>();
         restButtonsIDs = new LinkedList<>();
         fields = new LinkedList<>();
         fieldIDs = new LinkedList<>();
         for(DoorHandler.Doors.PassValue pass : passes){
-            if(pass.passType == DoorHandler.Doors.PassValue.type.Pass){
-                ButtonToggle button = new ButtonToggle(id++, this.width / 2 + xoff, yoff, 80, 16, pass.passName, false);
-                restButtons.add(button);
-                buttonList.add(button);
-                restButtonsIDs.add(pass.passId);
-            }
-            else if(pass.passType == DoorHandler.Doors.PassValue.type.Group){
-                ButtonEnum button = new ButtonEnum(id++, this.width / 2 + xoff, yoff, 80, 16, true, processGroup(pass), 0);
-                restButtons.add(button);
-                buttonList.add(button);
-                restButtonsIDs.add(pass.passId);
-            }
-            else{
-                GuiTextField field = new GuiTextField(id++, fontRenderer, this.width / 2 + xoff, yoff, 80, 16);
-                if(pass.passType == DoorHandler.Doors.PassValue.type.Level){
-                    field.setValidator((s) -> {
-                        try{
-                            int i = Integer.parseInt(s);
-                            return i >= 0 && i <= 99;
-                        }
-                        catch(Exception e){
-                            return false;
-                        }
-                    });
+            if(!pass.passId.equals("staff")) {
+                if (pass.passType == DoorHandler.Doors.PassValue.type.Pass) {
+                    ButtonToggle button = new ButtonToggle(id++, this.width / 2 - (50 + xoff), yoff, 100, 16, pass.passName, false);
+                    restButtons.add(button);
+                    buttonList.add(button);
+                    restButtonsIDs.add(pass.passId);
+                } else if (pass.passType == DoorHandler.Doors.PassValue.type.Group) {
+                    ButtonEnum button = new ButtonEnum(id++, this.width / 2 - (50 + xoff), yoff, 100, 16, true, processGroup(pass), 0);
+                    restButtons.add(button);
+                    buttonList.add(button);
+                    restButtonsIDs.add(pass.passId);
+                } else {
+                    GuiTextField field = new GuiTextField(id++, fontRenderer, this.width / 2 - (50 + xoff), yoff, 100, 16);
+                    field.setGuiResponder(this);
+                    if (pass.passType == DoorHandler.Doors.PassValue.type.Level) {
+                        field.setValidator((s) -> {
+                            try {
+                                if (!s.isEmpty()) {
+                                    int i = Integer.parseInt(s);
+                                    return i >= 0 && i <= 99;
+                                } else
+                                    return true;
+                            } catch (Exception e) {
+                                return false;
+                            }
+                        });
+                    }
+                    fields.add(field);
+                    fieldIDs.add(pass.passId);
                 }
-                fields.add(field);
-                fieldIDs.add(pass.passId);
+                //update offsets
+                xoff *= -1;
+                if (xoff > 0)
+                    yoff += 20;
             }
-            //update offsets
-            xoff *= -1;
-            if(xoff < 0)
-                yoff += 20;
         }
+        updateWithPasses();
     }
 
     private void updateWithPasses(){
-        if(passes.isEmpty()){
+        if(users.isEmpty()){
             allUsers.enabled = false;
             delUser.enabled = false;
             nameField.setEnabled(false);
@@ -203,7 +204,7 @@ public class EditUserGUI extends GuiScreen {
 
     private void finishLastMinute(){
         if(user != null){
-            user.name = nameField.getText().isEmpty() ? nameField.getText() : "new";
+            user.name = !nameField.getText().isEmpty() ? nameField.getText() : "new";
             for(int i=0; i<fields.size(); i++){
                 DoorHandler.Doors.PassValue pass;
                 if((pass = getPass(fieldIDs.get(i))) != null){
@@ -213,7 +214,7 @@ public class EditUserGUI extends GuiScreen {
                     }
                     else{
                         user.passes.get(pass.passId).passValue = new LinkedList<>();
-                        user.passes.get(pass.passId).passValue.add(field.getText());
+                        user.passes.get(pass.passId).passValue.add(field.getText().isEmpty() && pass.passType == DoorHandler.Doors.PassValue.type.Level ? "0" : field.getText());
                     }
                 }
             }
@@ -224,20 +225,49 @@ public class EditUserGUI extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
         if(!users.isEmpty())
-            drawString(selected.id.toString(),10, 20, 0xFFFFFF);
+            drawString(user.id.toString(),this.width / 2 + 10, 20, 0xFFFFFF);
+        nameField.drawTextBox();
+        for(GuiTextField field : fields)
+            field.drawTextBox();
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode != Keyboard.KEY_ESCAPE) {
+            if(nameField.isFocused()) {
+                nameField.textboxKeyTyped(typedChar, keyCode);
+            }
+            else {
+                for(GuiTextField field : fields)
+                    if(field.isFocused()){
+                        field.textboxKeyTyped(typedChar, keyCode);
+                        break;
+                    }
+            }
+        }
+        else
+            super.keyTyped(typedChar, keyCode);
+    }
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        nameField.mouseClicked(mouseX, mouseY, mouseButton);
+        for(GuiTextField field : fields)
+            field.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if(letPress){
             if(button == saveButton){ //TODO: Finish the User gui
+                finishLastMinute();
                 UserEditPacket packet = new UserEditPacket(editValidator, users, false);
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 mc.player.closeScreen();
             }
             else if(button == allUsers){
-                allUsers.onClick();
                 finishLastMinute();
+                allUsers.onClick();
                 updateWithPasses();
             }
             else if(button == addUser){
@@ -250,7 +280,7 @@ public class EditUserGUI extends GuiScreen {
                 user1.staff = false;
                 user1.passes = new HashMap<>();
                 for (DoorHandler.Doors.PassValue pass : passes){ //check for incorrect inputs.
-                    user1.passes.put(pass.passId, new DoorHandler.Doors.Users.UserPass(pass.passId,pass.passType == DoorHandler.Doors.PassValue.type.Level || pass.passType == DoorHandler.Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == DoorHandler.Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
+                    user1.passes.put(pass.passId, new DoorHandler.Doors.Users.UserPass(pass.passId,pass.passType == DoorHandler.Doors.PassValue.type.Level || pass.passType == DoorHandler.Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == DoorHandler.Doors.PassValue.type.Pass ? Arrays.asList("false") : Arrays.asList("") , pass.passType.getInt()));
                 }
                 users.add(user1);
                 ButtonEnum.groupIndex btn = processUser(user1);
@@ -280,11 +310,29 @@ public class EditUserGUI extends GuiScreen {
                             user.passes.get(restButtonsIDs.get(i)).passValue.set(0, Boolean.toString(((ButtonToggle)button).onClick()));
                         }
                         else{ //group
+                            ((ButtonEnum)button).onClick();
                             user.passes.get(restButtonsIDs.get(i)).passValue.set(0,Integer.toString(((ButtonEnum)button).getIndex()));
                         }
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void setEntryValue(int id, boolean value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, float value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, String value) {
+        if(id == nameField.getId()){
+            allUsers.changeCurrentName(value);
         }
     }
 }

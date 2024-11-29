@@ -36,14 +36,14 @@ public class ButtonEnum extends GuiButtonExt{
 
 	public void onClick(){
 		currentIndex++;
-		if(currentIndex > size) {
+		if(currentIndex >= size) {
 			currentIndex = 0;
 		}
 		updateDisplay();
 	}
 
 	public void changeIndex(int index){
-		currentIndex = Math.min(Math.max(index,size),0);
+		currentIndex = Math.max(Math.min(index,size - 1),0);
 		updateDisplay();
 	}
 
@@ -53,8 +53,16 @@ public class ButtonEnum extends GuiButtonExt{
 		changeIndex(currentIndex); //make sure it's still within the proper bounds
 	}
 
+	public void changeCurrentName(String newOne){
+		if(!includeNone || currentIndex != 0) {
+			this.map.get(includeNone ? currentIndex - 1 : currentIndex).name = newOne;
+			updateDisplay();
+		}
+	}
+
 	public void insertList(groupIndex ind){
 		this.map.add(ind);
+		size = includeNone ? map.size() + 1 : map.size();
 	}
 	public void removeList(int index){
 		if(index < size && index > (includeNone ? 0 : -1)) {

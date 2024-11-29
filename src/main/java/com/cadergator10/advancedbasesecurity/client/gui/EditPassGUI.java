@@ -4,11 +4,10 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
+import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
 import java.io.IOException;
@@ -16,7 +15,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class EditPassGUI extends GuiScreen {
+public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
     HashMap<String, DoorHandler.Doors.PassValue> passes;
     DoorHandler.Doors.PassValue pass;
@@ -59,7 +58,10 @@ public class EditPassGUI extends GuiScreen {
     }
     List<ButtonEnum.groupIndex> processPasses(HashMap<String, DoorHandler.Doors.PassValue> passes){
         List<ButtonEnum.groupIndex> btn = new LinkedList<>();
-        BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k, v) -> btn.add(processPass(v));
+        BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k, v) -> {
+            if (!k.equals("staff"))
+                btn.add(processPass(v));
+        };
         passes.forEach(biConsumer);
         return btn;
     }
@@ -68,18 +70,22 @@ public class EditPassGUI extends GuiScreen {
     public void initGui() {
         super.initGui();
         int id = -1;
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2, this.height - (this.height / 4) + 10, 90, 16, "Save"));
-        nameInput = new GuiTextField(id++, fontRenderer, this.width / 2 , 20, 100, 16);
-        this.buttonList.add(typeInput = new ButtonEnum(id++, this.width / 2 + 100, 40, 100, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Pass"),new ButtonEnum.groupIndex("1", "Level"),new ButtonEnum.groupIndex("2", "Group"),new ButtonEnum.groupIndex("3", "Text"),new ButtonEnum.groupIndex("4", "Multi-Text")),0));
-        groupInput = new GuiTextField(id++, fontRenderer, this.width / 2 , 20, 100, 16);
+        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Save"));
+        nameInput = new GuiTextField(id++, fontRenderer, this.width / 2 - 50, 20, 100, 16);
+        nameInput.setGuiResponder(this);
+        this.buttonList.add(typeInput = new ButtonEnum(id++, this.width / 2 - 50, 40, 100, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Pass"),new ButtonEnum.groupIndex("1", "Level"),new ButtonEnum.groupIndex("2", "Group"),new ButtonEnum.groupIndex("3", "Text"),new ButtonEnum.groupIndex("4", "Multi-Text")),0));
+        groupInput = new GuiTextField(id++, fontRenderer, this.width / 2 - 50, 60, 100, 16);
+        groupInput.setGuiResponder(this);
 
-        this.buttonList.add(passList = new ButtonEnum(id++, this.width / 2 - 150, 80, 120, 16, false, processPasses(passes),0));
-        this.buttonList.add(addPass = new GuiButton(id++, this.width / 2 + 30, 100, 30, 16, "Add Pass"));
-        this.buttonList.add(delPass = new GuiButton(id++, this.width / 2 + 70, 100, 30, 16, "Delete Pass"));
+        this.buttonList.add(passList = new ButtonEnum(id++, this.width / 2 - 60, 80, 120, 16, false, processPasses(passes),0));
+        this.buttonList.add(addPass = new GuiButton(id++, this.width / 2 - 70, 100, 60, 16, "Add Pass"));
+        this.buttonList.add(delPass = new GuiButton(id++, this.width / 2 + 10, 100, 60, 16, "Delete Pass"));
+        updateWithPasses(false);
     }
 
-    public void updateWithPasses(){
-        if(passes.isEmpty()){
+    public void updateWithPasses(boolean safe){
+        if(passes.size() - 1 <= 0){
+            AdvBaseSecurity.instance.logger.info("Disabled all pass editing");
             pass = null;
             delPass.enabled = false;
             passList.enabled = false;
@@ -89,14 +95,18 @@ public class EditPassGUI extends GuiScreen {
             groupInput.setVisible(false);
         }
         else{
-            pass = passes.get(passList.getUUID());
+            AdvBaseSecurity.instance.logger.info("Enabled all pass editing");
+            if(!safe)
+                pass = passes.get(passList.getUUID());
             if (pass != null) {
-                delPass.enabled = true;
-                passList.enabled = true;
-                nameInput.setEnabled(true);
-                nameInput.setText(pass.passName);
-                typeInput.enabled = true;
-                typeInput.changeIndex(pass.passType.getInt());
+                if(!safe){
+                    delPass.enabled = true;
+                    passList.enabled = true;
+                    nameInput.setEnabled(true);
+                    nameInput.setText(pass.passName);
+                    typeInput.enabled = true;
+                    typeInput.changeIndex(pass.passType.getInt());
+                }
                 if(pass.passType == DoorHandler.Doors.PassValue.type.Group) {
                     groupInput.setEnabled(true);
                     groupInput.setVisible(true);
@@ -125,6 +135,28 @@ public class EditPassGUI extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
+        nameInput.drawTextBox();
+        groupInput.drawTextBox();
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode != Keyboard.KEY_ESCAPE) {
+            if(nameInput.isFocused()) {
+                nameInput.textboxKeyTyped(typedChar, keyCode);
+            }
+            else if(groupInput.isFocused()) {
+                groupInput.textboxKeyTyped(typedChar, keyCode);
+            }
+        }
+        else
+            super.keyTyped(typedChar, keyCode);
+    }
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        nameInput.mouseClicked(mouseX, mouseY, mouseButton);
+        groupInput.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -133,11 +165,12 @@ public class EditPassGUI extends GuiScreen {
             lastMinuteUpdate();
             PassEditPacket packet = new PassEditPacket(editValidator, passes);
             AdvBaseSecurity.instance.network.sendToServer(packet);
+            mc.player.closeScreen();
         }
         else if(button == passList){
             lastMinuteUpdate();
             passList.onClick();
-            updateWithPasses();
+            updateWithPasses(false);
         }
         else if(button == addPass){
             lastMinuteUpdate();
@@ -149,16 +182,36 @@ public class EditPassGUI extends GuiScreen {
             passes.put(passd.passId, passd);
             passList.insertList(processPass(passd));
             passList.changeIndex(passes.size() - 1);
-            updateWithPasses();
+            updateWithPasses(false);
         }
         else if(button == delPass){
             passes.remove(pass.passId);
             passList.removeList();
-            updateWithPasses();
+            updateWithPasses(false);
         }
         else if(button == typeInput){
             typeInput.onClick();
             pass.passType = DoorHandler.Doors.PassValue.type.fromInt(typeInput.getIndex());
+            lastMinuteUpdate();
+            updateWithPasses(true);
+        }
+        AdvBaseSecurity.instance.logger.info(pass.toString());
+    }
+
+    @Override
+    public void setEntryValue(int id, boolean value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, float value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, String value) {
+        if(id == nameInput.getId()){
+            passList.changeCurrentName(value);
         }
     }
 }

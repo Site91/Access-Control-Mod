@@ -55,22 +55,23 @@ public class DoorListGUI extends GuiScreen {
         int id=-1;
         doorButtons = new LinkedList<>();
         buttonLevel = new LinkedList<>();
-        this.buttonList.add(closeButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, "Close"));
-        this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 100, this.height - (this.height / 4) + 10, "New Door"));
+        this.buttonList.add(closeButton = new GuiButton(id++, this.width / 2 - 150, this.height - (this.height / 4) + 10, "Close"));
+        this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Door"));
         this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));
         this.buttonList.add(downButton = new GuiButton(id++, this.width - 20, this.height - 20, 16, 16, "\\/"));
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
         if(!doors.isEmpty()){
             int pageCount = 1;
-            int thisCount = 1;
+            int thisCount = 0;
             for(DoorNamePacket.packetDoor door : doors){
-                GuiButton temp = new GuiButton(id++, this.width / 2 - 100, (this.height / 8) - (thisCount * 30), door.name);
+                AdvBaseSecurity.instance.logger.info("Button for door " + door.name);
+                GuiButton temp = new GuiButton(id++, this.width / 2 - 100, (this.height / 8) + (thisCount * 30), 200, 16, door.name);
                 this.buttonList.add(temp);
                 doorButtons.add(temp);
                 buttonLevel.add(pageCount);
-                if(thisCount++ > maxPageLength) {
-                    thisCount = 1;
+                if(thisCount++ >= maxPageLength) {
+                    thisCount = 0;
                     pageCount++;
                 }
             }
