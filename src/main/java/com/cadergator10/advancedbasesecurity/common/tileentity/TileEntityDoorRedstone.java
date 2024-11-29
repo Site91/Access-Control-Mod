@@ -47,6 +47,13 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
     }
 
     @Override
+    public void onPlace() {
+        //check if in list
+        if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
+            AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
+    }
+
+    @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
         if(compound.hasUniqueId("deviceId"))
@@ -55,6 +62,9 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
         //get powered
         if(!compound.hasKey("toclient") || !compound.getBoolean("toclient")) {
             powered = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
+            //check if in list
+            if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
+                AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
         }
         else{
             if(compound.hasKey("powered"))
@@ -84,9 +94,10 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
     @Override
     public void openDoor(boolean toggle) {
         //change powered state
+        AdvBaseSecurity.instance.logger.info("Door ID " + deviceId + " recieved toggle: " + toggle);
         if(toggle != powered){
             powered = toggle;
-//            this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos).withProperty(BlockDoorRedstone.POWERED, powered), this.world.getBlockState(this.pos).withProperty(BlockDoorRedstone.POWERED, powered), 2);
+//            this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
 //            this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
 //            getUpdateTag();
         }

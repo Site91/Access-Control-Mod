@@ -16,16 +16,18 @@ public class TickHandler {
 	public static Queue<EventHolder> threads = new LinkedList<>();
 	@SubscribeEvent
 	public void Tick(TickEvent.ServerTickEvent event){
-//		if(!threads.isEmpty()){
-//			for(EventHolder t : threads){
-//				if(t.processId.equals("requestcommand")){
-//					EntityPlayer pl = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(UUID.fromString(t.data2));
-//					pl.sendMessage(new TextComponentString(t.data));
-//				}
-//			}
-//		}
-		if(AdvBaseSecurity.instance.ws != null)
-			AdvBaseSecurity.instance.ws.Tick(event);
+		if(event.phase == TickEvent.Phase.START) {
+	//		if(!threads.isEmpty()){
+	//			for(EventHolder t : threads){
+	//				if(t.processId.equals("requestcommand")){
+	//					EntityPlayer pl = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(UUID.fromString(t.data2));
+	//					pl.sendMessage(new TextComponentString(t.data));
+	//				}
+	//			}
+	//		}
+			if (AdvBaseSecurity.instance.ws != null)
+				AdvBaseSecurity.instance.ws.Tick(event);
+		}
 	}
 }
 

@@ -120,7 +120,7 @@ public class BaseSecurityCommand extends CommandBase {
 											sender.sendMessage(new TextComponentString(TextFormatting.RED + "Door with the name " + args[2] + " does not exist"));
 										}
 										else{
-											AdvBaseSecurity.instance.doorHandler.changeDoorState(door1.doorId);
+											AdvBaseSecurity.instance.doorHandler.changeDoorState(door1.doorId, door1.isDoorOpen == 0, 0);
 										}
 									}
 									else{

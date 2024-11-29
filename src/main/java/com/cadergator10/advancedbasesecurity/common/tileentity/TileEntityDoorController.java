@@ -43,6 +43,9 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		}
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient"))
 			this.currentState = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
+			//check if in list
+			if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
+				AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
 		else{
 			if(nbt.hasKey("currentState"))
 				this.currentState = nbt.getBoolean("currentState");
@@ -167,6 +170,13 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 				openDoor(AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId));
 			}
 		}
+	}
+
+	@Override
+	public void onPlace() {
+		//check if in list
+		if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
+			AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
 	}
 
 	class chunkHolder{

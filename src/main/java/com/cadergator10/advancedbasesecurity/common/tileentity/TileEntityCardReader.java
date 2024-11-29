@@ -23,6 +23,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases.
 	public int tempTextDelay = 0;
 	public ReaderText currText = new ReaderText("ERROR", (byte)4);
+	public int tempLightFlag;
 
 	public TileEntityCardReader(){
 		super();
@@ -31,22 +32,23 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	public String readCard(@Nonnull ItemStack itemStack, EntityPlayer em, EnumFacing side) {
 		IDCard.CardTag cardTag = new IDCard.CardTag(itemStack);
 		//perform request to the global system
-		int value = AdvBaseSecurity.instance.doorHandler.checkSwipe(cardTag.cardId, deviceId);
+		int value = AdvBaseSecurity.instance.doorHandler.checkSwipe(cardTag.cardId, deviceId, true);
+		AdvBaseSecurity.instance.logger.debug("Received value of " + value);
 		//check values
 		if(value == -4){
-			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText(), (byte)4), 20 * 3);
+			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText(), (byte)4), 20 * 3, 3);
 		}
 		else if(value == -3){
-			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.nouser").getUnformattedText(), (byte)4), 20 * 3);
+			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.nouser").getUnformattedText(), (byte)4), 20 * 3, 3);
 		}
 		else if(value == -1){
-			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.blocked").getUnformattedText(), (byte)4), 20 * 3);
+			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.blocked").getUnformattedText(), (byte)4), 20 * 3, 1);
 		}
 		else if(value == 0){
-			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.denied").getUnformattedText(), (byte)4), 20 * 3);
+			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.denied").getUnformattedText(), (byte)4), 20 * 3, 1);
 		}
 		else if(value == 400){
-			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.error").getUnformattedText(), (byte)4), 20 * 3);
+			setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.error").getUnformattedText(), (byte)4), 20 * 3, 7);
 		}
 		return "access";
 	}
@@ -70,13 +72,21 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 		}
 	}
 
-	public void setTempText(ReaderText text, int ticks){
+	public void setTempText(ReaderText text, int ticks, int flag){
 		tempText = text;
 		tempTextDelay = ticks;
+		tempLightFlag = flag;
 		this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
 		this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
 		getUpdateTag();
 		markDirty();
+	}
+
+	@Override
+	public void onPlace() {
+		//check if in list
+		if (!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(this.deviceId))
+			AdvBaseSecurity.instance.doorHandler.allReaders.put(this.deviceId, this);
 	}
 
 	@Override
@@ -87,10 +97,14 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 			this.deviceId = nbt.getUniqueId("deviceId");
 		AdvBaseSecurity.instance.logger.info("Device ID r: " + deviceId);
 		if(nbt.hasKey("temptext") && nbt.hasKey("tempcol")){
-			this.tempText = new ReaderText(nbt.getString("temptext"), nbt.getByte("temptext"));
+			this.tempText = new ReaderText(nbt.getString("temptext"), nbt.getByte("tempcol"));
 		}
 		if(nbt.hasKey("temptick"))
 			this.tempTextDelay = nbt.getInteger("temptick");
+		if(nbt.hasKey("tempflag"))
+			this.tempLightFlag = nbt.getInteger("tempflag");
+		else
+			this.tempLightFlag = 0;
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
 			lightFlag = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
 			currText = AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
@@ -126,6 +140,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 			nbt.setString("temptext", this.tempText.text);
 			nbt.setByte("tempcol", this.tempText.color);
 		}
+		nbt.setInteger("tempflag", this.tempLightFlag);
 		nbt.setInteger("temptick", this.tempTextDelay);
 //		nbt.setInteger("", this.lightFlag);
 //		if(this.currText != null)

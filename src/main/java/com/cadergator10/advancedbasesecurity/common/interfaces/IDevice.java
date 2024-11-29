@@ -9,4 +9,5 @@ public interface IDevice {
 	public UUID getId();
 	public String getDevType(); //get type of device, if door or not door
 	public void setDoor(ItemStack heldItem);
+	public void onPlace();
 }

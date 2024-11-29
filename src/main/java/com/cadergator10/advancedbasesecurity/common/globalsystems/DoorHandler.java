@@ -1,12 +1,14 @@
 package com.cadergator10.advancedbasesecurity.common.globalsystems;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.config.DoorConfig;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.nbt.*;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -48,6 +50,7 @@ public class DoorHandler {
                     timedDoors.add(door);
                 }
             }
+            userCache = new LinkedList<>();
             loaded = true;
         }
     }
@@ -61,6 +64,7 @@ public class DoorHandler {
             allReaders = null;
             allDoors = null;
             editValidator = null;
+            userCache = null;
         }
     }
 
@@ -69,20 +73,53 @@ public class DoorHandler {
     public HashMap<UUID, IReader> allReaders;
     public HashMap<UUID, IDoor> allDoors;
 
+    public int doorTime = Integer.MIN_VALUE;
+    public List<cacheHolder> userCache;
+
+    static class cacheHolder{
+        public cacheHolder(){
+
+        }
+        public cacheHolder(UUID user, UUID door, int time, int worked){
+            this.userID = user;
+            this.doorID = door;
+            this.time = time;
+            this.worked = worked;
+        }
+        public UUID userID;
+        public UUID doorID;
+        public int time;
+        public int worked;
+    }
+
     public UUID editValidator;
 
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event){
-        if(!timedDoors.isEmpty()){
-            for(Doors.OneDoor door : timedDoors){
-                if(door.isDoorOpen == 1) {
-                    door.currTick--;
-                    if(door.currTick <= 0)
-                        door.isDoorOpen = 0;
-                }
+        if(event.phase == TickEvent.Phase.START) {
+            if (!timedDoors.isEmpty()) {
+                for (Doors.OneDoor door : timedDoors) {
+                    if (door.isDoorOpen == 1) {
+                        door.currTick--;
+                        if (door.currTick <= 0) {
+                            door.isDoorOpen = 0;
+                            pushDoorUpdate(door);
+                        }
+                    }
 
-                if(door.isDoorOpen == 0){
-                    timedDoors.remove(door);
+                    if (door.isDoorOpen == 0) {
+                        timedDoors.remove(door);
+                    }
+                }
+            }
+            //cache
+            if (DoorConfig.cachetime != 0) {
+                doorTime++;
+                for (int i = 0; i < userCache.size(); i++) {
+                    if (userCache.get(i).time <= doorTime) {
+                        userCache.remove(i);
+                        i--;
+                    }
                 }
             }
         }
@@ -125,7 +162,6 @@ public class DoorHandler {
             }
         }
     }
-    //TODO: make this stuff have a cache of maybe 30 seconds upon first one + an option to not update doors. This is so an overlay for the user can check ahead of time if available to display to them if looking at a reader with a card in hand
     //Check permissions list of a door
     private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
         for(int i=1; i<=5; i++){ //priorities
@@ -153,7 +189,7 @@ public class DoorHandler {
                                         //check add passes
                                         boolean contained = false;
                                         for(int j=0; j<pass.addPasses.size(); j++)
-                                            if(pass.addPasses.get(i).equals(addPass.id)){
+                                            if(pass.addPasses.get(j).equals(addPass.id)){
                                                 contained = true;
                                                 break;
                                             }
@@ -402,35 +438,38 @@ public class DoorHandler {
                 allDoors.get(id).openDoor(door.isDoorOpen != 0);
             }
         }
+        String display;
+        byte color;
+        int bar = door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0));
+        if(door.isDoorOpen == 0){ //perform the stuff based on a closed door.
+            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText();
+                color = 4;
+            }
+            else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
+                color = 12;
+            }
+            else {
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
+                color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
+            }
+        }
+        else{ //perform based on an open door
+            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
+                color = 10;
+            }
+            else {
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
+                color = 2;
+            }
+        }
+        door.readerLabel = display;
+        door.readerLabelColor = color;
         for(UUID id : door.Readers){
-            String display;
-            byte color;
-            if(door.isDoorOpen != 0){ //perform the stuff based on a closed door.
-                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
-                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText();
-                    color = 1;
-                }
-                else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
-                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
-                    color = 1;
-                }
-                else {
-                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
-                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 2 : 0);
-                }
-            }
-            else{ //perform based on an open door
-                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
-                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
-                    color = 4;
-                }
-                else {
-                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
-                    color = 1;
-                }
-            }
             if(allReaders.containsKey(id)){
-                allReaders.get(id).updateVisuals(door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0)), new ReaderText(display, color) );
+                allReaders.get(id).updateVisuals(bar, new ReaderText(display, color) );
             }
         }
         //timedDoors stuff
@@ -439,6 +478,12 @@ public class DoorHandler {
         }
         else{
             timedDoors.remove(door);
+        }
+        for(int i=0; i<userCache.size(); i++){ //clear cache of these door IDs
+            if(userCache.get(i).doorID.equals(door.doorId)){
+                userCache.remove(i);
+                i--;
+            }
         }
     }
 
@@ -631,14 +676,16 @@ public class DoorHandler {
     }
 
     private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){
+        AdvBaseSecurity.instance.logger.debug("Checking pass " + pass.passID);
         if(DoorGroups.passes.containsKey(pass.passID)){
             Doors.PassValue passValue = DoorGroups.passes.get(pass.passID);
+            AdvBaseSecurity.instance.logger.debug("Has name " + passValue.passName + " and type " + passValue.passType.getInt() + " :comparing to " + user.passValue.toString());
             if(passValue.passType == Doors.PassValue.type.Level){
-                if(pass.passValueI >= Integer.parseInt(user.passValue.get(0)))
+                if(pass.passValueI <= Integer.parseInt(user.passValue.get(0)))
                     return true;
             }
             else if(passValue.passType == Doors.PassValue.type.Group){
-                if(pass.passValueI == Integer.parseInt(user.passValue.get(0)))
+                if(pass.passValueI == Integer.parseInt(user.passValue.get(0)) - 1)
                     return true;
             }
             else if(passValue.passType == Doors.PassValue.type.Text){
@@ -665,35 +712,69 @@ public class DoorHandler {
     -1: blocked user (denied)
     0: access denied
     1: access granted
+    2: access granted staff
      */
-    public int checkSwipe(UUID userID, UUID readerID){
+    public int checkSwipe(UUID userID, UUID readerID, boolean properChange){ //properChange actually updates the door state.
+        AdvBaseSecurity.instance.logger.debug("Checking ID " + userID + " in reader ID " + readerID);
         //get the door
         Doors.OneDoor door = getDoorFromReader(readerID);
         if(door == null)
             return -4;
+        AdvBaseSecurity.instance.logger.debug("Found the door " + door.doorName);
         //get the user's card
         Doors.Users user = getUser(userID);
         if(user == null)
             return -3;
+        AdvBaseSecurity.instance.logger.debug("Found the user " + user.name);
         //check the door
         if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //if always open, don't do anything.
             return -2;
+        AdvBaseSecurity.instance.logger.debug("Door is not AllAccess");
         if(user.blocked)
             return -1;
         else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS)
             return user.staff ? 1 : 0;
+        AdvBaseSecurity.instance.logger.debug("User is neither blocked or door is no access. Preparing checks. Status: " + door.doorStatus.getInt());
+        //check cache
+        for(cacheHolder cache : userCache){
+            if(cache.userID.equals(userID) && cache.doorID.equals(door.doorId)){
+                //use this return value
+                AdvBaseSecurity.instance.logger.debug("Using cache value: " + cache.worked);
+                if(properChange){
+                    if(cache.worked != 0){ //1 or 2
+                        changeDoorState(cache.doorID);
+                    }
+                }
+                return cache.worked;
+            }
+        }
         if(door.doorStatus.getInt() >= 0) // # > 0 = can be opened by card swipe
         {
             if (checkPassList(door.passes, user)){
+                AdvBaseSecurity.instance.logger.debug("Succeeded check. Returning 1");
+                if(DoorConfig.cachetime != 0)
+                    userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
+                if(properChange)
+                    changeDoorState(door.doorId);
                 return 1;
             }
         }
         if(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS || door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN){ // |#| == 1 : checks with overridden pass list.
             if (checkPassList(door.override, user)){
+                AdvBaseSecurity.instance.logger.debug("Succeeded override check. Returning 1");
+                if(DoorConfig.cachetime != 0)
+                    userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
+                if(properChange)
+                    changeDoorState(door.doorId);
                 return 1;
             }
         }
-        return user.staff ? 1 : 0;
+        AdvBaseSecurity.instance.logger.debug("Failed others. Is staff: " + user.staff);
+        if(DoorConfig.cachetime != 0)
+            userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), user.staff ? 2 : 0));
+        if(properChange && user.staff)
+            changeDoorState(door.doorId);
+        return user.staff ? 2 : 0;
 
         //return -400;
     }
@@ -913,8 +994,8 @@ public class DoorHandler {
                     defaultTick = 20 * 5;
                     Doors = new LinkedList<>();
                     Readers = new LinkedList<>();
-                    readerLabel = "Closed";
-                    readerLabelColor = 4;
+                    readerLabel = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
+                    readerLabelColor = 6;
                     readerLights = 0;
                 }
             }

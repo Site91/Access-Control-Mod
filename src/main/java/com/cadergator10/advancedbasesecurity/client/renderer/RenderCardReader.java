@@ -201,7 +201,7 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		//card swiper
 		transferSide(vertexbuffer, 0);
 		transferSide(vertexbuffer, 1.1f);
-		transferLight(vertexbuffer, card != null ? card.lightFlag : 0);
+		transferLight(vertexbuffer, card != null ? (card.tempTextDelay > 0 ? card.tempLightFlag : card.lightFlag) : 0);
 
 		tessellator.draw();
 
