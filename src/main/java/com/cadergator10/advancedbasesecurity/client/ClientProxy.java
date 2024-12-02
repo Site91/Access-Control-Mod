@@ -2,14 +2,17 @@ package com.cadergator10.advancedbasesecurity.client;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReader;
+import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReaderSmall;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -45,6 +48,7 @@ public class ClientProxy extends CommonProxy {
         //ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader());
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReader.class, new RenderCardReader());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReaderSmall.class, new RenderCardReaderSmall());
     }
 
     @Override

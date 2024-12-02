@@ -63,8 +63,6 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
         if(!compound.hasKey("toclient") || !compound.getBoolean("toclient")) {
             powered = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
             //check if in list
-            if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
-                AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
         }
         else{
             if(compound.hasKey("powered"))

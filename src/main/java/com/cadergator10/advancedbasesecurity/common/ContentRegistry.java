@@ -2,6 +2,7 @@ package com.cadergator10.advancedbasesecurity.common;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReader;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
@@ -9,10 +10,7 @@ import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockSCPDoor;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoor;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
+import com.cadergator10.advancedbasesecurity.common.tileentity.*;
 import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -52,6 +50,7 @@ public class ContentRegistry { //where all new items will be added
 //        modBlocks.add(BlockAlarm.DEFAULTITEM = new BlockAlarm());
 //        modBlocks.add(BlockSecurityTerminal.DEFAULTITEM = new BlockSecurityTerminal());
         modBlocks.add(BlockCardReader.DEFAULTITEM = new BlockCardReader());
+        modBlocks.add(BlockCardReaderSmall.DEFAULTITEM = new BlockCardReaderSmall());
         modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
         modBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
 //
@@ -75,6 +74,7 @@ public class ContentRegistry { //where all new items will be added
             event.getRegistry().register(block);
 
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
+        registerTileEntity(TileEntityCardReaderSmall.class, BlockCardReaderSmall.NAME);
         registerTileEntity(TileEntityDoorRedstone.class, BlockDoorRedstone.NAME);
         registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
         registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);

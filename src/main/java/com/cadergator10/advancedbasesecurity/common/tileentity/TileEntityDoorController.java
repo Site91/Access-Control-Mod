@@ -43,9 +43,6 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		}
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient"))
 			this.currentState = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
-			//check if in list
-			if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
-				AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
 		else{
 			if(nbt.hasKey("currentState"))
 				this.currentState = nbt.getBoolean("currentState");
@@ -80,12 +77,12 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 	}
 
 	public HashMap<BlockPos, BlockDoor> getDoors() {
-		return getDoors(true);
+		return getDoors(this.pos, true);
 	}
 	//TAKEN STRAIGHT FROM OPENSECURITY!
 	// scans the blockposition for any surrounding doors, if it found a door it will start a scan for a neighbourdoor
 	// so dont parse the blockposition of any door to this!
-	private HashMap<BlockPos, BlockDoor> getDoors(boolean searchMaindoor) {
+	private HashMap<BlockPos, BlockDoor> getDoors(BlockPos pos, boolean searchMaindoor) {
 		HashMap<BlockPos, BlockDoor> doors = new HashMap<>();
 
 		for (EnumFacing direction : EnumFacing.VALUES) {
@@ -101,7 +98,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 				//if we found a door, we are making another loop with the last parameter set to false
 				// otherwise we end in an loop where the doors find each other infinitely
 				if(searchMaindoor)
-					doors.putAll(getDoors(false));
+					doors.putAll(getDoors(position, false));
 			}
 		}
 
@@ -115,6 +112,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 			if(doorSet.getValue() instanceof BlockDoorBase) {
 				TileEntityDoor te = (TileEntityDoor) world.getTileEntity(doorSet.getKey());
 				doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
+				te.setClonedID(deviceId);
 			}
 			else {
 				doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);

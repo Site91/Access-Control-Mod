@@ -85,6 +85,16 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 		}
 		return null;
 	}
+	int getDoorPassIndex(UUID id){
+		int index = 0;
+		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+			if(pass.id.equals(id))
+				return index;
+			index++;
+		}
+		return -1;
+	}
+
 
 	List<ButtonEnum.groupIndex> processGroup(DoorHandler.Doors.PassValue pass){
 		List<ButtonEnum.groupIndex> btn = new LinkedList<>();
@@ -391,9 +401,10 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 				updateWithPasses();
 			}
 			else if(button == delPass){
-				int index = getPassIndex(passListButton.getUUID());
+				int index = getDoorPassIndex(UUID.fromString(passListButton.getUUID()));
+				AdvBaseSecurity.instance.logger.info("id: " + passListButton.getUUID());
 				door.passes.remove(index);
-				passListButton.removeList(index);
+				passListButton.removeList();
 				updateWithPasses();
 			}
 		}

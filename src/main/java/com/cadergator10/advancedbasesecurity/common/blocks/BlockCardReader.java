@@ -42,6 +42,13 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 		setHardness(0.5f);
 		setCreativeTab(ContentRegistry.CREATIVETAB);
 	}
+	public BlockCardReader(String name) {
+        super(Material.IRON);
+        setTranslationKey("advancedbasesecurity." + name);
+		setRegistryName(AdvBaseSecurity.MODID, name);
+		setHardness(0.5f);
+		setCreativeTab(ContentRegistry.CREATIVETAB);
+	}
 
 	@Nullable
 	@Override

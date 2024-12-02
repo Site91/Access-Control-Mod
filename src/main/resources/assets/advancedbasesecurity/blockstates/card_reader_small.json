@@ -1,0 +1,8 @@
+{
+	"variants": {
+		"facing=north": { "model": "advancedbasesecurity:card_reader_small", "y": 180  },
+		"facing=south": { "model": "advancedbasesecurity:card_reader_small", "y": 0 },
+		"facing=west":  { "model": "advancedbasesecurity:card_reader_small", "y": 90 },
+		"facing=east":  { "model": "advancedbasesecurity:card_reader_small", "y": 270 }
+	}
+}

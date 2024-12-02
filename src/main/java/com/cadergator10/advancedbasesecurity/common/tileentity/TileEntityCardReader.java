@@ -109,8 +109,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 			lightFlag = AdvBaseSecurity.instance.doorHandler.getReaderLight(deviceId);
 			currText = AdvBaseSecurity.instance.doorHandler.getReaderLabel(deviceId);
 			//check if in list
-			if (!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(this.deviceId))
-				AdvBaseSecurity.instance.doorHandler.allReaders.put(this.deviceId, this);
 		}
 		else{
 			if(nbt.hasKey("lightFlag"))

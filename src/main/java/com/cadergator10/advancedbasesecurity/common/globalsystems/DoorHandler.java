@@ -127,17 +127,36 @@ public class DoorHandler {
 
     @SubscribeEvent
     public void onChunkUnload(ChunkEvent.Unload event){ //when chunks unload, detect if any readers/doors are unloaded, and remove from list accordingly.
-         Map<BlockPos, TileEntity> map = event.getChunk().getTileEntityMap();
-        BiConsumer<BlockPos, TileEntity> biConsumer = (k, v) -> {
-           if(v instanceof IDevice){
-               IDevice dev = (IDevice)v;
-               if(dev.getDevType().equals("reader"))
-                   allReaders.remove(dev.getId());
-               else if(dev.getDevType().equals("door"))
-                   allDoors.remove(dev.getId());
-           }
-        };
-        map.forEach(biConsumer);
+        if(!event.getWorld().isRemote) {
+            Map<BlockPos, TileEntity> map = event.getChunk().getTileEntityMap();
+            BiConsumer<BlockPos, TileEntity> biConsumer = (k, v) -> {
+                if (v instanceof IDevice) {
+                    IDevice dev = (IDevice) v;
+                    if (dev.getDevType().equals("reader"))
+                        allReaders.remove(dev.getId());
+                    else if (dev.getDevType().equals("door"))
+                        allDoors.remove(dev.getId());
+                }
+            };
+            map.forEach(biConsumer);
+        }
+    }
+
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event){
+        if(!event.getWorld().isRemote) {
+            Map<BlockPos, TileEntity> map = event.getChunk().getTileEntityMap();
+            BiConsumer<BlockPos, TileEntity> biConsumer = (k, v) -> {
+                if (v instanceof IDevice) {
+                    IDevice dev = (IDevice) v;
+                    if (dev.getDevType().equals("reader"))
+                        allReaders.put(dev.getId(), (IReader) dev);
+                    else if (dev.getDevType().equals("door"))
+                        allDoors.put(dev.getId(), (IDoor) dev);
+                }
+            };
+            map.forEach(biConsumer);
+        }
     }
 
 //    @SubscribeEvent
