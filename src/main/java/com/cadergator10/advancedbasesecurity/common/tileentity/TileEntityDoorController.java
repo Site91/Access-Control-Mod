@@ -41,6 +41,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		else{
 			prevPos = new LinkedList<>();
 		}
+		boolean current = this.currentState;
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient"))
 			this.currentState = AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId);
 		else{
@@ -49,6 +50,8 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 			else
 				this.currentState = false;
 		}
+		if(current != currentState)
+			openDoor(currentState);
 	}
 
 	@Override

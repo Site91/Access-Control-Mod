@@ -187,7 +187,7 @@ public class DoorHandler {
             int isThrough = 0; //-1 = reject pass. 0 = nope. 1 = allowed base.
             for(Doors.OneDoor.OnePass pass : door){
                 if(pass.priority == i && pass.passType != Doors.OneDoor.OnePass.type.Add){
-                    boolean gotIt = checkPass(pass, user.passes.get(pass.passID));
+                    boolean gotIt = !pass.passID.equals("staff") ? checkPass(pass, user.passes.get(pass.passID)) : user.staff;
                     if(gotIt) {
                         if (pass.passType == Doors.OneDoor.OnePass.type.Reject) {
                             isThrough = -1;
@@ -212,7 +212,7 @@ public class DoorHandler {
                                                 contained = true;
                                                 break;
                                             }
-                                        if(contained && !checkPass(addPass, user.passes.get(addPass.passID))){
+                                        if(contained && ((!pass.passID.equals("staff") && !checkPass(addPass, user.passes.get(addPass.passID))) || (pass.passID.equals("staff") && !user.staff ))){
                                             isThrough = 0;
                                             break;
                                         }
@@ -698,7 +698,6 @@ public class DoorHandler {
         AdvBaseSecurity.instance.logger.debug("Checking pass " + pass.passID);
         if(DoorGroups.passes.containsKey(pass.passID)){
             Doors.PassValue passValue = DoorGroups.passes.get(pass.passID);
-            AdvBaseSecurity.instance.logger.debug("Has name " + passValue.passName + " and type " + passValue.passType.getInt() + " :comparing to " + user.passValue.toString());
             if(passValue.passType == Doors.PassValue.type.Level){
                 if(pass.passValueI <= Integer.parseInt(user.passValue.get(0)))
                     return true;

@@ -43,10 +43,11 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
     public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
         TileEntityDoorRedstone tile = (TileEntityDoorRedstone) worldIn.getTileEntity(pos);
-        tile.newId();
-        if(!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(tile.getId()))
-            AdvBaseSecurity.instance.doorHandler.allDoors.put(tile.getId(), tile);
-
+        if(!worldIn.isRemote) {
+            tile.newId();
+            if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(tile.getId()))
+                AdvBaseSecurity.instance.doorHandler.allDoors.put(tile.getId(), tile);
+        }
     }
 
     @Nullable

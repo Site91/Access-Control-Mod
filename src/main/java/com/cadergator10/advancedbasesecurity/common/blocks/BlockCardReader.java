@@ -89,9 +89,10 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		TileEntity te = worldIn.getTileEntity(pos);
-		if(!AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(((TileEntityCardReader)te).getId()))
-			AdvBaseSecurity.instance.doorHandler.allReaders.put(((TileEntityCardReader)te).getId(), ((IReader) te));
-		((IReader) te).updateVisuals(7, new ReaderText("Disconnected", (byte) 4));
+		if (!worldIn.isRemote && !AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(((TileEntityCardReader) te).getId())) {
+			AdvBaseSecurity.instance.doorHandler.allReaders.put(((TileEntityCardReader) te).getId(), ((IReader) te));
+			((IReader) te).updateVisuals(7, new ReaderText("Disconnected", (byte) 4));
+		}
 	}
 
 	@Override

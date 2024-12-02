@@ -37,7 +37,8 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		TileEntity te = worldIn.getTileEntity(pos);
-		((IDevice) te).newId();
+		if (!worldIn.isRemote)
+			((IDevice) te).newId();
 	}
 
 	@Override

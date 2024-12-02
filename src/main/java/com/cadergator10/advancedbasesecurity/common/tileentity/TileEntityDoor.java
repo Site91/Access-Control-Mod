@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.nbt.NBTTagCompound;
+import scala.collection.parallel.ParIterableLike;
 
 import java.util.UUID;
 
@@ -17,18 +18,18 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 			clonedID = nbt.getUniqueId("clonedId");
 		else
 			clonedID = null;
-		if(clonedID != null) {
+		if(clonedID != null) { //todo: make sure this doesn't break everything. Theoretically will when chunk is loaded after doorcontroller
 			if (!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
-				boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorState(clonedID);
-				if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
-					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+//				boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorState(clonedID);
+//				if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
+//					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
 			} else {
-				boolean stated;
-				if(nbt.hasKey("devState")) {
-					stated = nbt.getBoolean("devState");
-					if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
-						((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
-				}
+//				boolean stated;
+//				if(nbt.hasKey("devState")) {
+//					stated = nbt.getBoolean("devState");
+//					if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
+//						((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+//				}
 			}
 		}
 //		if(currentDoor != null && !world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(currentDoor.currentState)){
