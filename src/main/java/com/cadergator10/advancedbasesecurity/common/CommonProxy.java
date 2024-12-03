@@ -1,19 +1,8 @@
 package com.cadergator10.advancedbasesecurity.common;
 
-import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReader;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
-import com.cadergator10.advancedbasesecurity.util.TickHandler;
-import com.cadergator10.advancedbasesecurity.util.WebsocketHandler;
-import net.minecraft.block.Block;
-import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-
-import java.util.HashMap;
-import java.util.HashSet;
 
 public class CommonProxy {
 
@@ -27,7 +16,7 @@ public class CommonProxy {
     }
 
     public void preinit(FMLPreInitializationEvent event){
-        MinecraftForge.EVENT_BUS.register(new TickHandler());
+//        MinecraftForge.EVENT_BUS.register(new TickHandler());
     }
     public void init(FMLInitializationEvent event){
         System.out.println("Hey yall! Scott here! And today, we're going to be sending REQUESTS!!!");

@@ -1,16 +1,14 @@
 package com.cadergator10.advancedbasesecurity;
 
+import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.commands.BaseSecurityCommand;
 import com.cadergator10.advancedbasesecurity.common.commands.RequestCommand;
 import com.cadergator10.advancedbasesecurity.common.commands.TimeCommand;
 import com.cadergator10.advancedbasesecurity.common.commands.WebsocketCommand;
-import com.cadergator10.advancedbasesecurity.common.CommonProxy;
-import com.cadergator10.advancedbasesecurity.client.config.WebsocketConfig;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.*;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.DoorNamedHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.ServerGenericHandler;
-import com.cadergator10.advancedbasesecurity.util.WebsocketHandler;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
@@ -25,9 +23,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 @Mod.EventBusSubscriber
 @Mod(modid = AdvBaseSecurity.MODID, name = AdvBaseSecurity.NAME, version = AdvBaseSecurity.VERSION, dependencies = "required-after: baubles")
 public class AdvBaseSecurity
@@ -40,9 +35,9 @@ public class AdvBaseSecurity
     @SidedProxy(clientSide = "com.cadergator10.advancedbasesecurity.client.ClientProxy", serverSide = "com.cadergator10.advancedbasesecurity.common.CommonProxy")
     public static CommonProxy proxy;
     public final Logger logger = LogManager.getFormatterLogger(MODID);
-    public WebsocketHandler ws;
     public DoorHandler doorHandler;
     public SimpleNetworkWrapper network;
+    public static boolean isSCPInstalled = false;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -80,34 +75,9 @@ public class AdvBaseSecurity
     {
         // some example code
         System.out.println("Baubles is installed: " + Loader.isModLoaded("baubles"));
+        isSCPInstalled = Loader.isModLoaded("scproleplay");
+        System.out.println("SCP Roleplay Mod is installed: " + isSCPInstalled);
         proxy.init(event);
-        if(event.getSide() != Side.CLIENT) {
-            if (WebsocketConfig.enableWebsocket) {
-                Map<String, String> httpHeaders = new IdentityHashMap<>();
-                httpHeaders.put("Authorization", WebsocketConfig.websocketCode);
-                ws = new WebsocketHandler(httpHeaders);
-                ws.connect();
-                //using some host verification stuff
-//            try{
-//                ws.connectBlocking();
-//                //verify
-//                HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-//                SSLSocket socket = (SSLSocket) ws.getSocket();
-//                SSLSession s = socket.getSession();
-//                logger.debug("verifying");
-//                if (!hv.verify("echo.websocket.org", s)) {
-//                    logger.debug("wrong url");
-//                    logger.error("Client", "Expected echo.websocket.org, found " + s.getPeerPrincipal());
-//                    throw new SSLHandshakeException("Expected websocket.org, found " + s.getPeerPrincipal());
-//                } else {
-//                    logger.info("Client", "Success");
-//                }
-//            }
-//            catch (Exception e){
-//                logger.error("WEBSOCKET ERROR: " + e);
-//            }
-            }
-        }
         doorHandler = new DoorHandler();
         MinecraftForge.EVENT_BUS.register(doorHandler);
     }
@@ -130,14 +100,6 @@ public class AdvBaseSecurity
     @EventHandler
     public void ServerStarted(FMLServerStartedEvent event){
 
-    }
-
-
-    @EventHandler
-    public void ServerClose(FMLServerStoppingEvent event) {
-        if (WebsocketConfig.enableWebsocket && event.getSide() != Side.CLIENT) {
-            ws.niceClose();
-        }
     }
 
     @EventHandler
