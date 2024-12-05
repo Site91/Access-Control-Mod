@@ -1,0 +1,4 @@
+{
+  "lockopen": {"category": "block","sounds": [{"name": "advancedbasesecurity:lockopen","stream": false}]},
+  "card-swipe": {"category": "block","sounds": [{"name": "advancedbasesecurity:card-swipe","stream": false}]}
+}

@@ -97,7 +97,7 @@ public class RenderCardReaderSmall extends TileEntitySpecialRenderer<TileEntityC
 		//front
 		vertexbuffer.pos(texPixel * 9f, texPixel * 6.5f,    texPixel * 14.5f).tex(1f - (texPixel * flag), 1f).normal(0f,0f,-1f).endVertex();
 		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f, texPixel * 14.5f).tex(1f - (texPixel * flag), 1f - (texPixel * 3f)).normal(0f,0f,-1f).endVertex();
-		vertexbuffer.pos(texPixel * 10f, texPixel * 9.5f, texPixel * 14.5f ).tex(1f - (1f - (texPixel * (flag + 1f))), 1f - (texPixel * 3f)).normal(0f,0f,-1f).endVertex();
+		vertexbuffer.pos(texPixel * 10f, texPixel * 9.5f, texPixel * 14.5f ).tex(1f - (texPixel * (flag + 1f)), 1f - (texPixel * 3f)).normal(0f,0f,-1f).endVertex();
 		vertexbuffer.pos(texPixel * 10f, texPixel * 6.5f,    texPixel * 14.5f).tex(1f - (texPixel * (flag + 1f)), 1f ).normal(0f,0f,-1f).endVertex();
 		//top
 		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f,    texPixel * 14.5f).tex(1f - (texPixel * flag), 1f - (texPixel * 2f)).normal(0f,-1f,0f).endVertex();
@@ -112,13 +112,13 @@ public class RenderCardReaderSmall extends TileEntitySpecialRenderer<TileEntityC
 		//left
 		vertexbuffer.pos(texPixel * 10f, texPixel * 6.5f,    texPixel * 14.5f).tex(1f - (texPixel * (flag + 1f)), 1f).normal(1f,0f,0f).endVertex();
 		vertexbuffer.pos(texPixel * 10f, texPixel * 9.5f, texPixel * 14.5f).tex(1f - (texPixel * (flag + 1f)),          1f - (texPixel * 3f)).normal(1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * 10f, texPixel * 9.5f, texPixel * 15f).tex(1f - (texPixel * (flag + 1f)), 1f - (texPixel * 3f)).normal(1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * 10f, texPixel * 6.5f,    texPixel * 15f).tex(1f - (texPixel * (flag + 1f)), 1f ).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 10f, texPixel * 9.5f, texPixel * 15f).tex(1f - (texPixel * flag), 1f - (texPixel * 3f)).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 10f, texPixel * 6.5f,    texPixel * 15f).tex(1f - (texPixel * flag), 1f ).normal(1f,0f,0f).endVertex();
 		//right
-		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f,    texPixel * 15f).tex(1f - (texPixel * flag), 1f).normal(-1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * 9f, texPixel * 6.5f, texPixel * 15f).tex(1f - (texPixel * flag),          1f - (texPixel * 3f)).normal(-1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * 9f, texPixel * 6.5f, texPixel * 14.5f).tex(1f - (texPixel * flag), 1f - (texPixel * 3f)).normal(-1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f,    texPixel * 14.5f).tex(1f - (texPixel * flag), 1f ).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 9f, texPixel * 6.5f,    texPixel * 15f).tex(1f - (texPixel * flag), 1f).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f, texPixel * 15f).tex(1f - (texPixel * flag),          1f - (texPixel * 3f)).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 9f, texPixel * 9.5f, texPixel * 14.5f).tex(1f - (texPixel * (flag + 1f)), 1f - (texPixel * 3f)).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * 9f, texPixel * 6.5f,    texPixel * 14.5f).tex(1f - (texPixel * (flag + 1f)), 1f ).normal(-1f,0f,0f).endVertex();
 	}
 
 	public void drawBlock(TileEntityCardReader card, long time) {

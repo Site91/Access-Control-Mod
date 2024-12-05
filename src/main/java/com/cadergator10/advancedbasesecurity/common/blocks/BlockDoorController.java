@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
@@ -36,9 +37,12 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-		TileEntity te = worldIn.getTileEntity(pos);
-		if (!worldIn.isRemote)
-			((IDevice) te).newId();
+		IDoor te = (IDoor) worldIn.getTileEntity(pos);
+		if (!worldIn.isRemote) {
+			te.newId();
+			if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId()))
+				AdvBaseSecurity.instance.doorHandler.allDoors.put(te.getId(), te);
+		}
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "advancedbasesecurity:item/door_scp"
+        "layer0": "advancedbasesecurity:item/door_metal"
     },
     "display": {
         "thirdperson": {

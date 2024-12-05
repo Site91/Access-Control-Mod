@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
@@ -21,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -116,30 +118,33 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
-		ItemStack heldItem;
-		int baubleID = BaublesApi.isBaubleEquipped(player, IDCard.DEFAULTSTACK.getItem());
-		if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
-			heldItem = player.getHeldItemMainhand();
-		} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
-			heldItem = player.getHeldItemOffhand();
-		} else if(baubleID != -1){ //equipped in Baubles slot
-			heldItem = BaublesApi.getBaublesHandler(player).getStackInSlot(baubleID);
-		} else {
-			return false;
-		}
-
-		if (!heldItem.isEmpty()) {
-			System.out.println(heldItem.getItem().getRegistryName().toString());
-			Item equipped = heldItem.getItem();
-			TileEntityCardReader tile = (TileEntityCardReader) world.getTileEntity(pos);
-
-			if (!world.isRemote) {
-				if(equipped instanceof IDCard)
-					tile.readCard(heldItem, player, side);
-				else if(equipped instanceof ItemLinkingCard)
-					tile.setDoor(heldItem);
+		if(hand == EnumHand.MAIN_HAND) {
+			ItemStack heldItem;
+			int baubleID = BaublesApi.isBaubleEquipped(player, IDCard.DEFAULTSTACK.getItem());
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+				heldItem = player.getHeldItemMainhand();
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+				heldItem = player.getHeldItemOffhand();
+			} else if (baubleID != -1) { //equipped in Baubles slot
+				heldItem = BaublesApi.getBaublesHandler(player).getStackInSlot(baubleID);
+			} else {
+				return false;
 			}
-			return true;
+
+			if (!heldItem.isEmpty()) {
+				System.out.println(heldItem.getItem().getRegistryName().toString());
+				Item equipped = heldItem.getItem();
+				TileEntityCardReader tile = (TileEntityCardReader) world.getTileEntity(pos);
+
+				if (!world.isRemote) {
+					if (equipped instanceof IDCard) {
+						world.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, SoundHandler.card_swipe, SoundCategory.BLOCKS, 1F, 1F);
+						tile.readCard(heldItem, player, side);
+					} else if (equipped instanceof ItemLinkingCard)
+						tile.setDoor(heldItem);
+				}
+				return true;
+			}
 		}
 		return false;
 	}

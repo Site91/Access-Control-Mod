@@ -1,8 +1,6 @@
 package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 
-import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Items;
@@ -14,11 +12,11 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.util.Random;
 
-public class BlockSCPDoor extends BlockDoorBase{
-    public static final String NAME = "scp_door";
-    public static BlockSCPDoor DEFAULTITEM;
+public class BlockMetalDoor extends BlockDoorBase{
+    public static final String NAME = "metal_door";
+    public static BlockMetalDoor DEFAULTITEM;
 
-    public BlockSCPDoor() {
+    public BlockMetalDoor() {
         super(NAME);
     }
 

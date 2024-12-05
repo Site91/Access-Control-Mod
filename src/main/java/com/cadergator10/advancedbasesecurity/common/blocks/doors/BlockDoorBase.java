@@ -1,15 +1,26 @@
 package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 
+import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentScore;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -45,6 +56,40 @@ public class BlockDoorBase extends BlockDoor {
 		} else {
 			return new BlockPos(thisPos.getX(), thisPos.getY() - 1, thisPos.getZ());
 		}
+	}
+
+	@Override
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+		if (!worldIn.isRemote && hand == EnumHand.MAIN_HAND) {
+			BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
+			IBlockState iblockstate = pos.equals(blockpos) ? state : worldIn.getBlockState(blockpos);
+			TileEntityDoor tile = (TileEntityDoor) worldIn.getTileEntity(blockpos);
+			ItemStack heldItem = null;
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
+				heldItem = player.getHeldItemMainhand();
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof ItemScrewdriver)) {
+				heldItem = player.getHeldItemOffhand();
+			}
+			if (heldItem != null && tile != null) { //change the door type
+				tile.pushDoor = !tile.pushDoor;
+				tile.markDirty();
+				if (tile.pushDoor)
+					player.sendMessage(new TextComponentString("Changed door type to push"));
+				else
+					player.sendMessage(new TextComponentString("Changed door type to automatic"));
+				return true;
+			}
+			if (tile == null || !tile.pushDoor)
+				return false;
+			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorState(tile.getClonedID())) {
+				state = iblockstate.cycleProperty(OPEN);
+				worldIn.setBlockState(blockpos, state, 10);
+				worldIn.markBlockRangeForRenderUpdate(blockpos, pos);
+				worldIn.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, ((Boolean) state.getValue(OPEN)).booleanValue() ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1F, 1F);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

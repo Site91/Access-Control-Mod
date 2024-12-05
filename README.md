@@ -17,3 +17,7 @@ With **coremod and mixin support** that is easy to configure.
 ### Mixins:
 
 - When writing Mixins on IntelliJ, it is advisable to use latest [MinecraftDev Fork for RetroFuturaGradle](https://github.com/eigenraven/MinecraftDev/releases).
+
+### Sound Credits:
+- lockopen: Lock 3.aif - le_abbaye_No..., https://freesound.org/people/le_abbaye_Noirlac/sounds/129424/
+- 

@@ -1,10 +1,8 @@
 package com.cadergator10.advancedbasesecurity;
 
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
+import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.commands.BaseSecurityCommand;
-import com.cadergator10.advancedbasesecurity.common.commands.RequestCommand;
-import com.cadergator10.advancedbasesecurity.common.commands.TimeCommand;
-import com.cadergator10.advancedbasesecurity.common.commands.WebsocketCommand;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.*;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.DoorNamedHandler;
@@ -43,6 +41,7 @@ public class AdvBaseSecurity
     public void preInit(FMLPreInitializationEvent event)
     {
         proxy.preinit(event);
+        SoundHandler.registerSounds();
         network = NetworkRegistry.INSTANCE.newSimpleChannel("AdvBaseSecurity");
         int packetID = 0;
         if(event.getSide() == Side.CLIENT) {
@@ -88,9 +87,6 @@ public class AdvBaseSecurity
 
     @EventHandler
     public void ServerStart(FMLServerStartingEvent event){
-        event.registerServerCommand(new RequestCommand());
-        event.registerServerCommand(new TimeCommand());
-        event.registerServerCommand(new WebsocketCommand());
         event.registerServerCommand(new BaseSecurityCommand());
         AdvBaseSecurity.instance.logger.info("In ServerStart");
         //prep door

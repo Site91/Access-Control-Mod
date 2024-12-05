@@ -6,28 +6,25 @@ import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
-import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockSCPDoor;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
+import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.*;
 import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraftforge.client.gui.ForgeGuiFactory;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,12 +53,13 @@ public class ContentRegistry { //where all new items will be added
 //
 //        modBlocksWithItem.put(BlockSecureDoor.DEFAULTITEM = new BlockSecureDoor(), ItemSecureDoor.DEFAULTSTACK = new ItemStack(new ItemSecureDoor()));
 //        modBlocksWithItem.put(BlockSecurePrivateDoor.DEFAULTITEM = new BlockSecurePrivateDoor(), ItemSecurePrivateDoor.DEFAULTSTACK = new ItemStack(new ItemSecurePrivateDoor()));
-        modBlocksWithItem.put(BlockSCPDoor.DEFAULTITEM = new BlockSCPDoor(), ItemSCPDoor.DEFAULTSTACK = new ItemStack(new ItemSCPDoor()));
+        modBlocksWithItem.put(BlockMetalDoor.DEFAULTITEM = new BlockMetalDoor(), ItemSCPDoor.DEFAULTSTACK = new ItemStack(new ItemSCPDoor()));
 //
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
         modItems.add(IDCard.DEFAULTSTACK = new ItemStack(new IDCard()));
         modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
+        modItems.add(ItemScrewdriver.DEFAULTSTACK = new ItemStack(new ItemScrewdriver()));
     }
 
 

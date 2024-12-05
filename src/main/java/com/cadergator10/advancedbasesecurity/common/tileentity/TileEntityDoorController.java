@@ -1,6 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
@@ -10,7 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
@@ -94,6 +97,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 
 			BlockPos position = pos.offset(direction); // Offset the block's position by 1 block in the current direction
 
+			World world1 = world;
 			Block block = world.getBlockState(position).getBlock(); // Get the IBlockState's Block
 			if (block instanceof BlockDoor) {
 				doors.put(position, (BlockDoor) block);
@@ -114,7 +118,11 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		for(Map.Entry<BlockPos, BlockDoor> doorSet : dooreme.entrySet()){
 			if(doorSet.getValue() instanceof BlockDoorBase) {
 				TileEntityDoor te = (TileEntityDoor) world.getTileEntity(doorSet.getKey());
-				doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
+				//make sure door lock is fine
+				if(te.pushDoor)
+					world.playSound(null, te.getPos().getX() + 0.5F, te.getPos().getY() + 0.5F,te.getPos().getZ() + 0.5F, SoundHandler.lockopen, SoundCategory.BLOCKS, 1F, toggle ? 1F : 0.8F);
+				else
+					doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
 				te.setClonedID(deviceId);
 			}
 			else {
@@ -147,6 +155,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 	@Override
 	public void newId() {
 		deviceId = UUID.randomUUID();
+		currentState = false;
 		markDirty();
 	}
 

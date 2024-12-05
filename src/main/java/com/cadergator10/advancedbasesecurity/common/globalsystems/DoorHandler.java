@@ -104,6 +104,7 @@ public class DoorHandler {
                         if (door.currTick <= 0) {
                             door.isDoorOpen = 0;
                             pushDoorUpdate(door);
+                            DoorGroups.markDirty();
                         }
                     }
 

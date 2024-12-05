@@ -1,0 +1,7 @@
+{
+    "parent": "block/door_top_rh",
+    "textures": {
+        "bottom": "advancedbasesecurity:block/door_metal_lower",
+        "top": "advancedbasesecurity:block/door_metal_upper"
+    }
+}

@@ -10,6 +10,7 @@ import java.util.UUID;
 public class TileEntityDoor extends TileEntityDeviceBase {
 //	TileEntityDoorController currentDoor;
 	UUID clonedID;
+	public boolean pushDoor; //if true, door must be right clicked to open/close.
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
@@ -18,6 +19,10 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 			clonedID = nbt.getUniqueId("clonedId");
 		else
 			clonedID = null;
+		if(nbt.hasKey("pushDoor"))
+			pushDoor = nbt.getBoolean("pushDoor");
+		else
+			pushDoor = false;
 		if(clonedID != null) { //todo: make sure this doesn't break everything. Theoretically will when chunk is loaded after doorcontroller
 			if (!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
 //				boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorState(clonedID);
@@ -42,6 +47,7 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 		super.writeToNBT(nbt);
 		if(clonedID != null)
 			nbt.setUniqueId("clonedId", clonedID);
+		nbt.setBoolean("pushDoor", pushDoor);
 		return nbt;
 	}
 
@@ -63,5 +69,9 @@ public class TileEntityDoor extends TileEntityDeviceBase {
 	public void setClonedID(UUID id){
 		clonedID = id;
 		markDirty();
+	}
+
+	public UUID getClonedID(){
+		return clonedID;
 	}
 }

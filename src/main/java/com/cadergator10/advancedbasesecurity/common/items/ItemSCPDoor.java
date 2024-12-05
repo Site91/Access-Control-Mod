@@ -1,8 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.items;
 
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
-import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
-import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockSCPDoor;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemDoor;
 import net.minecraft.item.ItemStack;
@@ -11,7 +10,7 @@ public class ItemSCPDoor extends ItemDoor {
     public static ItemStack DEFAULTSTACK;
 
     public ItemSCPDoor(){
-        this(BlockSCPDoor.DEFAULTITEM);
+        this(BlockMetalDoor.DEFAULTITEM);
     }
 
     @SuppressWarnings("ConstantConditions")
