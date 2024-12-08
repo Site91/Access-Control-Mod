@@ -3,7 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorControlRedstone;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -42,18 +42,18 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
     @Override
     public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-        TileEntityDoorRedstone tile = (TileEntityDoorRedstone) worldIn.getTileEntity(pos);
+        TileEntityDoorControlRedstone tile = (TileEntityDoorControlRedstone) worldIn.getTileEntity(pos);
         if(!worldIn.isRemote) {
             tile.newId();
-            if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(tile.getId()))
-                AdvBaseSecurity.instance.doorHandler.allDoors.put(tile.getId(), tile);
+            if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(tile.getId()))
+                AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(tile.getId(), tile);
         }
     }
 
     @Nullable
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
-        return new TileEntityDoorRedstone();
+        return new TileEntityDoorControlRedstone();
     }
 
     @Override
@@ -93,7 +93,7 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
 
     @Override
     public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
-        TileEntityDoorRedstone tile = (TileEntityDoorRedstone) worldIn.getTileEntity(pos);
+        TileEntityDoorControlRedstone tile = (TileEntityDoorControlRedstone) worldIn.getTileEntity(pos);
         worldIn.setBlockState(pos, state.withProperty(POWERED, tile.isPowered()));
     }
 
@@ -111,7 +111,7 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
         if (!heldItem.isEmpty()) {
             System.out.println(heldItem.getItem().getRegistryName().toString());
             Item equipped = heldItem.getItem();
-            TileEntityDoorRedstone tile = (TileEntityDoorRedstone) world.getTileEntity(pos);
+            TileEntityDoorControlRedstone tile = (TileEntityDoorControlRedstone) world.getTileEntity(pos);
 
             if (!world.isRemote) {
                 if(equipped instanceof ItemLinkingCard)

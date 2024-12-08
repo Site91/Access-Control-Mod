@@ -2,7 +2,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -11,11 +11,11 @@ import net.minecraft.util.ITickable;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
-public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoor, ITickable {
+public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implements IDoorControl, ITickable {
     UUID deviceId = UUID.randomUUID();
     boolean powered = false;
 
-    public TileEntityDoorRedstone() {
+    public TileEntityDoorControlRedstone() {
         super();
     }
 
@@ -49,8 +49,8 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
     @Override
     public void onPlace() {
         //check if in list
-        if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
-            AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
+        if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(this.deviceId))
+            AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(this.deviceId, this);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class TileEntityDoorRedstone extends TileEntityDeviceBase implements IDoo
 
     @Override
     public String getDevType() {
-        return "door";
+        return "doorcontrol";
     }
 
     @Override

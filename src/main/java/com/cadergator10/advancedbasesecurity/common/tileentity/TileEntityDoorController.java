@@ -3,7 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
@@ -19,9 +19,9 @@ import net.minecraftforge.common.util.Constants;
 import java.util.*;
 
 //Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
-public class TileEntityDoorController extends TileEntityDeviceBase implements IDoor {
+public class TileEntityDoorController extends TileEntityDeviceBase implements IDoorControl {
 	UUID deviceId = UUID.randomUUID();
-	boolean currentState;
+	boolean currentState = false;
 
 	List<BlockPos> prevPos = new LinkedList<>();
 
@@ -166,7 +166,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 
 	@Override
 	public String getDevType() {
-		return "door";
+		return "doorcontrol";
 	}
 
 	@Override
@@ -185,8 +185,8 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 	@Override
 	public void onPlace() {
 		//check if in list
-		if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(this.deviceId))
-			AdvBaseSecurity.instance.doorHandler.allDoors.put(this.deviceId, this);
+		if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(this.deviceId))
+			AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(this.deviceId, this);
 	}
 
 	class chunkHolder{

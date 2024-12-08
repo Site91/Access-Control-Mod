@@ -2,11 +2,9 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorRedstone;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
@@ -35,13 +33,14 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 		setCreativeTab(ContentRegistry.CREATIVETAB);
 	}
 
+	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
-		IDoor te = (IDoor) worldIn.getTileEntity(pos);
+		IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
 		if (!worldIn.isRemote) {
 			te.newId();
-			if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId()))
-				AdvBaseSecurity.instance.doorHandler.allDoors.put(te.getId(), te);
+			if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(te.getId()))
+				AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(te.getId(), te);
 		}
 	}
 

@@ -5,10 +5,10 @@ import com.cadergator10.advancedbasesecurity.client.config.DoorConfig;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.nbt.*;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -28,6 +28,7 @@ import java.util.function.BiConsumer;
 
 public class DoorHandler {
     public Doors DoorGroups;
+    public CentralDoorNBT IndDoors;
     public boolean loaded = false;
 
     public DoorHandler(){
@@ -40,7 +41,7 @@ public class DoorHandler {
         AdvBaseSecurity.instance.logger.info("got event");
         if(!event.getWorld().isRemote && !loaded) {
             allReaders = new HashMap<>();
-            allDoors = new HashMap<>();
+            allDoorControllers = new HashMap<>();
             timedDoors = new LinkedList<>();
             AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
             DoorGroups = Doors.get(event.getWorld());
@@ -51,6 +52,7 @@ public class DoorHandler {
                 }
             }
             userCache = new LinkedList<>();
+            IndDoors = CentralDoorNBT.get(event.getWorld());
             loaded = true;
         }
     }
@@ -60,9 +62,12 @@ public class DoorHandler {
             AdvBaseSecurity.instance.logger.info("World unloading. Removing door stuff");
             loaded = false;
             DoorGroups = null;
+            Doors.instance = null;
+            IndDoors = null;
+            CentralDoorNBT.instance = null;
             timedDoors = null;
             allReaders = null;
-            allDoors = null;
+            allDoorControllers = null;
             editValidator = null;
             userCache = null;
         }
@@ -71,6 +76,7 @@ public class DoorHandler {
     private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
 
     public HashMap<UUID, IReader> allReaders;
+    public HashMap<UUID, IDoorControl> allDoorControllers;
     public HashMap<UUID, IDoor> allDoors;
 
     public int doorTime = Integer.MIN_VALUE;
@@ -135,8 +141,8 @@ public class DoorHandler {
                     IDevice dev = (IDevice) v;
                     if (dev.getDevType().equals("reader"))
                         allReaders.remove(dev.getId());
-                    else if (dev.getDevType().equals("door"))
-                        allDoors.remove(dev.getId());
+                    else if (dev.getDevType().equals("doorcontrol"))
+                        allDoorControllers.remove(dev.getId());
                 }
             };
             map.forEach(biConsumer);
@@ -152,8 +158,8 @@ public class DoorHandler {
                     IDevice dev = (IDevice) v;
                     if (dev.getDevType().equals("reader"))
                         allReaders.put(dev.getId(), (IReader) dev);
-                    else if (dev.getDevType().equals("door"))
-                        allDoors.put(dev.getId(), (IDoor) dev);
+                    else if (dev.getDevType().equals("doorcontrol"))
+                        allDoorControllers.put(dev.getId(), (IDoorControl) dev);
                 }
             };
             map.forEach(biConsumer);
@@ -177,8 +183,8 @@ public class DoorHandler {
     //region Door Controls
     private void updateDoorState(Doors.OneDoor door){ //update door state of all doors that are currently loaded.
         for(UUID dev : door.Doors){
-            if(allDoors.containsKey(dev)){
-                allDoors.get(dev).openDoor(door.isDoorOpen != 0);
+            if(allDoorControllers.containsKey(dev)){
+                allDoorControllers.get(dev).openDoor(door.isDoorOpen != 0);
             }
         }
     }
@@ -454,8 +460,8 @@ public class DoorHandler {
     //push update to existing tile entities
     private void pushDoorUpdate(Doors.OneDoor door){
         for(UUID id : door.Doors){
-            if(allDoors.containsKey(id)){
-                allDoors.get(id).openDoor(door.isDoorOpen != 0);
+            if(allDoorControllers.containsKey(id)){
+                allDoorControllers.get(id).openDoor(door.isDoorOpen != 0);
             }
         }
         String display;
@@ -690,6 +696,17 @@ public class DoorHandler {
                 if(door.Doors.get(i).equals(id)){
                     return door.isDoorOpen != 0;
                 }
+            }
+        }
+        return false;
+    }
+    public boolean getDoorStateFromDoor(UUID id){ //based on individual doors on load instead
+        for(CentralDoorNBT.doorHoldr door : IndDoors.doors){
+            if(door.deviceId.equals(id)){
+                if(door.clonedId != null){
+                    return getDoorState(door.clonedId);
+                }
+                return false;
             }
         }
         return false;

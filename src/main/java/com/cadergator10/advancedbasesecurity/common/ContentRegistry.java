@@ -73,7 +73,7 @@ public class ContentRegistry { //where all new items will be added
 
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
         registerTileEntity(TileEntityCardReaderSmall.class, BlockCardReaderSmall.NAME);
-        registerTileEntity(TileEntityDoorRedstone.class, BlockDoorRedstone.NAME);
+        registerTileEntity(TileEntityDoorControlRedstone.class, BlockDoorRedstone.NAME);
         registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
         registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);
     }

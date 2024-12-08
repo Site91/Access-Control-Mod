@@ -3,6 +3,8 @@ package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
@@ -11,6 +13,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -25,6 +28,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class BlockDoorBase extends BlockDoor {
 	public final static String NAME = "door_base";
@@ -37,6 +41,21 @@ public class BlockDoorBase extends BlockDoor {
 		setRegistryName(AdvBaseSecurity.MODID, name);
 		setTranslationKey("advancedbasesecurity." + name);
 		setCreativeTab(ContentRegistry.CREATIVETAB);
+	}
+
+	@Override
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+		IDoor te;
+		if(state.getValue(HALF) == EnumDoorHalf.LOWER) {
+			te = (IDoor) worldIn.getTileEntity(pos);
+			if (!worldIn.isRemote) {
+				te.newId();
+				if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId()))
+					AdvBaseSecurity.instance.doorHandler.allDoors.put(te.getId(), te);
+				te.onPlace();
+			}
+		}
 	}
 
 	@Override
@@ -65,23 +84,28 @@ public class BlockDoorBase extends BlockDoor {
 			IBlockState iblockstate = pos.equals(blockpos) ? state : worldIn.getBlockState(blockpos);
 			TileEntityDoor tile = (TileEntityDoor) worldIn.getTileEntity(blockpos);
 			ItemStack heldItem = null;
-			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
 				heldItem = player.getHeldItemMainhand();
-			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof ItemScrewdriver)) {
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof ItemScrewdriver || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
 				heldItem = player.getHeldItemOffhand();
 			}
-			if (heldItem != null && tile != null) { //change the door type
-				tile.pushDoor = !tile.pushDoor;
-				tile.markDirty();
-				if (tile.pushDoor)
-					player.sendMessage(new TextComponentString("Changed door type to push"));
-				else
-					player.sendMessage(new TextComponentString("Changed door type to automatic"));
+			if (heldItem != null && tile != null) { //change the door type or link
+				if(heldItem.getItem() instanceof ItemLinkingCard){
+//					tile.setDoor(heldItem); //disabled since it isn't being added like that.
+				}
+				else {
+					tile.pushDoor = !tile.pushDoor;
+					tile.markDirty();
+					if (tile.pushDoor)
+						player.sendMessage(new TextComponentString("Changed door type to push"));
+					else
+						player.sendMessage(new TextComponentString("Changed door type to automatic"));
+				}
 				return true;
 			}
 			if (tile == null || !tile.pushDoor)
 				return false;
-			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorState(tile.getClonedID())) {
+			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorState(tile.getId())) { //TODO: Fix dis
 				state = iblockstate.cycleProperty(OPEN);
 				worldIn.setBlockState(blockpos, state, 10);
 				worldIn.markBlockRangeForRenderUpdate(blockpos, pos);
@@ -126,9 +150,4 @@ public class BlockDoorBase extends BlockDoor {
 
 		}
 	}
-
-
-
-
-
 }
