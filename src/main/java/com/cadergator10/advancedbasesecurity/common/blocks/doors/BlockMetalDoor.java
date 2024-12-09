@@ -3,11 +3,13 @@ package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.lwjgl.Sys;
 
 import javax.annotation.Nonnull;
 import java.util.Random;

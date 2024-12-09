@@ -42,6 +42,7 @@ public class DoorHandler {
         if(!event.getWorld().isRemote && !loaded) {
             allReaders = new HashMap<>();
             allDoorControllers = new HashMap<>();
+            allDoors = new HashMap<>();
             timedDoors = new LinkedList<>();
             AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
             DoorGroups = Doors.get(event.getWorld());
@@ -68,6 +69,7 @@ public class DoorHandler {
             timedDoors = null;
             allReaders = null;
             allDoorControllers = null;
+            allDoors = null;
             editValidator = null;
             userCache = null;
         }
@@ -710,6 +712,38 @@ public class DoorHandler {
             }
         }
         return false;
+    }
+
+    public CentralDoorNBT.doorHoldr indDoorsContains(UUID id){
+        for(int i=0; i<IndDoors.doors.size(); i++){
+            if(IndDoors.doors.get(i).deviceId.equals(id))
+                return IndDoors.doors.get(i);
+        }
+        return null;
+    }
+
+    public List<CentralDoorNBT.doorHoldr> getIndDoors(UUID clonedID){
+        List<CentralDoorNBT.doorHoldr> doors = new LinkedList<>();
+        for(int i=0; i<IndDoors.doors.size(); i++){
+            if(IndDoors.doors.get(i).clonedId != null && IndDoors.doors.get(i).clonedId.equals(clonedID))
+                doors.add(IndDoors.doors.get(i));
+        }
+        return doors;
+    }
+
+    public void toggleIndDoors(UUID clonedID, boolean toggle){
+        List<UUID> doors = new LinkedList<>();
+        for(int i=0; i<IndDoors.doors.size(); i++){
+            if(IndDoors.doors.get(i).clonedId != null && IndDoors.doors.get(i).clonedId.equals(clonedID))
+                doors.add(IndDoors.doors.get(i).deviceId);
+        }
+        BiConsumer<UUID, IDoor> bic = (k, v) -> {
+            if(doors.contains(k)){
+                v.openDoor(toggle);
+            }
+        };
+        allDoors.forEach(bic);
+        IndDoors.markDirty();
     }
 
     private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){

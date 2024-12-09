@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
@@ -45,17 +46,37 @@ public class BlockDoorBase extends BlockDoor {
 
 	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+		AdvBaseSecurity.instance.logger.info("DOING A THANG");
+		AdvBaseSecurity.instance.logger.info(state.getValue(HALF));
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		IDoor te;
 		if(state.getValue(HALF) == EnumDoorHalf.LOWER) {
 			te = (IDoor) worldIn.getTileEntity(pos);
 			if (!worldIn.isRemote) {
 				te.newId();
-				if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId()))
+				if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId())) {
 					AdvBaseSecurity.instance.doorHandler.allDoors.put(te.getId(), te);
+					AdvBaseSecurity.instance.doorHandler.IndDoors.doors.add(new CentralDoorNBT.doorHoldr(te.getId()));
+					AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
+				}
 				te.onPlace();
 			}
 		}
+	}
+
+	@Override
+	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+		BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
+		IDoor te = (IDoor) worldIn.getTileEntity(blockpos);
+		AdvBaseSecurity.instance.doorHandler.allDoors.remove(te.getId());
+		for (CentralDoorNBT.doorHoldr door : AdvBaseSecurity.instance.doorHandler.IndDoors.doors) {
+			if (door.deviceId.equals(te.getId())) {
+				AdvBaseSecurity.instance.doorHandler.IndDoors.doors.remove(door);
+				AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
+				break;
+			}
+		}
+		super.onBlockHarvested(worldIn, pos, state, player);
 	}
 
 	@Override
@@ -105,7 +126,7 @@ public class BlockDoorBase extends BlockDoor {
 			}
 			if (tile == null || !tile.pushDoor)
 				return false;
-			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorState(tile.getId())) { //TODO: Fix dis
+			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(tile.getId())) { //TODO: Fix dis
 				state = iblockstate.cycleProperty(OPEN);
 				worldIn.setBlockState(blockpos, state, 10);
 				worldIn.markBlockRangeForRenderUpdate(blockpos, pos);

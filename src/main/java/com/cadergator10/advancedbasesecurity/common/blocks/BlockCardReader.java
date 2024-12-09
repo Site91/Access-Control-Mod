@@ -4,6 +4,7 @@ import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
@@ -95,6 +96,13 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 			AdvBaseSecurity.instance.doorHandler.allReaders.put(((TileEntityCardReader) te).getId(), ((IReader) te));
 			((IReader) te).updateVisuals(7, new ReaderText("Disconnected", (byte) 4));
 		}
+	}
+
+	@Override
+	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+		IReader te = (IReader) worldIn.getTileEntity(pos);
+		AdvBaseSecurity.instance.doorHandler.allReaders.remove(te.getId());
+		super.onBlockHarvested(worldIn, pos, state, player);
 	}
 
 	@Override

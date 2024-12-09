@@ -2,6 +2,8 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorControlRedstone;
 import net.minecraft.block.Block;
@@ -48,6 +50,13 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
             if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(tile.getId()))
                 AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(tile.getId(), tile);
         }
+    }
+
+    @Override
+    public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+        IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
+        AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+        super.onBlockHarvested(worldIn, pos, state, player);
     }
 
     @Nullable

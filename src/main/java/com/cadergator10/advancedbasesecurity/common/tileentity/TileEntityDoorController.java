@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
+import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.Block;
@@ -23,7 +24,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 	UUID deviceId = UUID.randomUUID();
 	boolean currentState = false;
 
-	List<BlockPos> prevPos = new LinkedList<>();
+	List<UUID> prevPos = new LinkedList<>();
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
@@ -33,12 +34,11 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 			this.deviceId = nbt.getUniqueId("deviceId");
 		else
 			this.deviceId = UUID.randomUUID();
-		if(nbt.hasKey("doorList")){
-			NBTTagList tagList = nbt.getTagList("doorList", Constants.NBT.TAG_COMPOUND);
+		if(nbt.hasKey("allDoors")){
+			NBTTagList tagList = nbt.getTagList("allDoors", Constants.NBT.TAG_COMPOUND);
 			prevPos = new LinkedList<>();
 			for(int i=0; i<tagList.tagCount(); i++){
-				NBTTagCompound tag = tagList.getCompoundTagAt(i);
-				prevPos.add(new BlockPos(tag.getInteger("x"),tag.getInteger("y"),tag.getInteger("z")));
+				prevPos.add(tagList.getCompoundTagAt(i).getUniqueId("id"));
 			}
 		}
 		else{
@@ -65,13 +65,10 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		NBTTagList tagList = new NBTTagList();
 		for(int i=0; i<prevPos.size(); i++){
 			NBTTagCompound tag = new NBTTagCompound();
-			BlockPos pos1 = prevPos.get(i);
-			tag.setInteger("x", pos1.getX());
-			tag.setInteger("y", pos1.getY());
-			tag.setInteger("z", pos1.getZ());
+			tag.setUniqueId("id", prevPos.get(i));
 			tagList.appendTag(tag);
 		}
-		nbt.setTag("doorList", tagList);
+		nbt.setTag("allDoors", tagList);
 		return nbt;
 	}
 
@@ -114,42 +111,11 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 
 	@Override
 	public void openDoor(boolean toggle) {
-		HashMap<BlockPos, BlockDoor> dooreme = getDoors();
-		for(Map.Entry<BlockPos, BlockDoor> doorSet : dooreme.entrySet()){
-			if(doorSet.getValue() instanceof BlockDoorBase) {
-				TileEntityDoor te = (TileEntityDoor) world.getTileEntity(doorSet.getKey());
-				//make sure door lock is fine
-				if(te.pushDoor)
-					world.playSound(null, te.getPos().getX() + 0.5F, te.getPos().getY() + 0.5F,te.getPos().getZ() + 0.5F, SoundHandler.lockopen, SoundCategory.BLOCKS, 1F, toggle ? 1F : 0.8F);
-				else
-					doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
-				te.setClonedID(deviceId);
-			}
-			else {
-				doorSet.getValue().toggleDoor(world, doorSet.getKey(), toggle);
-			}
-		}
-		boolean dirtyed = false;
-		for(int i=0; i<prevPos.size(); i++){
-			BlockPos pose = prevPos.get(i);
-			if(!dooreme.containsKey(pose)){ //either unloaded chunk or was broken
-				if(world.isBlockLoaded(pose) && world.getBlockState(pose).getBlock() instanceof BlockDoorBase){ //loaded and part of it. so reset the door ID
-					TileEntityDoor door = ((TileEntityDoor)world.getTileEntity(pose));
-					if(door != null)
-						door.setClonedID(null);
-					dirtyed = true;
-					prevPos.remove(i);
-					i--;
-				}
-			}
-		}
-
-		if(toggle != currentState){
+		AdvBaseSecurity.instance.doorHandler.toggleIndDoors(deviceId, toggle);
+		if(toggle != currentState) {
 			currentState = toggle;
-			dirtyed = true;
-		}
-		if(dirtyed)
 			markDirty();
+		}
 	}
 
 	@Override
@@ -182,14 +148,26 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 		}
 	}
 
+	public void linkDoors() {
+		prevPos = new LinkedList<>();
+		HashMap<BlockPos, BlockDoor> dooreme = getDoors();
+		for(Map.Entry<BlockPos, BlockDoor> doorSet : dooreme.entrySet()){
+			if(doorSet.getValue() instanceof BlockDoorBase) {
+				TileEntityDoor te = (TileEntityDoor) world.getTileEntity(doorSet.getKey());
+				CentralDoorNBT.doorHoldr door = AdvBaseSecurity.instance.doorHandler.indDoorsContains(te.deviceId);
+				if(door != null){
+					door.clonedId = deviceId;
+					prevPos.add(door.deviceId);
+				}
+			}
+		}
+		markDirty();
+	}
+
 	@Override
 	public void onPlace() {
 		//check if in list
 		if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(this.deviceId))
 			AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(this.deviceId, this);
-	}
-
-	class chunkHolder{
-
 	}
 }

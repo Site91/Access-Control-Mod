@@ -1,12 +1,14 @@
 package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.SoundCategory;
 import scala.collection.parallel.ParIterableLike;
 
 import java.util.UUID;
@@ -76,7 +78,12 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 
 	@Override
 	public void openDoor(boolean toggle) {
-
+		if(pushDoor){
+			world.playSound(null, getPos().getX() + 0.5F, getPos().getY() + 0.5F, getPos().getZ() + 0.5F, SoundHandler.lockopen, SoundCategory.BLOCKS, 1F, toggle ? 1F : 0.8F);
+		}
+		else{
+			((BlockDoor)world.getBlockState(pos).getBlock()).toggleDoor(world, pos, toggle);
+		}
 	}
 
 	@Override

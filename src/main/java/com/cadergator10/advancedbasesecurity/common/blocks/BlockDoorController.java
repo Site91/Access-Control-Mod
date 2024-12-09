@@ -2,8 +2,10 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -45,6 +47,13 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 	}
 
 	@Override
+	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+		super.onBlockHarvested(worldIn, pos, state, player);
+		IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
+		AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+	}
+
+	@Override
 	public boolean hasTileEntity(IBlockState state) {
 		return true;
 	}
@@ -59,9 +68,9 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		ItemStack heldItem;
-		if (!player.getHeldItemMainhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard) {
+		if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 			heldItem = player.getHeldItemMainhand();
-		} else if (!player.getHeldItemOffhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard) {
+		} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 			heldItem = player.getHeldItemOffhand();
 		} else {
 			return false;
@@ -75,6 +84,8 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 			if (!world.isRemote) {
 				if(equipped instanceof ItemLinkingCard)
 					tile.setDoor(heldItem);
+				else
+					tile.linkDoors();
 			}
 			return true;
 		}
