@@ -4,6 +4,7 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
+import com.cadergator10.advancedbasesecurity.common.interfaces.ICamo;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.Block;
@@ -20,7 +21,7 @@ import net.minecraftforge.common.util.Constants;
 import java.util.*;
 
 //Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
-public class TileEntityDoorController extends TileEntityDeviceBase implements IDoorControl {
+public class TileEntityDoorController extends TileEntityCamoBase implements IDoorControl {
 	UUID deviceId = UUID.randomUUID();
 	boolean currentState = false;
 
@@ -111,6 +112,7 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 
 	@Override
 	public void openDoor(boolean toggle) {
+		AdvBaseSecurity.instance.logger.info("openDoor called ye");
 		AdvBaseSecurity.instance.doorHandler.toggleIndDoors(deviceId, toggle);
 		if(toggle != currentState) {
 			currentState = toggle;

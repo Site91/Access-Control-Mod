@@ -1,10 +1,15 @@
 package com.cadergator10.advancedbasesecurity.client;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.model.CamoflageBakedModel;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReader;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockCamo;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockGlassDoor;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReaderSmall;
 import net.minecraft.block.Block;
@@ -16,6 +21,7 @@ import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
@@ -23,6 +29,7 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -38,12 +45,18 @@ public class ClientProxy extends CommonProxy {
         return world.provider.getDimension() == dimId ? world : null;
     }
 
+    @SubscribeEvent
+    public void colorHandlerEventBlock(ColorHandlerEvent.Block event){
+        BlockDoorController.DEFAULTITEM.initColorHandler(event.getBlockColors());
+    }
+
     @Override
     public void preinit(FMLPreInitializationEvent event) {
         super.preinit(event);
         //Config.clientPreInit();
 
         MinecraftForge.EVENT_BUS.register(this);
+        ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader());
 
         //ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader());
 
@@ -55,6 +68,8 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
         Minecraft mc = Minecraft.getMinecraft();
+
+        CamoflageBakedModel.initTextures();
 //        mc.getItemColors().registerItemColorHandler(new CardColorHandler(), ItemRFIDCard.DEFAULTSTACK.getItem());
 //        mc.getItemColors().registerItemColorHandler(new CardColorHandler(), ItemMagCard.DEFAULTSTACK.getItem());
 
@@ -69,8 +84,8 @@ public class ClientProxy extends CommonProxy {
             ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block), 0, new ModelResourceLocation(block.getRegistryName().toString(), "inventory"));
 
         // BlockNanoFog uses custom texture/model loader for shield blocks
-//        for(Block block : ContentRegistry.modCamoBlocks)
-//            CamouflageBlockModelLoader.registerBlock((BlockCamouflage) block);
+        for(Block block : ContentRegistry.modCamoBlocks)
+            CamouflageBlockModelLoader.registerBlock((BlockCamo) block);
 
         for(ItemStack itemStack : ContentRegistry.modBlocksWithItem.values())
             ModelLoader.setCustomModelResourceLocation(itemStack.getItem(), 0, new ModelResourceLocation(itemStack.getItem().getRegistryName().toString(), "inventory"));
@@ -79,7 +94,8 @@ public class ClientProxy extends CommonProxy {
             ModelLoader.setCustomModelResourceLocation(itemStack.getItem(), 0, new ModelResourceLocation(itemStack.getItem().getRegistryName().toString(), "inventory"));
 
 //        ModelLoader.setCustomStateMapper(BlockRolldoorElement.DEFAULTITEM, new StateMap.Builder().ignore(BlockRolldoorElement.PROPERTYOFFSET).build());
-//        ModelLoader.setCustomStateMapper(BlockSecureDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
+        ModelLoader.setCustomStateMapper(BlockMetalDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
+        ModelLoader.setCustomStateMapper(BlockGlassDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
 //        ModelLoader.setCustomStateMapper(BlockSecurePrivateDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
 //        ModelLoader.setCustomStateMapper(BlockSecureMagDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
     }

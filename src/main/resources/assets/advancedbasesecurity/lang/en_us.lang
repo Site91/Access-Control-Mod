@@ -24,8 +24,11 @@ advancedbasesecurity.reader.text.error=ERROR
 #items
 item.advancedbasesecurity.id_card.name=ID Card
 item.advancedbasesecurity.linking_card=Linking Card
+item.advancedbasesecurity.screwdriver.name=Screwdriver
 #blocks
 tile.advancedbasesecurity.card_reader.name=Card Reader
+tile.advancedbasesecurity.card_reader_small.name=Card Reader (small)
 tile.advancedbasesecurity.redstone_control.name=Redstone Door Controller
-tile.advancedbasesecurity.door_controller.name=Door Controller
-item.tile.advancedbasesecurity.scp_door.name=SCP door
+tile.advancedbasesecurity.door_control.name=Door Controller
+tile.advancedbasesecurity.metal_door.name=Metal door
+tile.advancedbasesecurity.glass_door.name=Glass door

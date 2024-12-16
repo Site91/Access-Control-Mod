@@ -31,12 +31,12 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 		else
 			pushDoor = false;
 		if (nbt.hasKey("toclient") && nbt.getBoolean("toclient")) { //TODO: Open or close based on state
-				boolean stated;
-				if(nbt.hasKey("devState")) {
-					stated = nbt.getBoolean("devState");
-					if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
-						((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
-				}
+			boolean stated;
+			if(nbt.hasKey("devState")) {
+				stated = nbt.getBoolean("devState");
+				if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated))
+					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+			}
 		}
 //		if(currentDoor != null && !world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(currentDoor.currentState)){
 //			((BlockDoor)world.getBlockState(pos).getBlock()).toggleDoor(world, pos, currentDoor.currentState);
@@ -46,11 +46,12 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	@Override
 	public void onLoad() {
 		super.onLoad();
-		IBlockState state = world.getBlockState(pos);
-		boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId);
-		if (!pushDoor && !state.getValue(BlockDoor.OPEN).equals(stated)) {
-			((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
-
+		if(!world.isRemote) {
+			IBlockState state = world.getBlockState(pos);
+			boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId);
+			if (!pushDoor && !state.getValue(BlockDoor.OPEN).equals(stated)) {
+				((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+			}
 		}
 	}
 

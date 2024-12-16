@@ -1,7 +1,6 @@
 package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 
 import com.cadergator10.advancedbasesecurity.common.items.ItemMetalDoor;
-import net.minecraft.block.BlockDoor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Items;
@@ -13,12 +12,12 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.util.Random;
 
-public class BlockMetalDoor extends BlockDoorBase{
-    public static final String NAME = "metal_door";
-    public static BlockMetalDoor DEFAULTITEM;
+public class BlockGlassDoor extends BlockDoorBase{
+    public static final String NAME = "glass_door";
+    public static BlockGlassDoor DEFAULTITEM;
 
-    public BlockMetalDoor() {
-        super(NAME, Material.IRON);
+    public BlockGlassDoor() {
+        super(NAME, Material.GLASS);
     }
 
     @Nonnull
@@ -30,7 +29,7 @@ public class BlockMetalDoor extends BlockDoorBase{
     @Nonnull
     @Override
     public Item getItemDropped(IBlockState state, Random rand, int fortune) {
-        return state.getValue(HALF) == BlockDoor.EnumDoorHalf.UPPER ? Items.AIR : getItem();
+        return state.getValue(HALF) == EnumDoorHalf.UPPER ? Items.AIR : getItem();
     }
 
     protected Item getItem() {

@@ -38,7 +38,6 @@ public class DoorHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onWorldLoad(WorldEvent.Load event){
-        AdvBaseSecurity.instance.logger.info("got event");
         if(!event.getWorld().isRemote && !loaded) {
             allReaders = new HashMap<>();
             allDoorControllers = new HashMap<>();
@@ -472,33 +471,40 @@ public class DoorHandler {
         }
         String display;
         byte color;
+        int barColor;
         int bar = door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0));
         if(door.isDoorOpen == 0){ //perform the stuff based on a closed door.
             if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
                 display = new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText();
                 color = 4;
+                barColor = 1;
             }
             else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
                 display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
                 color = 12;
+                barColor = 1;
             }
             else {
                 display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
                 color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
+                barColor = 0;
             }
         }
         else{ //perform based on an open door
             if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
                 display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
                 color = 10;
+                barColor = 4;
             }
             else {
                 display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
                 color = 2;
+                barColor = 4;
             }
         }
         door.readerLabel = display;
         door.readerLabelColor = color;
+        door.readerLights = barColor;
         for(UUID id : door.Readers){
             if(allReaders.containsKey(id)){
                 allReaders.get(id).updateVisuals(bar, new ReaderText(display, color) );
@@ -718,6 +724,22 @@ public class DoorHandler {
         return false;
     }
 
+    public List<String> getUserNames(){
+        List<String> names = new LinkedList<>();
+        for(Doors.Users user : DoorGroups.users){
+            names.add(user.name);
+        }
+        return names;
+    }
+
+    public List<String> getDoorNames(){
+        List<String> names = new LinkedList<>();
+        for(Doors.OneDoor dooor : DoorGroups.doors){
+            names.add(dooor.doorName);
+        }
+        return names;
+    }
+
     public CentralDoorNBT.doorHoldr indDoorsContains(UUID id){
         for(int i=0; i<IndDoors.doors.size(); i++){
             if(IndDoors.doors.get(i).deviceId.equals(id))
@@ -868,11 +890,21 @@ public class DoorHandler {
         public HashMap<UUID, Groups> groups = new HashMap<>();
         public List<Users> users = new LinkedList<>();
 
+        void quickPassAdd(){
+            PassValue tempPass = new PassValue("staff");
+            tempPass.passName = "Staff";
+            tempPass.passType = PassValue.type.Pass;
+            tempPass.groupNames = null;
+            passes.put("staff", tempPass);
+        }
+
         public Doors(){
             super(DATA_NAME);
+            quickPassAdd();
         }
         public Doors(String str){
             super(str);
+            quickPassAdd();
         }
 
         public static Doors get(World world) {
@@ -896,11 +928,7 @@ public class DoorHandler {
 
             //read all pass data
             this.passes = new HashMap<>();
-            PassValue tempPass = new PassValue("staff");
-            tempPass.passName = "Staff";
-            tempPass.passType = PassValue.type.Pass;
-            tempPass.groupNames = null;
-            passes.put("staff", tempPass);
+            quickPassAdd();
             if(nbt.hasKey("passes")){
                 NBTTagList tempPassList = nbt.getTagList("passes", Constants.NBT.TAG_COMPOUND);
                 for(int i=0; i<tempPassList.tagCount(); i++){

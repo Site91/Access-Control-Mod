@@ -26,6 +26,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentScore;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -36,10 +37,10 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 	public final static String NAME = "door_base";
 
 	public BlockDoorBase(){
-		this(NAME);
+		this(NAME, Material.IRON);
 	}
-	BlockDoorBase(String name) {
-		super(Material.IRON);
+	BlockDoorBase(String name, Material mat) {
+		super(mat);
 		setRegistryName(AdvBaseSecurity.MODID, name);
 		setTranslationKey("advancedbasesecurity." + name);
 		setCreativeTab(ContentRegistry.CREATIVETAB);

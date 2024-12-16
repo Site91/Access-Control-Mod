@@ -23,7 +23,7 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class BlockDoorController extends Block implements ITileEntityProvider {
+public class BlockDoorController extends BlockCamo implements ITileEntityProvider {
 	public final static String NAME = "door_control";
 	public static BlockDoorController DEFAULTITEM;
 
@@ -67,6 +67,9 @@ public class BlockDoorController extends Block implements ITileEntityProvider {
 
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
+		boolean rightClick = super.onBlockActivated(world, pos, state, player, hand, side, hitX, hitY, hitZ);
+		if(rightClick)
+			return true;
 		ItemStack heldItem;
 		if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 			heldItem = player.getHeldItemMainhand();

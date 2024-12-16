@@ -15,9 +15,13 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -124,7 +128,7 @@ public class BaseSecurityCommand extends CommandBase {
 										}
 									}
 									else{
-										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors open <doorName> <time>"));
+										sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors toggle <doorName> <time>"));
 									}
 									break;
 								default:
@@ -351,8 +355,84 @@ public class BaseSecurityCommand extends CommandBase {
 				}
 			}
 			else {
-				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Invalid Arguments"));
+				sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity <info/doors/groups/users/passes> ..."));
 			}
 		}
+	}
+
+	@Override
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
+		if (args.length > 0) {
+			switch (args[0]) {
+				case "doors":
+					if (args.length > 1) {
+						switch (args[1]) {
+							case "edit":
+							case "create":
+								return Collections.emptyList();
+							case "link":
+							case "open":
+                            case "toggle":
+                                if(args.length == 3){
+									return CommandBase.getListOfStringsMatchingLastWord(args, AdvBaseSecurity.instance.doorHandler.getDoorNames());
+								}
+								else{
+									return Collections.emptyList();
+								}
+                            default:
+								return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link", "open", "toggle");
+						}
+					}
+					return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link", "open", "toggle");
+				case "groups":
+					if (args.length > 1) {
+						switch(args[1]){
+							case "create":
+							case "count":
+							case "setstatus":
+								return Collections.emptyList();
+							default:
+								return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link");
+						}
+					}
+					else{
+						return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link");
+					}
+				case "users":
+					if (args.length > 1) {
+						ICommandSender sendered = sender.getCommandSenderEntity();
+						switch(args[1]){
+							case "edit":
+								return Collections.emptyList();
+							case "link":
+								return CommandBase.getListOfStringsMatchingLastWord(args, AdvBaseSecurity.instance.doorHandler.getUserNames());
+							default:
+								return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "link");
+						}
+					}
+					else{
+						return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "link");
+					}
+				case "passes":
+					if (args.length > 1) {
+						ICommandSender sendered = sender.getCommandSenderEntity();
+						switch(args[1]){
+							case "edit":
+                            case "list":
+                                return Collections.emptyList();
+                            default:
+								return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "list");
+						}
+					}
+					else{
+						return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "list");
+					}
+				case "info":
+					return Collections.emptyList();
+				default:
+					return CommandBase.getListOfStringsMatchingLastWord(args, "info", "doors", "groups", "users", "passes");
+			}
+		}
+		return Collections.emptyList();
 	}
 }

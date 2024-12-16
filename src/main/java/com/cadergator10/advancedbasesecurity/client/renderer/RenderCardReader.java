@@ -96,15 +96,15 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		GlStateManager.popMatrix();
 	}
 
-	private void transferSide(BufferBuilder vertexbuffer, float slide){
+	private void transferSide(BufferBuilder vertexbuffer, float slide, boolean invertSide){
 		//card swipe rightside
-		vertexbuffer.pos(texPixel * (4+slide), texPixel * 4,    texPixel).tex(1f,          texPixel * 2f).normal(-1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * (4+slide), texPixel * 11, texPixel).tex(1f,          texPixel * 9f).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * (4+slide), texPixel * 4,    texPixel).tex(invertSide ? 1f-uvWide*2f : 1f,          texPixel * 2f).normal(-1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * (4+slide), texPixel * 11, texPixel).tex(invertSide ? 1f-uvWide*2f : 1f,          texPixel * 9f).normal(-1f,0f,0f).endVertex();
 		vertexbuffer.pos(texPixel * (4f+slide), texPixel * 11, 0f-texPixel      ).tex(1f-uvWide, texPixel * 9f).normal(-1f,0f,0f).endVertex();
 		vertexbuffer.pos(texPixel * (4f+slide), texPixel * 4,    0f-texPixel      ).tex(1f-uvWide, texPixel * 2f).normal(-1f,0f,0f).endVertex();
 		//card swipe leftside
-		vertexbuffer.pos(texPixel * (5+slide), texPixel * 11,    texPixel).tex(1f-uvWide*2f,          texPixel * 2f).normal(1f,0f,0f).endVertex();
-		vertexbuffer.pos(texPixel * (5+slide), texPixel * 4, texPixel).tex(1f-uvWide*2f,          texPixel * 9f).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * (5+slide), texPixel * 11,    texPixel).tex(!invertSide ? 1f-uvWide*2f : 1f,          texPixel * 2f).normal(1f,0f,0f).endVertex();
+		vertexbuffer.pos(texPixel * (5+slide), texPixel * 4, texPixel).tex(!invertSide ? 1f-uvWide*2f : 1f,          texPixel * 9f).normal(1f,0f,0f).endVertex();
 		vertexbuffer.pos(texPixel * (5f+slide), texPixel * 4, 0f-texPixel      ).tex(1f-uvWide, texPixel * 9f).normal(1f,0f,0f).endVertex();
 		vertexbuffer.pos(texPixel * (5f+slide), texPixel * 11,    0f-texPixel      ).tex(1f-uvWide, texPixel * 2f).normal(1f,0f,0f).endVertex();
 		//card swipe bottom
@@ -199,8 +199,8 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		vertexbuffer.pos(1f-texPixel, 1f-texPixel, 0f      ).tex(1f-uvGen-uvWide, 1f-texPixel).normal(-1f,0f,0f).endVertex();
 		vertexbuffer.pos(1f-texPixel, texPixel,    0f      ).tex(1f-uvGen-uvWide, texPixel   ).normal(-1f,0f,0f).endVertex();
 		//card swiper
-		transferSide(vertexbuffer, 0);
-		transferSide(vertexbuffer, 1.1f);
+		transferSide(vertexbuffer, 0, true);
+		transferSide(vertexbuffer, 1.1f, false);
 		transferLight(vertexbuffer, card != null ? (card.tempTextDelay > 0 ? card.tempLightFlag : card.lightFlag) : 0);
 
 		tessellator.draw();

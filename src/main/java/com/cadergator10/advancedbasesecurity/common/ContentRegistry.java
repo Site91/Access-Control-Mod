@@ -6,11 +6,9 @@ import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
+import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockGlassDoor;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemMetalDoor;
-import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
+import com.cadergator10.advancedbasesecurity.common.items.*;
 import com.cadergator10.advancedbasesecurity.common.tileentity.*;
 import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
 import net.minecraft.block.Block;
@@ -35,6 +33,9 @@ public class ContentRegistry { //where all new items will be added
     // holds a list of normal mod blocks
     public static final HashSet<Block> modBlocks = new HashSet<>();
 
+    //disguisable blocks. Pretty much just one atm
+    public static final HashSet<Block> modCamoBlocks = new HashSet<>();
+
     // holds a list of mod blocks that have a specific custom Item like the doors
     public static final HashMap<Block, ItemStack> modBlocksWithItem = new HashMap<>();
 
@@ -49,11 +50,13 @@ public class ContentRegistry { //where all new items will be added
         modBlocks.add(BlockCardReader.DEFAULTITEM = new BlockCardReader());
         modBlocks.add(BlockCardReaderSmall.DEFAULTITEM = new BlockCardReaderSmall());
         modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
-        modBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
+
+        modCamoBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
 //
 //        modBlocksWithItem.put(BlockSecureDoor.DEFAULTITEM = new BlockSecureDoor(), ItemSecureDoor.DEFAULTSTACK = new ItemStack(new ItemSecureDoor()));
 //        modBlocksWithItem.put(BlockSecurePrivateDoor.DEFAULTITEM = new BlockSecurePrivateDoor(), ItemSecurePrivateDoor.DEFAULTSTACK = new ItemStack(new ItemSecurePrivateDoor()));
         modBlocksWithItem.put(BlockMetalDoor.DEFAULTITEM = new BlockMetalDoor(), ItemMetalDoor.DEFAULTSTACK = new ItemStack(new ItemMetalDoor()));
+        modBlocksWithItem.put(BlockGlassDoor.DEFAULTITEM = new BlockGlassDoor(), ItemGlassDoor.DEFAULTSTACK = new ItemStack(new ItemGlassDoor()));
 //
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
@@ -66,6 +69,9 @@ public class ContentRegistry { //where all new items will be added
     @SubscribeEvent
     public static void addBlocks(RegistryEvent.Register<Block> event) {
         for(Block block : modBlocks)
+            event.getRegistry().register(block);
+
+        for(Block block : modCamoBlocks)
             event.getRegistry().register(block);
 
         for(Block block : modBlocksWithItem.keySet())
@@ -88,6 +94,9 @@ public class ContentRegistry { //where all new items will be added
     public static void addItems(RegistryEvent.Register<Item> event) {
 
         for(Block block : modBlocks)
+            event.getRegistry().register(new ItemBlock(block).setRegistryName(block.getRegistryName()));
+
+        for(Block block : modCamoBlocks)
             event.getRegistry().register(new ItemBlock(block).setRegistryName(block.getRegistryName()));
 
         for(Map.Entry<Block, ItemStack> entry : modBlocksWithItem.entrySet())
