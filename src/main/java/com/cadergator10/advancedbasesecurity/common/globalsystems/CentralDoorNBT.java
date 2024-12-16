@@ -64,7 +64,8 @@ public class CentralDoorNBT extends WorldSavedData {
         for(doorHoldr door : doors){
             NBTTagCompound tag = new NBTTagCompound();
             tag.setUniqueId("id", door.deviceId);
-            tag.setUniqueId("cloned", door.clonedId);
+            if(door.clonedId != null)
+                tag.setUniqueId("cloned", door.clonedId);
             list.appendTag(tag);
         }
         nbt.setTag("doors", list);

@@ -53,8 +53,8 @@ public class TileEntityDoorController extends TileEntityDeviceBase implements ID
 			else
 				this.currentState = false;
 		}
-		if(current != currentState)
-			openDoor(currentState);
+//		if(current != currentState)
+//			openDoor(currentState);
 	}
 
 	@Override

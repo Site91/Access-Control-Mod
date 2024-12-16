@@ -9,7 +9,7 @@ import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemSCPDoor;
+import com.cadergator10.advancedbasesecurity.common.items.ItemMetalDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.*;
 import com.cadergator10.advancedbasesecurity.itemgroups.basesecuritytab;
@@ -53,7 +53,7 @@ public class ContentRegistry { //where all new items will be added
 //
 //        modBlocksWithItem.put(BlockSecureDoor.DEFAULTITEM = new BlockSecureDoor(), ItemSecureDoor.DEFAULTSTACK = new ItemStack(new ItemSecureDoor()));
 //        modBlocksWithItem.put(BlockSecurePrivateDoor.DEFAULTITEM = new BlockSecurePrivateDoor(), ItemSecurePrivateDoor.DEFAULTSTACK = new ItemStack(new ItemSecurePrivateDoor()));
-        modBlocksWithItem.put(BlockMetalDoor.DEFAULTITEM = new BlockMetalDoor(), ItemSCPDoor.DEFAULTSTACK = new ItemStack(new ItemSCPDoor()));
+        modBlocksWithItem.put(BlockMetalDoor.DEFAULTITEM = new BlockMetalDoor(), ItemMetalDoor.DEFAULTSTACK = new ItemStack(new ItemMetalDoor()));
 //
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));

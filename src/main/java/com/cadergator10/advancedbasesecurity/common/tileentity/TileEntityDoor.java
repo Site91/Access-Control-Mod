@@ -6,6 +6,7 @@ import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
@@ -45,8 +46,9 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	@Override
 	public void onLoad() {
 		super.onLoad();
+		IBlockState state = world.getBlockState(pos);
 		boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId);
-		if (!world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(stated)) {
+		if (!pushDoor && !state.getValue(BlockDoor.OPEN).equals(stated)) {
 			((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
 
 		}
@@ -56,15 +58,17 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
 		if(deviceId != null)
-			nbt.setUniqueId("clonedId", deviceId);
+			nbt.setUniqueId("deviceId", deviceId);
 		nbt.setBoolean("pushDoor", pushDoor);
 		return nbt;
 	}
 
 	@Override
 	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
-		nbt.setBoolean("toclient", true);
-		nbt.setBoolean("devState", AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId));
+		if(!pushDoor) {
+			nbt.setBoolean("toclient", true);
+			nbt.setBoolean("devState", AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId));
+		}
 		return nbt;
 	}
 

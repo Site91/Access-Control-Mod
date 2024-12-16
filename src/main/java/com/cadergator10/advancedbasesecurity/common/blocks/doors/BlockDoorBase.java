@@ -12,6 +12,7 @@ import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -31,7 +32,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
-public class BlockDoorBase extends BlockDoor {
+public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 	public final static String NAME = "door_base";
 
 	public BlockDoorBase(){
@@ -46,8 +47,6 @@ public class BlockDoorBase extends BlockDoor {
 
 	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-		AdvBaseSecurity.instance.logger.info("DOING A THANG");
-		AdvBaseSecurity.instance.logger.info(state.getValue(HALF));
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		IDoor te;
 		if(state.getValue(HALF) == EnumDoorHalf.LOWER) {
@@ -56,8 +55,6 @@ public class BlockDoorBase extends BlockDoor {
 				te.newId();
 				if (!AdvBaseSecurity.instance.doorHandler.allDoors.containsKey(te.getId())) {
 					AdvBaseSecurity.instance.doorHandler.allDoors.put(te.getId(), te);
-					AdvBaseSecurity.instance.doorHandler.IndDoors.doors.add(new CentralDoorNBT.doorHoldr(te.getId()));
-					AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
 				}
 				te.onPlace();
 			}
@@ -66,6 +63,7 @@ public class BlockDoorBase extends BlockDoor {
 
 	@Override
 	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
+		AdvBaseSecurity.instance.logger.info("Deleting door block now!");
 		BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
 		IDoor te = (IDoor) worldIn.getTileEntity(blockpos);
 		AdvBaseSecurity.instance.doorHandler.allDoors.remove(te.getId());
@@ -127,9 +125,7 @@ public class BlockDoorBase extends BlockDoor {
 			if (tile == null || !tile.pushDoor)
 				return false;
 			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(tile.getId())) { //TODO: Fix dis
-				state = iblockstate.cycleProperty(OPEN);
-				worldIn.setBlockState(blockpos, state, 10);
-				worldIn.markBlockRangeForRenderUpdate(blockpos, pos);
+				toggleDoor(worldIn, pos, !iblockstate.getValue(OPEN));
 				worldIn.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, ((Boolean) state.getValue(OPEN)).booleanValue() ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1F, 1F);
 				return true;
 			}
@@ -141,7 +137,7 @@ public class BlockDoorBase extends BlockDoor {
 	public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos){
 		if (state.getValue(HALF) == BlockDoor.EnumDoorHalf.UPPER) {
 			BlockPos blockpos = pos.down();
-			IBlockState iblockstate = worldIn.getBlockState(blockpos);
+			IBlockState iblockstate = worldIn.getBlockState(blockpos).getActualState(worldIn, pos);
 
 			if (iblockstate.getBlock() != this)
 				worldIn.setBlockToAir(pos);
@@ -170,5 +166,11 @@ public class BlockDoorBase extends BlockDoor {
 				this.dropBlockAsItem(worldIn, pos, state, 0);
 
 		}
+	}
+
+	@Nullable
+	@Override
+	public TileEntity createNewTileEntity(World worldIn, int meta) {
+		return new TileEntityDoor();
 	}
 }

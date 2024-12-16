@@ -145,6 +145,8 @@ public class DoorHandler {
                         allReaders.remove(dev.getId());
                     else if (dev.getDevType().equals("doorcontrol"))
                         allDoorControllers.remove(dev.getId());
+                    else if (dev.getDevType().equals("door"))
+                        allDoors.remove(dev.getId());
                 }
             };
             map.forEach(biConsumer);
@@ -162,6 +164,8 @@ public class DoorHandler {
                         allReaders.put(dev.getId(), (IReader) dev);
                     else if (dev.getDevType().equals("doorcontrol"))
                         allDoorControllers.put(dev.getId(), (IDoorControl) dev);
+                    else if (dev.getDevType().equals("door"))
+                        allDoors.put(dev.getId(), (IDoor) dev);
                 }
             };
             map.forEach(biConsumer);
