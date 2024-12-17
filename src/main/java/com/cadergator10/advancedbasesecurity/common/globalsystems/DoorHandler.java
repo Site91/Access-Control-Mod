@@ -104,21 +104,27 @@ public class DoorHandler {
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event){
         if(event.phase == TickEvent.Phase.START) {
-            if (!timedDoors.isEmpty()) {
-                for (Doors.OneDoor door : timedDoors) {
-                    if (door.isDoorOpen == 1) {
-                        door.currTick--;
-                        if (door.currTick <= 0) {
-                            door.isDoorOpen = 0;
-                            pushDoorUpdate(door);
-                            DoorGroups.markDirty();
+            try {
+                if (!timedDoors.isEmpty()) {
+                    for (int i = 0; i < timedDoors.size(); i++) {
+                        Doors.OneDoor door = timedDoors.get(i);
+                        if (door.isDoorOpen == 1) {
+                            door.currTick--;
+                            if (door.currTick <= 0) {
+                                door.isDoorOpen = 0;
+                                pushDoorUpdate(door);
+                                DoorGroups.markDirty();
+                            }
+                        }
+
+                        if (door.isDoorOpen == 0) {
+                            timedDoors.remove(door);
                         }
                     }
-
-                    if (door.isDoorOpen == 0) {
-                        timedDoors.remove(door);
-                    }
                 }
+            }
+            catch (Exception e){
+                //nothing. Just in case above thing crashes
             }
             //cache
             if (DoorConfig.cachetime != 0) {

@@ -64,15 +64,17 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 
 	@Override
 	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
-		AdvBaseSecurity.instance.logger.info("Deleting door block now!");
-		BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
-		IDoor te = (IDoor) worldIn.getTileEntity(blockpos);
-		AdvBaseSecurity.instance.doorHandler.allDoors.remove(te.getId());
-		for (CentralDoorNBT.doorHoldr door : AdvBaseSecurity.instance.doorHandler.IndDoors.doors) {
-			if (door.deviceId.equals(te.getId())) {
-				AdvBaseSecurity.instance.doorHandler.IndDoors.doors.remove(door);
-				AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
-				break;
+		if(worldIn.isRemote) {
+			AdvBaseSecurity.instance.logger.info("Deleting door block now!");
+			BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
+			IDoor te = (IDoor) worldIn.getTileEntity(blockpos);
+			AdvBaseSecurity.instance.doorHandler.allDoors.remove(te.getId());
+			for (CentralDoorNBT.doorHoldr door : AdvBaseSecurity.instance.doorHandler.IndDoors.doors) {
+				if (door.deviceId.equals(te.getId())) {
+					AdvBaseSecurity.instance.doorHandler.IndDoors.doors.remove(door);
+					AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
+					break;
+				}
 			}
 		}
 		super.onBlockHarvested(worldIn, pos, state, player);

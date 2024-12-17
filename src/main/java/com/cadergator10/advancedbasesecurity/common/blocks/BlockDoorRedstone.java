@@ -54,8 +54,10 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
 
     @Override
     public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
-        IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
-        AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+        if(worldIn.isRemote) {
+            IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
+            AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+        }
         super.onBlockHarvested(worldIn, pos, state, player);
     }
 

@@ -125,13 +125,11 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 			else
 				currText = new ReaderText("PACKET ERROR", (byte)4);
 		}
-		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Read");
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write");
 		if(this.deviceId != null)
 			nbt.setUniqueId("deviceId", this.deviceId);
 		if(this.tempText != null){
@@ -143,7 +141,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 //		nbt.setInteger("", this.lightFlag);
 //		if(this.currText != null)
 //			nbt.setString("textlabel",this.currText.getFormattedText());
-		AdvBaseSecurity.instance.logger.info("Ending Reader NBT Write: " + nbt.toString());
 		return nbt;
 	}
 

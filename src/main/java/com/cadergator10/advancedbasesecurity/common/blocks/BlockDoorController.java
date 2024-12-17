@@ -49,8 +49,10 @@ public class BlockDoorController extends BlockCamo implements ITileEntityProvide
 	@Override
 	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
 		super.onBlockHarvested(worldIn, pos, state, player);
-		IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
-		AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+		if(worldIn.isRemote) {
+			IDoorControl te = (IDoorControl) worldIn.getTileEntity(pos);
+			AdvBaseSecurity.instance.doorHandler.allDoorControllers.remove(te.getId());
+		}
 	}
 
 	@Override
