@@ -61,9 +61,11 @@ public class DoorNamePacket implements IMessage {
             buf.writeInt(door.status);
             buf.writeInt(door.readerCount);
             buf.writeInt(door.doorCount);
-            buf.writeBoolean(door.groupID != null && groups.containsKey(door.groupID) && !tempList.contains(door.groupID));
-            if(door.groupID != null && groups.containsKey(door.groupID) && !tempList.contains(door.groupID)){
+            boolean hasGroup = door.groupID != null && groups.containsKey(door.groupID) && !tempList.contains(door.groupID);
+            buf.writeBoolean(hasGroup);
+            if(hasGroup){
                 tempList.add(door.groupID);
+                ByteBufUtils.writeUTF8String(buf, door.groupID.toString());
             }
         }
         buf.writeInt(tempList.size());

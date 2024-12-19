@@ -1,10 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReader;
-import com.cadergator10.advancedbasesecurity.common.blocks.BlockCardReaderSmall;
-import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
-import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
+import com.cadergator10.advancedbasesecurity.common.blocks.*;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockGlassDoor;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
@@ -49,6 +46,7 @@ public class ContentRegistry { //where all new items will be added
 //        modBlocks.add(BlockSecurityTerminal.DEFAULTITEM = new BlockSecurityTerminal());
         modBlocks.add(BlockCardReader.DEFAULTITEM = new BlockCardReader());
         modBlocks.add(BlockCardReaderSmall.DEFAULTITEM = new BlockCardReaderSmall());
+        modBlocks.add(BlockCardReaderDouble.DEFAULTITEM = new BlockCardReaderDouble());
         modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
 
         modCamoBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
@@ -79,6 +77,7 @@ public class ContentRegistry { //where all new items will be added
 
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
         registerTileEntity(TileEntityCardReaderSmall.class, BlockCardReaderSmall.NAME);
+        registerTileEntity(TileEntityCardReaderDouble.class, BlockCardReaderDouble.NAME);
         registerTileEntity(TileEntityDoorControlRedstone.class, BlockDoorRedstone.NAME);
         registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
         registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);

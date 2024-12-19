@@ -250,7 +250,7 @@ public class BaseSecurityCommand extends CommandBase {
 //									}
 									break;
 								default:
-									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity doors <edit/create/link>"));
+									sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /basesecurity groups <create/count/setstatus>"));
 									break;
 							}
 						}
@@ -387,16 +387,18 @@ public class BaseSecurityCommand extends CommandBase {
 				case "groups":
 					if (args.length > 1) {
 						switch(args[1]){
-							case "create":
 							case "count":
-							case "setstatus":
+							case "create":
 								return Collections.emptyList();
+							case "setstatus":
+								if(args.length == 3)
+									return CommandBase.getListOfStringsMatchingLastWord(args, AdvBaseSecurity.instance.doorHandler.getGroupNames());
 							default:
-								return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link");
+								return CommandBase.getListOfStringsMatchingLastWord(args, "create", "count", "setstatus");
 						}
 					}
 					else{
-						return CommandBase.getListOfStringsMatchingLastWord(args, "edit", "create", "link");
+						return CommandBase.getListOfStringsMatchingLastWord(args, "create", "count", "setstatus");
 					}
 				case "users":
 					if (args.length > 1) {

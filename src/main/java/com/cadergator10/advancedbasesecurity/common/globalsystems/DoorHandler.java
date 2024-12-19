@@ -329,7 +329,7 @@ public class DoorHandler {
         List<UUID> groups = new LinkedList<>();
         //Find any that are children
         BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
-            if(v.parentID.equals(groupID))
+            if(v.parentID != null && v.parentID.equals(groupID))
                 groups.add(k);
         };
         DoorGroups.groups.forEach(biConsumer);
@@ -481,7 +481,7 @@ public class DoorHandler {
         int bar = door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0));
         if(door.isDoorOpen == 0){ //perform the stuff based on a closed door.
             if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.nodoor").getUnformattedText();
+                display = new TextComponentTranslation("advancedbasesecurity.reader.text.noaccess").getUnformattedText();
                 color = 4;
                 barColor = 1;
             }
@@ -631,8 +631,13 @@ public class DoorHandler {
         //get all doors and push their values
         for(Doors.OneDoor door : DoorGroups.doors){
             if(door.groupID != null && groups.contains(door.groupID)){ //that door is part of the group tree
+                Doors.OneDoor.allDoorStatuses prev = door.doorStatus;
                 door.doorStatus = group.status;
                 door.override = (Math.abs(group.status.getInt()) == 1 ? group.override : null); //because -1 and 1 values are override ones.
+                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS)
+                    door.isDoorOpen = 2; //lock open
+                else if(prev == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //revert to closed state
+                    door.isDoorOpen = 0;
                 pushUpdateDoors.add(door);
             }
         }
@@ -742,6 +747,14 @@ public class DoorHandler {
         List<String> names = new LinkedList<>();
         for(Doors.OneDoor dooor : DoorGroups.doors){
             names.add(dooor.doorName);
+        }
+        return names;
+    }
+
+    public List<String> getGroupNames(){
+        List<String> names = new LinkedList<>();
+        for(Doors.Groups dooor : DoorGroups.groups.values()){
+            names.add(dooor.name);
         }
         return names;
     }

@@ -1,8 +1,8 @@
 package com.cadergator10.advancedbasesecurity.client;
 
-import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.model.CamoflageBakedModel;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReader;
+import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReaderDouble;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReaderSmall;
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
@@ -11,13 +11,13 @@ import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorController;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockGlassDoor;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
+import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReaderDouble;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReaderSmall;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.block.statemap.StateMap;
-import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -26,7 +26,6 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -62,6 +61,7 @@ public class ClientProxy extends CommonProxy {
 
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReader.class, new RenderCardReader());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReaderSmall.class, new RenderCardReaderSmall());
+        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReaderDouble.class, new RenderCardReaderDouble());
     }
 
     @Override

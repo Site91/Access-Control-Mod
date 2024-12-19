@@ -28,6 +28,7 @@ item.advancedbasesecurity.screwdriver.name=Screwdriver
 #blocks
 tile.advancedbasesecurity.card_reader.name=Card Reader
 tile.advancedbasesecurity.card_reader_small.name=Card Reader (small)
+tile.advancedbasesecurity.card_reader_double.name=Card Reader (double)
 tile.advancedbasesecurity.redstone_control.name=Redstone Door Controller
 tile.advancedbasesecurity.door_control.name=Door Controller
 tile.advancedbasesecurity.metal_door.name=Metal door

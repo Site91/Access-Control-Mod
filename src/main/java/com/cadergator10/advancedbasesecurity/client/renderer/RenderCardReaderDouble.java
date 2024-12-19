@@ -1,8 +1,6 @@
 package com.cadergator10.advancedbasesecurity.client.renderer;
 
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -15,7 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardReader> {
+public class RenderCardReaderDouble extends TileEntitySpecialRenderer<TileEntityCardReader> {
 
 	static float texPixel=1.0f/16f;
 	static float uvWide = 1.0f/24f; //to ensure width is correct
@@ -68,7 +66,7 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		GL11.glPopMatrix();
 	}
 
-	public RenderCardReader()
+	public RenderCardReaderDouble()
 	{
 		super();
 	}
@@ -92,7 +90,17 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		this.bindTexture(new ResourceLocation("advancedbasesecurity", "textures/block/card_reader_front.png"));
 		GlStateManager.scale(1.001, 1.001, 1.001); //just a dirty fix to avoid tiny gaps between keypad and blocks next to it
 		drawBlock(tileEntity, time);
+		GlStateManager.color(1, 1, 1, 255);
+		GlStateManager.popMatrix();
 
+		GlStateManager.pushMatrix();
+		GlStateManager.translate(x, y, z);
+		GlStateManager.translate(.5f, 0, .5f);
+		GlStateManager.rotate(tileEntity.getAngle() + 180f, 0f, 1f, 0f);
+		GlStateManager.translate(-.5f, 0, -.5f);
+		this.bindTexture(new ResourceLocation("advancedbasesecurity", "textures/block/card_reader_front.png"));
+		GlStateManager.scale(1.001, 1.001, 1.001);
+		drawBlock(tileEntity, time);
 		GlStateManager.popMatrix();
 	}
 
@@ -151,6 +159,23 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		Tessellator tessellator=Tessellator.getInstance();
 		BufferBuilder vertexbuffer = tessellator.getBuffer();
 //commented out all insets since I don't think its all needed for what I am doing. I just need the text displayed
+		drawBlockOne(vertexbuffer, card);
+		tessellator.draw();
+		//vertexbuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL); //tessellator.startDrawingQuads();
+		//tessellator.setBrightness(255);
+
+		FontRenderer font=this.getFontRenderer();
+		if (font!=null)
+		{
+			String fbText = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.text : (card.currText!=null ? card.currText.text : "")) : "";
+			byte fbColor = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.color : (card.currText!=null ? card.currText.color : 7)) : 7;
+
+			if (fbText!=null && fbText.length()>0)
+				writeLabel(font, texPixel, display, fbColor, fbText);
+		}
+	}
+
+	public void drawBlockOne(BufferBuilder vertexbuffer, TileEntityCardReader card){
 		vertexbuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL); //tessellator.startDrawingQuads();
 		//inset face
 		vertexbuffer.pos(texPixel,    texPixel,    texPixel).tex(uvWide,    1f-texPixel).normal(0f, 0f, -1f).endVertex();
@@ -202,20 +227,5 @@ public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardR
 		transferSide(vertexbuffer, 0, false);
 		transferSide(vertexbuffer, 1.1f, true);
 		transferLight(vertexbuffer, card != null ? (card.tempTextDelay > 0 ? card.tempLightFlag : card.lightFlag) : 0);
-
-		tessellator.draw();
-
-		//vertexbuffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL); //tessellator.startDrawingQuads();
-		//tessellator.setBrightness(255);
-
-		FontRenderer font=this.getFontRenderer();
-		if (font!=null)
-		{
-			String fbText = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.text : (card.currText!=null ? card.currText.text : "")) : "";
-			byte fbColor = card!=null ? (card.tempTextDelay > 0 && card.tempText!=null ? card.tempText.color : (card.currText!=null ? card.currText.color : 7)) : 7;
-
-			if (fbText!=null && fbText.length()>0)
-				writeLabel(font, texPixel, display, fbColor, fbText);
-		}
 	}
 }
