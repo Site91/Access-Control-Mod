@@ -2,6 +2,7 @@ package com.cadergator10.advancedbasesecurity.common.items;
 
 import baubles.api.BaubleType;
 import baubles.api.IBauble;
+import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
@@ -16,7 +17,7 @@ public class ItemLinkingCard extends ItemBase {
 	}
 
 	public static class CardTag { //inspired by OpenSecurity's approach. a lot is as I learn
-		public UUID doorId = null;
+		public DoorHandler.DoorIdentifier doorId = null;
 
 		public CardTag(ItemStack stack){
 			if(stack.getItem() instanceof ItemLinkingCard)
@@ -29,13 +30,15 @@ public class ItemLinkingCard extends ItemBase {
 
 		public void readFromNBT(NBTTagCompound nbt){
 			if(nbt != null) {
-				if (nbt.hasUniqueId("doorId"))
-					doorId = nbt.getUniqueId("doorId");
+				if (nbt.hasKey("identifier")) {
+					doorId = new DoorHandler.DoorIdentifier(nbt.getCompoundTag("identifier"));
+				}
 			}
 		}
 
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt){
-			nbt.setUniqueId("doorId", doorId);
+			if(doorId != null)
+				nbt.setTag("identifier", doorId.writeToNBT(new NBTTagCompound()));
 			return nbt;
 		}
 	}

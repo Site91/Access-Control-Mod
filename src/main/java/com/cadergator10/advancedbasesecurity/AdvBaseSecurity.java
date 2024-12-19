@@ -87,7 +87,7 @@ public class AdvBaseSecurity
 
     @EventHandler
     public void ServerStart(FMLServerStartingEvent event){
-        event.registerServerCommand(new BaseSecurityCommand());
+        //event.registerServerCommand(new BaseSecurityCommand()); //command removed since phasing out of it
         AdvBaseSecurity.instance.logger.info("In ServerStart");
         //prep door
         //doorHandler.onWorldLoad(event);

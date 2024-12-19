@@ -7,12 +7,14 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
+import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.StructureStrongholdPieces;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
@@ -27,9 +29,14 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 public class DoorHandler {
-    public Doors DoorGroups;
+    public DoorData doorData;
+    public HashMap<UUID, Doors> DoorGroups;
     public CentralDoorNBT IndDoors;
     public boolean loaded = false;
+
+    public HashMap<UUID, IReader> allReaders;
+    public HashMap<UUID, IDoorControl> allDoorControllers;
+    public HashMap<UUID, IDoor> allDoors;
 
     public DoorHandler(){
         AdvBaseSecurity.instance.logger.info("Loaded DoorHandler!");
@@ -38,22 +45,27 @@ public class DoorHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onWorldLoad(WorldEvent.Load event){
+        doorTime = Integer.MIN_VALUE;
         if(!event.getWorld().isRemote && !loaded) {
+            doorData = DoorData.get(event.getWorld());
+            AdvBaseSecurity.instance.logger.info("Found " + doorData.doors.size() + " doors to load!");
+            DoorGroups = new HashMap<>();
+            for(UUID id : doorData.doors){
+                Doors door = Doors.get(event.getWorld(), id.toString());
+                for (Doors.OneDoor doore : door.doors) {
+                    if (doore.isDoorOpen == 1) { //any timed doors add to list
+                        door.timedDoors.add(doore);
+                    }
+                }
+                DoorGroups.put(id, door);
+                AdvBaseSecurity.instance.logger.info("Door Manager with ID " + id.toString() + " and name " + door.name + " loaded!");
+            }
+            AdvBaseSecurity.instance.logger.info("Successfully loaded");
+            IndDoors = CentralDoorNBT.get(event.getWorld());
+            loaded = true;
             allReaders = new HashMap<>();
             allDoorControllers = new HashMap<>();
             allDoors = new HashMap<>();
-            timedDoors = new LinkedList<>();
-            AdvBaseSecurity.instance.logger.info("World Loaded! Prepping Doors");
-            DoorGroups = Doors.get(event.getWorld());
-            AdvBaseSecurity.instance.logger.info("Successfully loaded");
-            for (Doors.OneDoor door : DoorGroups.doors) {
-                if (door.isDoorOpen == 1) { //any timed doors add to list
-                    timedDoors.add(door);
-                }
-            }
-            userCache = new LinkedList<>();
-            IndDoors = CentralDoorNBT.get(event.getWorld());
-            loaded = true;
         }
     }
 
@@ -62,26 +74,19 @@ public class DoorHandler {
             AdvBaseSecurity.instance.logger.info("World unloading. Removing door stuff");
             loaded = false;
             DoorGroups = null;
-            Doors.instance = null;
+            DoorData.instance = null;
             IndDoors = null;
             CentralDoorNBT.instance = null;
-            timedDoors = null;
+            editValidator = null;
             allReaders = null;
             allDoorControllers = null;
             allDoors = null;
-            editValidator = null;
-            userCache = null;
         }
     }
 
-    private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
 
-    public HashMap<UUID, IReader> allReaders;
-    public HashMap<UUID, IDoorControl> allDoorControllers;
-    public HashMap<UUID, IDoor> allDoors;
 
-    public int doorTime = Integer.MIN_VALUE;
-    public List<cacheHolder> userCache;
+    public static int doorTime = Integer.MIN_VALUE;
 
     static class cacheHolder{
         public cacheHolder(){
@@ -104,37 +109,10 @@ public class DoorHandler {
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event){
         if(event.phase == TickEvent.Phase.START) {
-            try {
-                if (!timedDoors.isEmpty()) {
-                    for (int i = 0; i < timedDoors.size(); i++) {
-                        Doors.OneDoor door = timedDoors.get(i);
-                        if (door.isDoorOpen == 1) {
-                            door.currTick--;
-                            if (door.currTick <= 0) {
-                                door.isDoorOpen = 0;
-                                pushDoorUpdate(door);
-                                DoorGroups.markDirty();
-                            }
-                        }
-
-                        if (door.isDoorOpen == 0) {
-                            timedDoors.remove(door);
-                        }
-                    }
-                }
-            }
-            catch (Exception e){
-                //nothing. Just in case above thing crashes
-            }
-            //cache
-            if (DoorConfig.cachetime != 0) {
+            if (DoorConfig.cachetime != 0)
                 doorTime++;
-                for (int i = 0; i < userCache.size(); i++) {
-                    if (userCache.get(i).time <= doorTime) {
-                        userCache.remove(i);
-                        i--;
-                    }
-                }
+            for(Doors door : DoorGroups.values()){
+                door.onTick(event, doorTime);
             }
         }
     }
@@ -181,220 +159,32 @@ public class DoorHandler {
 //    public void serverSave(WorldEvent.Save event){
 //
 //    }
+    
 
-    public UUID getEditValidator(){
-        editValidator = UUID.randomUUID();
-        return editValidator;
+    public Doors getDoorManager(DoorIdentifier id){
+        return getDoorManager(id.ManagerID);
     }
-
-    public boolean checkValidator(UUID editValidator){
-        return this.editValidator.equals(editValidator);
-    }
-
-    //region Door Controls
-    private void updateDoorState(Doors.OneDoor door){ //update door state of all doors that are currently loaded.
-        for(UUID dev : door.Doors){
-            if(allDoorControllers.containsKey(dev)){
-                allDoorControllers.get(dev).openDoor(door.isDoorOpen != 0);
-            }
-        }
-    }
-    //Check permissions list of a door
-    private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
-        for(int i=1; i<=5; i++){ //priorities
-            int isThrough = 0; //-1 = reject pass. 0 = nope. 1 = allowed base.
-            for(Doors.OneDoor.OnePass pass : door){
-                if(pass.priority == i && pass.passType != Doors.OneDoor.OnePass.type.Add){
-                    boolean gotIt = !pass.passID.equals("staff") ? checkPass(pass, user.passes.get(pass.passID)) : user.staff;
-                    if(gotIt) {
-                        if (pass.passType == Doors.OneDoor.OnePass.type.Reject) {
-                            isThrough = -1;
-                        }
-                        else if (pass.passType == Doors.OneDoor.OnePass.type.Supreme) {
-                            isThrough = 1;
-                            break;
-                        }
-                        else if (pass.passType == Doors.OneDoor.OnePass.type.Base) {
-                            //check if either reject or base pass was already evaluated to true.
-                            if(isThrough != 0)
-                                continue;
-                            //check all add passes
-                            isThrough = 1;
-                            if(!pass.addPasses.isEmpty()) {
-                                for (Doors.OneDoor.OnePass addPass : door) {
-                                    if (addPass.passType == Doors.OneDoor.OnePass.type.Add) {
-                                        //check add passes
-                                        boolean contained = false;
-                                        for(int j=0; j<pass.addPasses.size(); j++)
-                                            if(pass.addPasses.get(j).equals(addPass.id)){
-                                                contained = true;
-                                                break;
-                                            }
-                                        if(contained && ((!pass.passID.equals("staff") && !checkPass(addPass, user.passes.get(addPass.passID))) || (pass.passID.equals("staff") && !user.staff ))){
-                                            isThrough = 0;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if(isThrough == 1){
-                return true;
-            }
-            else if(isThrough == -1){
-                return false;
-            }
-        }
-        return false;
-    }
-
-	//region Quick Item Retrieval Functions
-	//get the door from a reader ID
-    public Doors.OneDoor getDoorFromReader(UUID reader){
-        for(Doors.OneDoor tempdoor : DoorGroups.doors){
-            boolean contained = false;
-            for(UUID id : tempdoor.Readers)
-                if(id.equals(reader)){
-                    contained = true;
-                    break;
-                }
-            if(contained) {
-                return tempdoor;
-            }
+    
+    public Doors getDoorManager(UUID id){
+        if(DoorGroups.containsKey(id)){
+            return DoorGroups.get(id);
         }
         return null;
     }
 
-    //get the door by its ID
-    public Doors.OneDoor getDoorFromID(UUID doorID){
-        for(Doors.OneDoor tempdoor : DoorGroups.doors){
-            if(tempdoor.doorId.equals(doorID)){
-                return tempdoor;
-            }
-        }
-        return null;
-    }
-
-    //get the door by its name (first one only)
-    public Doors.OneDoor getDoorFromName(String doorName){
-        for(Doors.OneDoor tempdoor : DoorGroups.doors){
-            if(tempdoor.doorName.equalsIgnoreCase(doorName)){
-                return tempdoor;
-            }
-        }
-        return null;
-    }
-
-    //get the user by user ID
-    public Doors.Users getUser(UUID userID){
-        for(Doors.Users tempuser : DoorGroups.users){
-            if(tempuser.id.equals(userID)) {
-                return tempuser;
-            }
-        }
-        return null;
-    }
-    public Doors.Users getUserByName(String userID){
-        for(Doors.Users tempuser : DoorGroups.users){
-            if(tempuser.name.equals(userID)) {
-                return tempuser;
-            }
-        }
-        return null;
-    }
-
-    //get group by ID
-    public Doors.Groups getDoorGroup(UUID groupID){
-        if(DoorGroups.groups.containsKey(groupID))
-            return DoorGroups.groups.get(groupID);
-        return null;
-    }
-    //get group by name
-    public UUID getDoorGroupID(String group){
-        List<UUID> groups = new LinkedList<>();
-        BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
-            if(v.name.equalsIgnoreCase(group))
-                groups.add(v.id);
-        };
-        DoorGroups.groups.forEach(biConsumer);
-        if(!group.isEmpty())
-            return groups.get(0);
-        return null;
-    }
-    //get children groups
-    public List<UUID> getDoorGroupChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
-        List<UUID> groups = new LinkedList<>();
-        //Find any that are children
-        BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
-            if(v.parentID != null && v.parentID.equals(groupID))
-                groups.add(k);
-        };
-        DoorGroups.groups.forEach(biConsumer);
-        //if children found & cascade=true, call this on all others too
-        if(cascade && !groups.isEmpty()){
-            for(UUID id : groups){
-                List<UUID> newGroups = getDoorGroupChildren(id, true);
-                //delete duplicates
-                newGroups.removeIf(groups::contains); //u -> groups.contains(u)
-                //add to groups list
-                groups.addAll(newGroups);
-            }
-        }
-        return groups;
-    }
-
-    //get group hashmap as list with index
-    public List<ButtonEnum.groupIndex> getGroupList(){
-        List<ButtonEnum.groupIndex> groups = new LinkedList<>();
-        BiConsumer<UUID,Doors.Groups> biConsumer = (k, v) -> groups.add(new ButtonEnum.groupIndex(k.toString(), v.name));
-        this.DoorGroups.groups.forEach(biConsumer);
-        return groups;
-    }
-
-    //get doors by groupID
-    private List<Doors.OneDoor> getDoorsByGroup(UUID groupID){
-        List<Doors.OneDoor> doors = new LinkedList<>();
-        for(Doors.OneDoor door : DoorGroups.doors){
-            if(door.groupID.equals(groupID))
-                doors.add(door);
-        }
-        return doors;
-    }
-    //get doors by list of groupIDs
-    private List<Doors.OneDoor> getDoorsByGroup(List<UUID> groupID){
-        List<Doors.OneDoor> doors = new LinkedList<>();
-        for(Doors.OneDoor door : DoorGroups.doors){
-            boolean contained = false;
-            for(UUID id : groupID)
-                if(id.equals(door.groupID)){
-                    contained = true;
-                    break;
-                }
-            if(contained)
-                doors.add(door);
-        }
-        return doors;
-    }
-    //public ones
-    //make new door and return
-    public Doors.OneDoor addNewDoor(){
-        Doors.OneDoor door = new Doors.OneDoor(true);
-        DoorGroups.doors.add(door);
-        DoorGroups.markDirty();
-        return door;
-    }
-	//endregion
 
     //region Reader/Door Management
-    public boolean SetDevID(UUID devID, UUID doorID, boolean isDoor){
+    public boolean SetDevID(UUID devID, DoorIdentifier doorID, boolean isDoor){
+        //make sure manager ID exists
+        if(!DoorGroups.containsKey(doorID.ManagerID))
+            return false;
+        Doors manager = DoorGroups.get(doorID.ManagerID);
         int foundRightOne = -1;
         int index = 0;
         if(!isDoor) {
-            for (Doors.OneDoor door : DoorGroups.doors) {
-                if (door.doorId.equals(doorID)) {
+
+            for (Doors.OneDoor door : manager.doors) {
+                if (door.doorId.equals(doorID.DoorID)) {
                     boolean contained = false;
                     for(UUID id : door.Readers)
                         if(id.equals(devID)){
@@ -411,7 +201,7 @@ public class DoorHandler {
             }
             if (foundRightOne != -1) {
                 index = 0;
-                for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
+                for (Doors.OneDoor door : manager.doors) { //make sure no other door has this reader.
                     for(int j=0; j<door.Readers.size(); j++){
                         if(foundRightOne != index && door.Readers.get(j).equals(devID)){
                             door.Readers.remove(j);
@@ -420,12 +210,12 @@ public class DoorHandler {
                     }
                     index++;
                 }
-                DoorGroups.markDirty();
+                manager.markDirty();
             }
         }
         else{
-            for (Doors.OneDoor door : DoorGroups.doors) {
-                if (door.doorId.equals(doorID)) {
+            for (Doors.OneDoor door : manager.doors) {
+                if (door.doorId.equals(doorID.DoorID)) {
                     boolean contained = false;
                     for(UUID id : door.Doors)
                         if(id.equals(devID)){
@@ -442,7 +232,7 @@ public class DoorHandler {
             }
             if (foundRightOne != -1) {
                 index = 0;
-                for (Doors.OneDoor door : DoorGroups.doors) { //make sure no other door has this reader.
+                for (Doors.OneDoor door : manager.doors) { //make sure no other door has this reader.
                     for(int j=0; j<door.Doors.size(); j++){
                         if(foundRightOne != index && door.Doors.get(j).equals(devID)){
                             door.Doors.remove(j);
@@ -451,463 +241,37 @@ public class DoorHandler {
                     }
                     index++;
                 }
-                DoorGroups.markDirty();
+                manager.markDirty();
             }
         }
         return foundRightOne != -1;
     }
     //endregion
 
-    //remove from timedDoors
-    private void removeFromTimedDoors(UUID doorID){
-        for (int i = 0; i < timedDoors.size(); i++) {
-            if (timedDoors.get(i).doorId.equals(doorID)) {
-                timedDoors.remove(i);
-                break;
-            }
-        }
-    }
-
-    //push update to existing tile entities
-    private void pushDoorUpdate(Doors.OneDoor door){
-        for(UUID id : door.Doors){
-            if(allDoorControllers.containsKey(id)){
-                allDoorControllers.get(id).openDoor(door.isDoorOpen != 0);
-            }
-        }
-        String display;
-        byte color;
-        int barColor;
-        int bar = door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0));
-        if(door.isDoorOpen == 0){ //perform the stuff based on a closed door.
-            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.noaccess").getUnformattedText();
-                color = 4;
-                barColor = 1;
-            }
-            else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
-                color = 12;
-                barColor = 1;
-            }
-            else {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
-                color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
-                barColor = 0;
-            }
-        }
-        else{ //perform based on an open door
-            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
-                color = 10;
-                barColor = 4;
-            }
-            else {
-                display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
-                color = 2;
-                barColor = 4;
-            }
-        }
-        door.readerLabel = display;
-        door.readerLabelColor = color;
-        door.readerLights = barColor;
-        for(UUID id : door.Readers){
-            if(allReaders.containsKey(id)){
-                allReaders.get(id).updateVisuals(bar, new ReaderText(display, color) );
-            }
-        }
-        //timedDoors stuff
-        if(door.isDoorOpen == 1 && !timedDoors.contains(door)){
-            timedDoors.add(door);
-        }
-        else{
-            timedDoors.remove(door);
-        }
-        for(int i=0; i<userCache.size(); i++){ //clear cache of these door IDs
-            if(userCache.get(i).doorID.equals(door.doorId)){
-                userCache.remove(i);
-                i--;
-            }
-        }
-    }
-
-    //push update to a group of doors
-    private void pushDoorUpdateMult(List<Doors.OneDoor> door){
-        for(Doors.OneDoor id : door){
-            pushDoorUpdate(id);
-        }
-    }
-
-    //Push state to door (internal because this should only be called by "changeDoorState")
-    private void changeDoorStateInternal(Doors.OneDoor door, boolean openState, int ticks){ //if ticks = 0, toggle; if openState == -1, use default
-        //check state
-        if(!openState && door.isDoorOpen != 0){ //if asking to close door & door state is not already closed.
-            //check timed doors list to see if it needs a remove
-            if(door.isDoorOpen == 1) {
-                removeFromTimedDoors(door.doorId);
-            }
-            //change door values
-            door.isDoorOpen = 0;
-            door.currTick = 0;
-            //update tile entites
-            DoorGroups.markDirty();
-            pushDoorUpdate(door);
-        }
-        else if(openState && door.isDoorOpen == 0){ //opening a closed door
-            //change door values
-            door.isDoorOpen = (ticks == 0 ? 2 : 1);
-            door.currTick = ticks;
-            //update tile entities
-            DoorGroups.markDirty();
-            pushDoorUpdate(door);
-        }
-        else if(openState && door.isDoorOpen != 0){ //trying to open an already open door.
-            if(door.isDoorOpen == 1){ //both timed door, so update time to max
-                if(ticks != 0) //is a tick door
-                    door.currTick = Math.max(door.currTick, ticks);
-                else{ //convert to being toggled open
-                    removeFromTimedDoors(door.doorId);
-                    door.isDoorOpen = 2;
-                    door.currTick = 0;
-                }
-            }
-            DoorGroups.markDirty();
-            //if (door.isDoorOpen == 2) not needed due to it being a toggle.
-            //pushDoorUpdate(door) not needed since door isn't needing a new state
-        }
-    }
-
-    public void changeDoorState(UUID doorID){ //use default value
-        Doors.OneDoor door = getDoorFromID(doorID);
-        if(door == null)
-            return;
-        changeDoorStateInternal(door, door.defaultToggle ? door.isDoorOpen == 0 : true, door.defaultToggle ? 0 : door.defaultTick);
-    }
-    public void changeDoorState(UUID doorID, boolean openState, int ticks){
-        Doors.OneDoor door = getDoorFromID(doorID);
-        if(door == null)
-            return;
-        changeDoorStateInternal(door, openState, ticks);
-    }
-
-    public void verifyUserPasses(){
-        List<String> exists = new LinkedList<>();
-        BiConsumer<String, Doors.PassValue> bic = (s, passValue) -> exists.add(s);
-        DoorGroups.passes.forEach(bic);
-        for(Doors.Users user : DoorGroups.users){
-            List<String> exists2 = new LinkedList<>();
-            BiConsumer<String, Doors.Users.UserPass> bic2 = (s, passValue) -> exists2.add(s);
-            user.passes.forEach(bic2);
-            for (String s : exists2) { //check for deleted passes
-                if (!exists.contains(s)) {
-                    user.passes.remove(s);
-                }
-            }
-            for (String s : exists){ //check for incorrect inputs.
-                Doors.PassValue pass = DoorGroups.passes.get(s);
-                if(!exists2.contains(s) || user.passes.get(s).type != pass.passType.getInt() || (pass.passType == Doors.PassValue.type.Group && Integer.parseInt(user.passes.get(s).passValue.get(0)) > pass.groupNames.size())){
-                    user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
-                }
-            }
-        }
-        DoorGroups.markDirty();
-    }
-
-    public void updateGroups(Doors.Groups group, boolean pushToChildren){ //pushToChildren means if a change was made to a group, if it should update all child groups too (groups with parentID set to this groupID)
-        //group at this point has already been updated. this function simply pushes to doors and updates children groups
-        List<UUID> groups = new LinkedList<>();
-        groups.add(group.id);
-        if(pushToChildren) //if all groups that are children will receive this state
-            groups.addAll(getDoorGroupChildren(group.id, true));
-        List<Doors.OneDoor> pushUpdateDoors = getDoorsByGroup(groups); //Any doors which need a doorState push
-        //get all groups and update their values correctly first
-        for(UUID tempgroupID : groups){
-            if(!tempgroupID.equals(group.id)) {
-                Doors.Groups tempgroup = getDoorGroup(tempgroupID);
-                tempgroup.status = group.status;
-                tempgroup.override = group.override;
-            }
-        }
-        //get all doors and push their values
-        for(Doors.OneDoor door : DoorGroups.doors){
-            if(door.groupID != null && groups.contains(door.groupID)){ //that door is part of the group tree
-                Doors.OneDoor.allDoorStatuses prev = door.doorStatus;
-                door.doorStatus = group.status;
-                door.override = (Math.abs(group.status.getInt()) == 1 ? group.override : null); //because -1 and 1 values are override ones.
-                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS)
-                    door.isDoorOpen = 2; //lock open
-                else if(prev == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //revert to closed state
-                    door.isDoorOpen = 0;
-                pushUpdateDoors.add(door);
-            }
-        }
-        DoorGroups.markDirty();
-        //push update
-        pushDoorUpdateMult(pushUpdateDoors);
-    }
-
-    public void recievedUpdate(UUID validator, Doors.OneDoor door){ //if new door settings are added from outside.
-        if(checkValidator(validator)) {
-            Doors.OneDoor listDoor = null;
-            for (Doors.OneDoor door1 : DoorGroups.doors) {
-                if (door1.doorId.equals(door.doorId)) {
-                    listDoor = door1;
-                    break;
-                }
-            }
-            if (listDoor != null) {
-                listDoor.doorName = door.doorName;
-                listDoor.passes = door.passes;
-                listDoor.defaultToggle = door.defaultToggle;
-                listDoor.defaultTick = door.defaultTick;
-                listDoor.Readers = door.Readers;
-                listDoor.Doors = door.Doors;
-                //check if the group needs an update
-                boolean pushDoor = false;
-                if((listDoor.groupID != null && door.groupID != null && !listDoor.groupID.equals(door.groupID)) || (listDoor.groupID == null && door.groupID != null)) {
-                    Doors.Groups group = getDoorGroup(door.groupID);
-                    if (group != null) {
-                        listDoor.doorStatus = group.status;
-                        listDoor.override = group.override;
-                        pushDoor = true;
-                        //don't bother with isDoorOpen because it'll be done in pushDoorUpdate;
-                    }
-                }
-                else if(door.groupID == null && listDoor.groupID != null) { //remove group, so revert to default access
-                    listDoor.doorStatus = Doors.OneDoor.allDoorStatuses.ACCESS;
-                    listDoor.override = null;
-//                        if(listDoor.isDoorOpen != 0){ //will need to push the door update
-//                            listDoor.isDoorOpen = 0;
-//                            listDoor.currTick = 0;
-//							timedDoors.remove(listDoor); //if it exists here
-//                            pushDoor = true;
-//                        }
-                    pushDoor = true; //commented all back stuff out since pushDoorUpdate does it all
-                }
-                listDoor.groupID = door.groupID;
-                DoorGroups.markDirty();
-                if(pushDoor)
-                    pushDoorUpdate(listDoor);
-            }
-        }
-    }
-
-    public int getReaderLight(UUID id){
-        for(Doors.OneDoor door : DoorGroups.doors){
-            for(int i=0; i<door.Readers.size(); i++){
-                if(door.Readers.get(i).equals(id)){
-                    return door.readerLights;
-                }
-            }
-        }
-        return 0;
-    }
-    public ReaderText getReaderLabel(UUID id){
-        for(Doors.OneDoor door : DoorGroups.doors){
-            for(int i=0; i<door.Readers.size(); i++){
-                if(door.Readers.get(i).equals(id)){
-                    AdvBaseSecurity.instance.logger.info("Reader label:" + door.readerLabel + " for the id " + id);
-                    return new ReaderText(door.readerLabel, door.readerLabelColor);
-                }
-            }
-        }
-        return new ReaderText("Disconnected", (byte) 4);
-    }
-    public boolean getDoorState(UUID id){
-        for(Doors.OneDoor door : DoorGroups.doors){
-            for(int i=0; i<door.Doors.size(); i++){
-                if(door.Doors.get(i).equals(id)){
-                    return door.isDoorOpen != 0;
-                }
-            }
-        }
-        return false;
-    }
-    public boolean getDoorStateFromDoor(UUID id){ //based on individual doors on load instead
-        for(CentralDoorNBT.doorHoldr door : IndDoors.doors){
-            if(door.deviceId.equals(id)){
-                if(door.clonedId != null){
-                    return getDoorState(door.clonedId);
-                }
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public List<String> getUserNames(){
-        List<String> names = new LinkedList<>();
-        for(Doors.Users user : DoorGroups.users){
-            names.add(user.name);
-        }
-        return names;
-    }
-
-    public List<String> getDoorNames(){
-        List<String> names = new LinkedList<>();
-        for(Doors.OneDoor dooor : DoorGroups.doors){
-            names.add(dooor.doorName);
-        }
-        return names;
-    }
-
-    public List<String> getGroupNames(){
-        List<String> names = new LinkedList<>();
-        for(Doors.Groups dooor : DoorGroups.groups.values()){
-            names.add(dooor.name);
-        }
-        return names;
-    }
-
-    public CentralDoorNBT.doorHoldr indDoorsContains(UUID id){
-        for(int i=0; i<IndDoors.doors.size(); i++){
-            if(IndDoors.doors.get(i).deviceId.equals(id))
-                return IndDoors.doors.get(i);
-        }
-        return null;
-    }
-
-    public List<CentralDoorNBT.doorHoldr> getIndDoors(UUID clonedID){
-        List<CentralDoorNBT.doorHoldr> doors = new LinkedList<>();
-        for(int i=0; i<IndDoors.doors.size(); i++){
-            if(IndDoors.doors.get(i).clonedId != null && IndDoors.doors.get(i).clonedId.equals(clonedID))
-                doors.add(IndDoors.doors.get(i));
-        }
-        return doors;
-    }
-
-    public void toggleIndDoors(UUID clonedID, boolean toggle){
-        List<UUID> doors = new LinkedList<>();
-        for(int i=0; i<IndDoors.doors.size(); i++){
-            if(IndDoors.doors.get(i).clonedId != null && IndDoors.doors.get(i).clonedId.equals(clonedID))
-                doors.add(IndDoors.doors.get(i).deviceId);
-        }
-        BiConsumer<UUID, IDoor> bic = (k, v) -> {
-            if(doors.contains(k)){
-                v.openDoor(toggle);
-            }
-        };
-        allDoors.forEach(bic);
-        IndDoors.markDirty();
-    }
-
-    private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){
-        AdvBaseSecurity.instance.logger.debug("Checking pass " + pass.passID);
-        if(DoorGroups.passes.containsKey(pass.passID)){
-            Doors.PassValue passValue = DoorGroups.passes.get(pass.passID);
-            if(passValue.passType == Doors.PassValue.type.Level){
-                if(pass.passValueI <= Integer.parseInt(user.passValue.get(0)))
-                    return true;
-            }
-            else if(passValue.passType == Doors.PassValue.type.Group){
-                if(pass.passValueI == Integer.parseInt(user.passValue.get(0)) - 1)
-                    return true;
-            }
-            else if(passValue.passType == Doors.PassValue.type.Text){
-                if(pass.passValueS.equals(user.passValue.get(0)))
-                    return true;
-            }
-            else if(passValue.passType == Doors.PassValue.type.MultiText){
-                for(String s : user.passValue){
-                    if(s.equals(pass.passValueS))
-                        return true;
-                }
-            }
-            else if(passValue.passType == Doors.PassValue.type.Pass)
-                return user.passValue.get(0).equals("true");
-        }
-        return false;
-    }
-
-    /*
-    -400: error
-    -4: door doesn't exist
-    -3: user doesn't exist
-    -2: don't do anything
-    -1: blocked user (denied)
-    0: access denied
-    1: access granted
-    2: access granted staff
-     */
-    public int checkSwipe(UUID userID, UUID readerID, boolean properChange){ //properChange actually updates the door state.
-        AdvBaseSecurity.instance.logger.debug("Checking ID " + userID + " in reader ID " + readerID);
-        //get the door
-        Doors.OneDoor door = getDoorFromReader(readerID);
-        if(door == null)
-            return -4;
-        AdvBaseSecurity.instance.logger.debug("Found the door " + door.doorName);
-        //get the user's card
-        Doors.Users user = getUser(userID);
-        if(user == null)
-            return -3;
-        AdvBaseSecurity.instance.logger.debug("Found the user " + user.name);
-        //check the door
-        if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //if always open, don't do anything.
-            return -2;
-        AdvBaseSecurity.instance.logger.debug("Door is not AllAccess");
-        if(user.blocked)
-            return -1;
-        else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS)
-            return user.staff ? 1 : 0;
-        AdvBaseSecurity.instance.logger.debug("User is neither blocked or door is no access. Preparing checks. Status: " + door.doorStatus.getInt());
-        //check cache
-        for(cacheHolder cache : userCache){
-            if(cache.userID.equals(userID) && cache.doorID.equals(door.doorId)){
-                //use this return value
-                AdvBaseSecurity.instance.logger.debug("Using cache value: " + cache.worked);
-                if(properChange){
-                    if(cache.worked != 0){ //1 or 2
-                        changeDoorState(cache.doorID);
-                    }
-                }
-                return cache.worked;
-            }
-        }
-        if(door.doorStatus.getInt() >= 0) // # > 0 = can be opened by card swipe
-        {
-            if (checkPassList(door.passes, user)){
-                AdvBaseSecurity.instance.logger.debug("Succeeded check. Returning 1");
-                if(DoorConfig.cachetime != 0)
-                    userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
-                if(properChange)
-                    changeDoorState(door.doorId);
-                return 1;
-            }
-        }
-        if(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS || door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN){ // |#| == 1 : checks with overridden pass list.
-            if (checkPassList(door.override, user)){
-                AdvBaseSecurity.instance.logger.debug("Succeeded override check. Returning 1");
-                if(DoorConfig.cachetime != 0)
-                    userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
-                if(properChange)
-                    changeDoorState(door.doorId);
-                return 1;
-            }
-        }
-        AdvBaseSecurity.instance.logger.debug("Failed others. Is staff: " + user.staff);
-        if(DoorConfig.cachetime != 0)
-            userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), user.staff ? 2 : 0));
-        if(properChange && user.staff)
-            changeDoorState(door.doorId);
-        return user.staff ? 2 : 0;
-
-        //return -400;
-    }
-
-    //endregion
+    
 
 
     //region Door save file
     public static class Doors extends WorldSavedData{
         public int currentDoorVer = 0; //The version of the file. In case on the website it has been updated.
 
-        public static final String DATA_NAME = AdvBaseSecurity.MODID + "_basesecuritydoors";
-        public static Doors instance;
+        public static final String DATA_NAME = AdvBaseSecurity.MODID + "_doorid_";
 
+        public String name;
+        public UUID id;
         public List<OneDoor> doors = new LinkedList<>();
         public HashMap<String, PassValue> passes = new HashMap<>();
         public HashMap<UUID, Groups> groups = new HashMap<>();
         public List<Users> users = new LinkedList<>();
+
+        //in-session stuff (not nbt)
+        private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
+
+
+
+        public List<cacheHolder> userCache;
+        
+        public ModifierValidation validator;
 
         void quickPassAdd(){
             PassValue tempPass = new PassValue("staff");
@@ -916,25 +280,34 @@ public class DoorHandler {
             tempPass.groupNames = null;
             passes.put("staff", tempPass);
         }
+        
+        void firstTimeSetup(){
+            timedDoors = new LinkedList<>();
+            userCache = new LinkedList<>();
+            validator = new ModifierValidation();
+        }
 
         public Doors(){
             super(DATA_NAME);
             quickPassAdd();
+            firstTimeSetup();
         }
         public Doors(String str){
-            super(str);
+            super(DATA_NAME + str);
             quickPassAdd();
+            firstTimeSetup();
         }
 
-        public static Doors get(World world) {
+        public static Doors get(World world, String id) {
             MapStorage storage = world.getMapStorage();
-            instance = (Doors) storage.getOrLoadData(Doors.class, DATA_NAME);
+            Doors door = (Doors) storage.getOrLoadData(Doors.class, DATA_NAME + id);
 
-            if (instance == null) {
-                instance = new Doors();
-                storage.setData(DATA_NAME, instance);
+            if (door == null) {
+                door = new Doors();
+                storage.setData(DATA_NAME + id, door);
             }
-            return instance;
+            door.id = UUID.fromString(id);
+            return door;
         }
 
         @Override
@@ -944,6 +317,10 @@ public class DoorHandler {
                 currentDoorVer = nbt.getInteger("versionNum");
             else
                 currentDoorVer = 0;
+            if(nbt.hasKey("name"))
+                name = nbt.getString("name");
+            else
+                name = "new";
 
             //read all pass data
             this.passes = new HashMap<>();
@@ -1033,6 +410,675 @@ public class DoorHandler {
 
             return nbt;
         }
+
+        public void onTick(TickEvent.ServerTickEvent event, int timer){
+            try {
+                if (!timedDoors.isEmpty()) {
+                    for (int i = 0; i < timedDoors.size(); i++) {
+                        Doors.OneDoor door = timedDoors.get(i);
+                        if (door.isDoorOpen == 1) {
+                            door.currTick--;
+                            if (door.currTick <= 0) {
+                                door.isDoorOpen = 0;
+                                pushDoorUpdate(door);
+                                markDirty();
+                            }
+                        }
+
+                        if (door.isDoorOpen == 0) {
+                            timedDoors.remove(door);
+                        }
+                    }
+                }
+            }
+            catch (Exception e){
+                //nothing. Just in case above thing crashes
+            }
+            //cache
+            if (DoorConfig.cachetime != 0) {
+                for (int i = 0; i < userCache.size(); i++) {
+                    if (userCache.get(i).time <= timer) {
+                        userCache.remove(i);
+                        i--;
+                    }
+                }
+            }
+        }
+
+        //region Door Controls
+        private void updateDoorState(Doors.OneDoor door){ //update door state of all doors that are currently loaded.
+            for(UUID dev : door.Doors){
+                if(AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(dev)){
+                    AdvBaseSecurity.instance.doorHandler.allDoorControllers.get(dev).openDoor(door.isDoorOpen != 0);
+                }
+            }
+        }
+        //Check permissions list of a door
+        private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
+            for(int i=1; i<=5; i++){ //priorities
+                int isThrough = 0; //-1 = reject pass. 0 = nope. 1 = allowed base.
+                for(Doors.OneDoor.OnePass pass : door){
+                    if(pass.priority == i && pass.passType != Doors.OneDoor.OnePass.type.Add){
+                        boolean gotIt = !pass.passID.equals("staff") ? checkPass(pass, user.passes.get(pass.passID)) : user.staff;
+                        if(gotIt) {
+                            if (pass.passType == Doors.OneDoor.OnePass.type.Reject) {
+                                isThrough = -1;
+                            }
+                            else if (pass.passType == Doors.OneDoor.OnePass.type.Supreme) {
+                                isThrough = 1;
+                                break;
+                            }
+                            else if (pass.passType == Doors.OneDoor.OnePass.type.Base) {
+                                //check if either reject or base pass was already evaluated to true.
+                                if(isThrough != 0)
+                                    continue;
+                                //check all add passes
+                                isThrough = 1;
+                                if(!pass.addPasses.isEmpty()) {
+                                    for (Doors.OneDoor.OnePass addPass : door) {
+                                        if (addPass.passType == Doors.OneDoor.OnePass.type.Add) {
+                                            //check add passes
+                                            boolean contained = false;
+                                            for(int j=0; j<pass.addPasses.size(); j++)
+                                                if(pass.addPasses.get(j).equals(addPass.id)){
+                                                    contained = true;
+                                                    break;
+                                                }
+                                            if(contained && ((!pass.passID.equals("staff") && !checkPass(addPass, user.passes.get(addPass.passID))) || (pass.passID.equals("staff") && !user.staff ))){
+                                                isThrough = 0;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if(isThrough == 1){
+                    return true;
+                }
+                else if(isThrough == -1){
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        //region Quick Item Retrieval Functions
+        //get the door from a reader ID
+        public Doors.OneDoor getDoorFromReader(UUID reader){
+            for(Doors.OneDoor tempdoor : doors){
+                boolean contained = false;
+                for(UUID id : tempdoor.Readers)
+                    if(id.equals(reader)){
+                        contained = true;
+                        break;
+                    }
+                if(contained) {
+                    return tempdoor;
+                }
+            }
+            return null;
+        }
+
+        //get the door by its ID
+        public Doors.OneDoor getDoorFromID(UUID doorID){
+            for(Doors.OneDoor tempdoor : doors){
+                if(tempdoor.doorId.equals(doorID)){
+                    return tempdoor;
+                }
+            }
+            return null;
+        }
+
+        //get the door by its name (first one only)
+        public Doors.OneDoor getDoorFromName(String doorName){
+            for(Doors.OneDoor tempdoor : doors){
+                if(tempdoor.doorName.equalsIgnoreCase(doorName)){
+                    return tempdoor;
+                }
+            }
+            return null;
+        }
+
+        //get the user by user ID
+        public Doors.Users getUser(UUID userID){
+            for(Doors.Users tempuser : users){
+                if(tempuser.id.equals(userID)) {
+                    return tempuser;
+                }
+            }
+            return null;
+        }
+        public Doors.Users getUserByName(String userID){
+            for(Doors.Users tempuser : users){
+                if(tempuser.name.equals(userID)) {
+                    return tempuser;
+                }
+            }
+            return null;
+        }
+
+        //get group by ID
+        public Doors.Groups getDoorGroup(UUID groupID){
+            if(groups.containsKey(groupID))
+                return groups.get(groupID);
+            return null;
+        }
+        //get group by name
+        public UUID getDoorGroupID(String group){
+            List<UUID> grouped = new LinkedList<>();
+            BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
+                if(v.name.equalsIgnoreCase(group))
+                    grouped.add(v.id);
+            };
+            groups.forEach(biConsumer);
+            if(!group.isEmpty())
+                return grouped.get(0);
+            return null;
+        }
+        //get children groups
+        public List<UUID> getDoorGroupChildren(UUID groupID, boolean cascade){ //cascade means all children. false means only direct children
+            List<UUID> grouped = new LinkedList<>();
+            //Find any that are children
+            BiConsumer<UUID, Doors.Groups> biConsumer = (k, v) -> {
+                if(v.parentID != null && v.parentID.equals(groupID))
+                    grouped.add(k);
+            };
+            groups.forEach(biConsumer);
+            //if children found & cascade=true, call this on all others too
+            if(cascade && !grouped.isEmpty()){
+                for(UUID id : grouped){
+                    List<UUID> newGroups = getDoorGroupChildren(id, true);
+                    //delete duplicates
+                    newGroups.removeIf(grouped::contains); //u -> groups.contains(u)
+                    //add to groups list
+                    grouped.addAll(newGroups);
+                }
+            }
+            return grouped;
+        }
+
+        //get group hashmap as list with index
+        public List<ButtonEnum.groupIndex> getGroupList(){
+            List<ButtonEnum.groupIndex> groups = new LinkedList<>();
+            BiConsumer<UUID,Doors.Groups> biConsumer = (k, v) -> groups.add(new ButtonEnum.groupIndex(k.toString(), v.name));
+            this.groups.forEach(biConsumer);
+            return groups;
+        }
+
+        //get doors by groupID
+        private List<Doors.OneDoor> getDoorsByGroup(UUID groupID){
+            List<Doors.OneDoor> doors = new LinkedList<>();
+            for(Doors.OneDoor door : doors){
+                if(door.groupID.equals(groupID))
+                    doors.add(door);
+            }
+            return doors;
+        }
+        //get doors by list of groupIDs
+        private List<Doors.OneDoor> getDoorsByGroup(List<UUID> groupID){
+            List<Doors.OneDoor> doors = new LinkedList<>();
+            for(Doors.OneDoor door : doors){
+                boolean contained = false;
+                for(UUID id : groupID)
+                    if(id.equals(door.groupID)){
+                        contained = true;
+                        break;
+                    }
+                if(contained)
+                    doors.add(door);
+            }
+            return doors;
+        }
+        //public ones
+        //make new door and return
+        public Doors.OneDoor addNewDoor(){
+            Doors.OneDoor door = new Doors.OneDoor(true);
+            doors.add(door);
+            markDirty();
+            return door;
+        }
+        //endregion
+
+        //remove from timedDoors
+        private void removeFromTimedDoors(UUID doorID){
+            for (int i = 0; i < timedDoors.size(); i++) {
+                if (timedDoors.get(i).doorId.equals(doorID)) {
+                    timedDoors.remove(i);
+                    break;
+                }
+            }
+        }
+
+        //push update to existing tile entities
+        private void pushDoorUpdate(Doors.OneDoor door){
+            for(UUID id : door.Doors){
+                if(AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(id)){
+                    AdvBaseSecurity.instance.doorHandler.allDoorControllers.get(id).openDoor(door.isDoorOpen != 0);
+                }
+            }
+            String display;
+            byte color;
+            int barColor;
+            int bar = door.isDoorOpen != 0 ? 4 : (door.doorStatus.getInt() < 0 ? 1 : (door.doorStatus.getInt() > 1 ? 4 : 0));
+            if(door.isDoorOpen == 0){ //perform the stuff based on a closed door.
+                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.noaccess").getUnformattedText();
+                    color = 4;
+                    barColor = 1;
+                }
+                else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.lockdown").getUnformattedText();
+                    color = 12;
+                    barColor = 1;
+                }
+                else {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
+                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
+                    barColor = 0;
+                }
+            }
+            else{ //perform based on an open door
+                if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allaccess").getUnformattedText();
+                    color = 10;
+                    barColor = 4;
+                }
+                else {
+                    display = new TextComponentTranslation("advancedbasesecurity.reader.text.allowed").getUnformattedText();
+                    color = 2;
+                    barColor = 4;
+                }
+            }
+            door.readerLabel = display;
+            door.readerLabelColor = color;
+            door.readerLights = barColor;
+            for(UUID id : door.Readers){
+                if(AdvBaseSecurity.instance.doorHandler.allReaders.containsKey(id)){
+                    AdvBaseSecurity.instance.doorHandler.allReaders.get(id).updateVisuals(bar, new ReaderText(display, color) );
+                }
+            }
+            //timedDoors stuff
+            if(door.isDoorOpen == 1 && !timedDoors.contains(door)){
+                timedDoors.add(door);
+            }
+            else{
+                timedDoors.remove(door);
+            }
+            for(int i=0; i<userCache.size(); i++){ //clear cache of these door IDs
+                if(userCache.get(i).doorID.equals(door.doorId)){
+                    userCache.remove(i);
+                    i--;
+                }
+            }
+        }
+
+        //push update to a group of doors
+        private void pushDoorUpdateMult(List<Doors.OneDoor> door){
+            for(Doors.OneDoor id : door){
+                pushDoorUpdate(id);
+            }
+        }
+
+        //Push state to door (internal because this should only be called by "changeDoorState")
+        private void changeDoorStateInternal(Doors.OneDoor door, boolean openState, int ticks){ //if ticks = 0, toggle; if openState == -1, use default
+            //check state
+            if(!openState && door.isDoorOpen != 0){ //if asking to close door & door state is not already closed.
+                //check timed doors list to see if it needs a remove
+                if(door.isDoorOpen == 1) {
+                    removeFromTimedDoors(door.doorId);
+                }
+                //change door values
+                door.isDoorOpen = 0;
+                door.currTick = 0;
+                //update tile entites
+                markDirty();
+                pushDoorUpdate(door);
+            }
+            else if(openState && door.isDoorOpen == 0){ //opening a closed door
+                //change door values
+                door.isDoorOpen = (ticks == 0 ? 2 : 1);
+                door.currTick = ticks;
+                //update tile entities
+                markDirty();
+                pushDoorUpdate(door);
+            }
+            else if(openState && door.isDoorOpen != 0){ //trying to open an already open door.
+                if(door.isDoorOpen == 1){ //both timed door, so update time to max
+                    if(ticks != 0) //is a tick door
+                        door.currTick = Math.max(door.currTick, ticks);
+                    else{ //convert to being toggled open
+                        removeFromTimedDoors(door.doorId);
+                        door.isDoorOpen = 2;
+                        door.currTick = 0;
+                    }
+                }
+                markDirty();
+                //if (door.isDoorOpen == 2) not needed due to it being a toggle.
+                //pushDoorUpdate(door) not needed since door isn't needing a new state
+            }
+        }
+
+        public void changeDoorState(UUID doorID){ //use default value
+            Doors.OneDoor door = getDoorFromID(doorID);
+            if(door == null)
+                return;
+            changeDoorStateInternal(door, door.defaultToggle ? door.isDoorOpen == 0 : true, door.defaultToggle ? 0 : door.defaultTick);
+        }
+        public void changeDoorState(UUID doorID, boolean openState, int ticks){
+            Doors.OneDoor door = getDoorFromID(doorID);
+            if(door == null)
+                return;
+            changeDoorStateInternal(door, openState, ticks);
+        }
+
+        public void verifyUserPasses(){
+            List<String> exists = new LinkedList<>();
+            BiConsumer<String, Doors.PassValue> bic = (s, passValue) -> exists.add(s);
+            passes.forEach(bic);
+            for(Doors.Users user : users){
+                List<String> exists2 = new LinkedList<>();
+                BiConsumer<String, Doors.Users.UserPass> bic2 = (s, passValue) -> exists2.add(s);
+                user.passes.forEach(bic2);
+                for (String s : exists2) { //check for deleted passes
+                    if (!exists.contains(s)) {
+                        user.passes.remove(s);
+                    }
+                }
+                for (String s : exists){ //check for incorrect inputs.
+                    Doors.PassValue pass = passes.get(s);
+                    if(!exists2.contains(s) || user.passes.get(s).type != pass.passType.getInt() || (pass.passType == Doors.PassValue.type.Group && Integer.parseInt(user.passes.get(s).passValue.get(0)) > pass.groupNames.size())){
+                        user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
+                    }
+                }
+            }
+            markDirty();
+        }
+
+        public void updateGroups(Doors.Groups group, boolean pushToChildren){ //pushToChildren means if a change was made to a group, if it should update all child groups too (groups with parentID set to this groupID)
+            //group at this point has already been updated. this function simply pushes to doors and updates children groups
+            List<UUID> groups = new LinkedList<>();
+            groups.add(group.id);
+            if(pushToChildren) //if all groups that are children will receive this state
+                groups.addAll(getDoorGroupChildren(group.id, true));
+            List<Doors.OneDoor> pushUpdateDoors = getDoorsByGroup(groups); //Any doors which need a doorState push
+            //get all groups and update their values correctly first
+            for(UUID tempgroupID : groups){
+                if(!tempgroupID.equals(group.id)) {
+                    Doors.Groups tempgroup = getDoorGroup(tempgroupID);
+                    tempgroup.status = group.status;
+                    tempgroup.override = group.override;
+                }
+            }
+            //get all doors and push their values
+            for(Doors.OneDoor door : doors){
+                if(door.groupID != null && groups.contains(door.groupID)){ //that door is part of the group tree
+                    Doors.OneDoor.allDoorStatuses prev = door.doorStatus;
+                    door.doorStatus = group.status;
+                    door.override = (Math.abs(group.status.getInt()) == 1 ? group.override : null); //because -1 and 1 values are override ones.
+                    if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS)
+                        door.isDoorOpen = 2; //lock open
+                    else if(prev == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //revert to closed state
+                        door.isDoorOpen = 0;
+                    pushUpdateDoors.add(door);
+                }
+            }
+            markDirty();
+            //push update
+            pushDoorUpdateMult(pushUpdateDoors);
+        }
+
+        public void recievedUpdate(UUID editValidator, Doors.OneDoor door){ //if new door settings are added from outside.
+            if(validator.hasPermissions("door:" + door.doorId.toString(), editValidator)) {
+                Doors.OneDoor listDoor = null;
+                for (Doors.OneDoor door1 : doors) {
+                    if (door1.doorId.equals(door.doorId)) {
+                        listDoor = door1;
+                        break;
+                    }
+                }
+                if (listDoor != null) {
+                    listDoor.doorName = door.doorName;
+                    listDoor.passes = door.passes;
+                    listDoor.defaultToggle = door.defaultToggle;
+                    listDoor.defaultTick = door.defaultTick;
+                    listDoor.Readers = door.Readers;
+                    listDoor.Doors = door.Doors;
+                    //check if the group needs an update
+                    boolean pushDoor = false;
+                    if((listDoor.groupID != null && door.groupID != null && !listDoor.groupID.equals(door.groupID)) || (listDoor.groupID == null && door.groupID != null)) {
+                        Doors.Groups group = getDoorGroup(door.groupID);
+                        if (group != null) {
+                            listDoor.doorStatus = group.status;
+                            listDoor.override = group.override;
+                            pushDoor = true;
+                            //don't bother with isDoorOpen because it'll be done in pushDoorUpdate;
+                        }
+                    }
+                    else if(door.groupID == null && listDoor.groupID != null) { //remove group, so revert to default access
+                        listDoor.doorStatus = Doors.OneDoor.allDoorStatuses.ACCESS;
+                        listDoor.override = null;
+//                        if(listDoor.isDoorOpen != 0){ //will need to push the door update
+//                            listDoor.isDoorOpen = 0;
+//                            listDoor.currTick = 0;
+//							timedDoors.remove(listDoor); //if it exists here
+//                            pushDoor = true;
+//                        }
+                        pushDoor = true; //commented all back stuff out since pushDoorUpdate does it all
+                    }
+                    listDoor.groupID = door.groupID;
+                    markDirty();
+                    if(pushDoor)
+                        pushDoorUpdate(listDoor);
+                }
+            }
+        }
+
+        public int getReaderLight(UUID id){
+            for(Doors.OneDoor door : doors){
+                for(int i=0; i<door.Readers.size(); i++){
+                    if(door.Readers.get(i).equals(id)){
+                        return door.readerLights;
+                    }
+                }
+            }
+            return 0;
+        }
+        public ReaderText getReaderLabel(UUID id){
+            for(Doors.OneDoor door : doors){
+                for(int i=0; i<door.Readers.size(); i++){
+                    if(door.Readers.get(i).equals(id)){
+                        AdvBaseSecurity.instance.logger.info("Reader label:" + door.readerLabel + " for the id " + id);
+                        return new ReaderText(door.readerLabel, door.readerLabelColor);
+                    }
+                }
+            }
+            return new ReaderText("Disconnected", (byte) 4);
+        }
+        public boolean getDoorState(UUID id){
+            for(Doors.OneDoor door : doors){
+                for(int i=0; i<door.Doors.size(); i++){
+                    if(door.Doors.get(i).equals(id)){
+                        return door.isDoorOpen != 0;
+                    }
+                }
+            }
+            return false;
+        }
+        public boolean getDoorStateFromDoor(UUID id){ //based on individual doors on load instead
+            for(CentralDoorNBT.doorHoldr door : AdvBaseSecurity.instance.doorHandler.IndDoors.doors){
+                if(door.deviceId.equals(id)){
+                    if(door.clonedId != null){
+                        return getDoorState(door.clonedId);
+                    }
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        public List<String> getUserNames(){
+            List<String> names = new LinkedList<>();
+            for(Doors.Users user : users){
+                names.add(user.name);
+            }
+            return names;
+        }
+
+        public List<String> getDoorNames(){
+            List<String> names = new LinkedList<>();
+            for(Doors.OneDoor dooor : doors){
+                names.add(dooor.doorName);
+            }
+            return names;
+        }
+
+        public List<String> getGroupNames(){
+            List<String> names = new LinkedList<>();
+            for(Doors.Groups dooor : groups.values()){
+                names.add(dooor.name);
+            }
+            return names;
+        }
+
+        public CentralDoorNBT.doorHoldr indDoorsContains(UUID id){
+            for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
+                if(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).deviceId.equals(id))
+                    return AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i);
+            }
+            return null;
+        }
+
+        public List<CentralDoorNBT.doorHoldr> getIndDoors(UUID clonedID){
+            List<CentralDoorNBT.doorHoldr> doors = new LinkedList<>();
+            for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
+                if(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).clonedId != null && AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).clonedId.equals(clonedID))
+                    doors.add(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i));
+            }
+            return doors;
+        }
+
+        public void toggleIndDoors(UUID clonedID, boolean toggle){
+            List<UUID> doors = new LinkedList<>();
+            for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
+                if(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).clonedId != null && AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).clonedId.equals(clonedID))
+                    doors.add(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).deviceId);
+            }
+            BiConsumer<UUID, IDoor> bic = (k, v) -> {
+                if(doors.contains(k)){
+                    v.openDoor(toggle);
+                }
+            };
+            AdvBaseSecurity.instance.doorHandler.allDoors.forEach(bic);
+            AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
+        }
+
+        private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){
+            AdvBaseSecurity.instance.logger.debug("Checking pass " + pass.passID);
+            if(passes.containsKey(pass.passID)){
+                Doors.PassValue passValue = passes.get(pass.passID);
+                if(passValue.passType == Doors.PassValue.type.Level){
+                    if(pass.passValueI <= Integer.parseInt(user.passValue.get(0)))
+                        return true;
+                }
+                else if(passValue.passType == Doors.PassValue.type.Group){
+                    if(pass.passValueI == Integer.parseInt(user.passValue.get(0)) - 1)
+                        return true;
+                }
+                else if(passValue.passType == Doors.PassValue.type.Text){
+                    if(pass.passValueS.equals(user.passValue.get(0)))
+                        return true;
+                }
+                else if(passValue.passType == Doors.PassValue.type.MultiText){
+                    for(String s : user.passValue){
+                        if(s.equals(pass.passValueS))
+                            return true;
+                    }
+                }
+                else if(passValue.passType == Doors.PassValue.type.Pass)
+                    return user.passValue.get(0).equals("true");
+            }
+            return false;
+        }
+
+        /*
+        -400: error
+        -4: door doesn't exist
+        -3: user doesn't exist
+        -2: don't do anything
+        -1: blocked user (denied)
+        0: access denied
+        1: access granted
+        2: access granted staff
+         */
+        public int checkSwipe(UUID userID, UUID readerID, boolean properChange){ //properChange actually updates the door state.
+            AdvBaseSecurity.instance.logger.debug("Checking ID " + userID + " in reader ID " + readerID);
+            //get the door
+            Doors.OneDoor door = getDoorFromReader(readerID);
+            if(door == null)
+                return -4;
+            AdvBaseSecurity.instance.logger.debug("Found the door " + door.doorName);
+            //get the user's card
+            Doors.Users user = getUser(userID);
+            if(user == null)
+                return -3;
+            AdvBaseSecurity.instance.logger.debug("Found the user " + user.name);
+            //check the door
+            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.ALL_ACCESS) //if always open, don't do anything.
+                return -2;
+            AdvBaseSecurity.instance.logger.debug("Door is not AllAccess");
+            if(user.blocked)
+                return -1;
+            else if(door.doorStatus == Doors.OneDoor.allDoorStatuses.NO_ACCESS)
+                return user.staff ? 1 : 0;
+            AdvBaseSecurity.instance.logger.debug("User is neither blocked or door is no access. Preparing checks. Status: " + door.doorStatus.getInt());
+            //check cache
+            for(cacheHolder cache : userCache){
+                if(cache.userID.equals(userID) && cache.doorID.equals(door.doorId)){
+                    //use this return value
+                    AdvBaseSecurity.instance.logger.debug("Using cache value: " + cache.worked);
+                    if(properChange){
+                        if(cache.worked != 0){ //1 or 2
+                            changeDoorState(cache.doorID);
+                        }
+                    }
+                    return cache.worked;
+                }
+            }
+            if(door.doorStatus.getInt() >= 0) // # > 0 = can be opened by card swipe
+            {
+                if (checkPassList(door.passes, user)){
+                    AdvBaseSecurity.instance.logger.debug("Succeeded check. Returning 1");
+                    if(DoorConfig.cachetime != 0)
+                        userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
+                    if(properChange)
+                        changeDoorState(door.doorId);
+                    return 1;
+                }
+            }
+            if(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS || door.doorStatus == Doors.OneDoor.allDoorStatuses.LOCKDOWN){ // |#| == 1 : checks with overridden pass list.
+                if (checkPassList(door.override, user)){
+                    AdvBaseSecurity.instance.logger.debug("Succeeded override check. Returning 1");
+                    if(DoorConfig.cachetime != 0)
+                        userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
+                    if(properChange)
+                        changeDoorState(door.doorId);
+                    return 1;
+                }
+            }
+            AdvBaseSecurity.instance.logger.debug("Failed others. Is staff: " + user.staff);
+            if(DoorConfig.cachetime != 0)
+                userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), user.staff ? 2 : 0));
+            if(properChange && user.staff)
+                changeDoorState(door.doorId);
+            return user.staff ? 2 : 0;
+
+            //return -400;
+        }
+
+        //endregion
 
         public static class OneDoor{
             public UUID doorId; //unique identifier
@@ -1667,4 +1713,127 @@ public class DoorHandler {
         }
     }
     //endregion
+
+    public static class DoorData extends WorldSavedData{
+
+        public static final String DATA_NAME = AdvBaseSecurity.MODID + "_doorlist";
+        public static DoorData instance;
+
+        List<UUID> doors;
+
+        public DoorData(){
+            super(DATA_NAME);
+            doors = new LinkedList<>();
+        }
+        public DoorData(String str){
+            super(str);
+            doors = new LinkedList<>();
+        }
+
+        public static DoorData get(World world) {
+            MapStorage storage = world.getMapStorage();
+            instance = (DoorData) storage.getOrLoadData(Doors.class, DATA_NAME);
+
+            if (instance == null) {
+                instance = new DoorData();
+                storage.setData(DATA_NAME, instance);
+            }
+            return instance;
+        }
+
+        @Override
+        public void readFromNBT(NBTTagCompound nbt) {
+            doors = new LinkedList<>();
+            if(nbt.hasKey("doors")) {
+                NBTTagList list = nbt.getTagList("doors", Constants.NBT.TAG_STRING);
+                for(int i=0; i<list.tagCount(); i++){
+                    doors.add(UUID.fromString(list.getStringTagAt(i)));
+                }
+            }
+        }
+
+        @Override
+        public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+            NBTTagList list = new NBTTagList();
+            for(UUID id : doors){
+                list.appendTag(new NBTTagString(id.toString()));
+            }
+            nbt.setTag("doors", list);
+            return nbt;
+        }
+    }
+
+    public static class DoorIdentifier{
+        public UUID ManagerID;
+        public UUID DoorID;
+        public DoorIdentifier(UUID manager, UUID door){
+            ManagerID = manager;
+            DoorID = door;
+        }
+        public DoorIdentifier(){}
+        public DoorIdentifier(NBTTagCompound tag){
+            readFromNBT(tag);
+        }
+
+        public void readFromNBT(NBTTagCompound tag){
+            if(tag.hasUniqueId("manager"))
+                ManagerID = tag.getUniqueId("manager");
+            if(tag.hasUniqueId("door"))
+                DoorID = tag.getUniqueId("door");
+        }
+
+        public NBTTagCompound writeToNBT(NBTTagCompound tag){
+            tag.setUniqueId("manager", ManagerID);
+            tag.setUniqueId("door", DoorID);
+            return tag;
+        }
+    }
+
+    public static class ModifierValidation{ //Contains the IDs for people allowed to modify a part of the system (to prevent overwriting)
+        public static final int maxTime = 60 * 15;
+
+        private HashMap<String, OneHolder> currentHolders;
+
+        public void onSecond(){
+            List<String> keys = new LinkedList<>();
+            for(OneHolder hol : currentHolders.values()){
+                hol.timeLeft--;
+                if(hol.timeLeft <= 0){
+                    keys.add(hol.key);
+                }
+            }
+            for(String str : keys)
+                removePerm(str);
+        }
+
+        public boolean hasPermissions(String where, UUID id){
+            if(currentHolders.containsKey(where) && currentHolders.get(where).editValidator.equals(id)){
+                currentHolders.get(where).timeLeft = maxTime;
+                return true;
+            }
+            return false;
+        }
+
+        public boolean addPermissions(String where, UUID id, boolean overwrite){
+            if(currentHolders.containsKey(where) && !overwrite)
+                return false;
+            currentHolders.put(where, new OneHolder(id, where));
+            return true;
+        }
+
+        public void removePerm(String where){
+            currentHolders.remove(where);
+        }
+
+        public static class OneHolder{
+            public OneHolder(UUID id, String key){
+                timeLeft = maxTime;
+                editValidator = id;
+                this.key = key;
+            }
+            public int timeLeft;
+            public UUID editValidator;
+            public String key;
+        }
+    }
 }

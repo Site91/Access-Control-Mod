@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
+import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.BlockDoor;
@@ -16,8 +17,11 @@ import java.util.UUID;
 
 public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 //	TileEntityDoorController currentDoor;
-	public UUID deviceId;
+	public UUID managerId;
+	public UUID deviceId = null;
 	public boolean pushDoor; //if true, door must be right clicked to open/close.
+
+	DoorHandler.Doors door = null;
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
@@ -26,6 +30,8 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 			deviceId = nbt.getUniqueId("deviceId");
 		else
 			deviceId = null;
+		if(nbt.hasUniqueId("managerId"))
+			managerId = nbt.getUniqueId("managerId");
 		if(nbt.hasKey("pushDoor"))
 			pushDoor = nbt.getBoolean("pushDoor");
 		else
@@ -47,12 +53,21 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	public void onLoad() {
 		super.onLoad();
 		if(!world.isRemote) {
-			IBlockState state = world.getBlockState(pos);
-			boolean stated = AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId);
-			if (!pushDoor && !state.getValue(BlockDoor.OPEN).equals(stated)) {
-				((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+			if(managerId != null)
+				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
+			if(door != null) {
+				IBlockState state = world.getBlockState(pos);
+				boolean stated = door.getDoorStateFromDoor(deviceId);
+				if (!pushDoor && !state.getValue(BlockDoor.OPEN).equals(stated)) {
+					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
+				}
 			}
 		}
+	}
+
+	@Override
+	public DoorHandler.Doors getDoor() {
+		return door;
 	}
 
 	@Override
@@ -60,6 +75,8 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 		super.writeToNBT(nbt);
 		if(deviceId != null)
 			nbt.setUniqueId("deviceId", deviceId);
+		if(managerId != null)
+			nbt.setUniqueId("managerId", managerId);
 		nbt.setBoolean("pushDoor", pushDoor);
 		return nbt;
 	}
@@ -68,7 +85,10 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	public NBTTagCompound pushMoretoUpdate(NBTTagCompound nbt) {
 		if(!pushDoor) {
 			nbt.setBoolean("toclient", true);
-			nbt.setBoolean("devState", AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(deviceId));
+			if(door != null)
+				nbt.setBoolean("devState", door.getDoorStateFromDoor(deviceId));
+			else
+				nbt.setBoolean("devState", false);
 		}
 		return nbt;
 	}
@@ -94,6 +114,7 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	@Override
 	public void newId() {
 		deviceId = UUID.randomUUID();
+		managerId = null;
 		markDirty();
 	}
 
@@ -115,7 +136,10 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 			boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, true);
 			if(found){
 				AdvBaseSecurity.instance.logger.info("Found door! Linking...");
-				openDoor(AdvBaseSecurity.instance.doorHandler.getDoorState(deviceId));
+				managerId = cardTag.doorId.ManagerID;
+				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
+				if(door != null)
+					openDoor(door.getDoorState(deviceId));
 			}
 		}
 	}

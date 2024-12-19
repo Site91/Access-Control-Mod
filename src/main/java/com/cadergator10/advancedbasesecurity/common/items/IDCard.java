@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.items;
 import baubles.api.BaubleType;
 import baubles.api.IBauble;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -25,7 +26,7 @@ public class IDCard extends ItemBase implements IBauble {
 	}
 
 	public static class CardTag { //inspired by OpenSecurity's approach. a lot is as I learn
-		public UUID cardId = UUID.randomUUID();
+		public DoorHandler.DoorIdentifier cardId = null;
 		public UUID playerId = null;
 		public int color = 0xFFFFFF;
 
@@ -40,9 +41,8 @@ public class IDCard extends ItemBase implements IBauble {
 
 		public void readFromNBT(NBTTagCompound nbt){
 			if(nbt != null) {
-				if (nbt.hasUniqueId("cardId"))
-					cardId = nbt.getUniqueId("cardId");
-
+				if (nbt.hasKey("cardId"))
+					cardId = new DoorHandler.DoorIdentifier(nbt.getCompoundTag("cardId"));
 				if (nbt.hasUniqueId("playerId"))
 					playerId = nbt.getUniqueId("playerId");
 
@@ -57,7 +57,8 @@ public class IDCard extends ItemBase implements IBauble {
 
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt){
 			nbt.setUniqueId("playerId", playerId);
-			nbt.setUniqueId("cardId", cardId);
+			if(cardId != null)
+				nbt.setTag("cardId", cardId.writeToNBT(new NBTTagCompound()));
 
 			NBTTagCompound displayTag = new NBTTagCompound();
 			displayTag.setInteger("color", color);
