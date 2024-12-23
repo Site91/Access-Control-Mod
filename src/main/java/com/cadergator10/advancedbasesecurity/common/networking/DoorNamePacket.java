@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.UUID;
 
 public class DoorNamePacket implements IMessage {
-    public UUID editValidator;
     public List<packetDoor> doors;
     public HashMap<UUID, String> groupNames;
     public HashMap<UUID, DoorHandler.Doors.Groups> groups;
@@ -39,8 +38,7 @@ public class DoorNamePacket implements IMessage {
     public DoorNamePacket(){
 
     }
-    public DoorNamePacket(DoorHandler.Doors door, UUID editValidator){
-        this.editValidator = editValidator;
+    public DoorNamePacket(DoorHandler.Doors door){
         doors = new LinkedList<>();
         for(DoorHandler.Doors.OneDoor doore : door.doors){
             doors.add(new packetDoor(doore.doorId, doore.doorName, doore.doorStatus.getInt(), doore.Readers.size(), doore.Doors.size(), doore.groupID));
@@ -52,7 +50,6 @@ public class DoorNamePacket implements IMessage {
     public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
-        ByteBufUtils.writeUTF8String(buf, editValidator.toString());
         buf.writeInt(doors.size());
         List<UUID> tempList = new LinkedList<>();
         for(packetDoor door : doors){
@@ -79,7 +76,6 @@ public class DoorNamePacket implements IMessage {
     public void fromBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
-        editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         int size = buf.readInt();
         doors = new LinkedList<>();
         for(int i=0; i<size; i++){

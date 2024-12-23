@@ -9,6 +9,7 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -24,6 +25,7 @@ import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import scala.collection.immutable.Stream;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -166,7 +168,7 @@ public class DoorHandler {
     }
     
     public Doors getDoorManager(UUID id){
-        if(DoorGroups.containsKey(id)){
+        if(id != null && DoorGroups.containsKey(id)){
             return DoorGroups.get(id);
         }
         return null;
@@ -248,6 +250,26 @@ public class DoorHandler {
     }
     //endregion
 
+    public Doors createManager(World world, EntityPlayer player, String name){
+        UUID id = UUID.randomUUID();
+        Doors door = Doors.get(world, id.toString());
+        door.name = name;
+        if(player != null)
+            door.creator = player.getUniqueID();
+        door.markDirty();
+        DoorGroups.put(id, door);
+        return door;
+    }
+
+    public List<Doors> getAllowedManagers(EntityPlayer player){
+        List<Doors> doors = new LinkedList<>();
+        for(Doors door : DoorGroups.values()){
+            if(door.hasPerms(player))
+                doors.add(door);
+        }
+        return doors;
+    }
+
     
 
 
@@ -259,6 +281,8 @@ public class DoorHandler {
 
         public String name;
         public UUID id;
+        public UUID creator;
+        public List<UUID> allowedPlayers;
         public List<OneDoor> doors = new LinkedList<>();
         public HashMap<String, PassValue> passes = new HashMap<>();
         public HashMap<UUID, Groups> groups = new HashMap<>();
@@ -321,6 +345,17 @@ public class DoorHandler {
                 name = nbt.getString("name");
             else
                 name = "new";
+            if(nbt.hasKey("owner"))
+                creator = UUID.fromString(nbt.getString("owner"));
+            else
+                creator = null;
+            allowedPlayers = new LinkedList<>();
+            if(nbt.hasKey("whitelist")){
+                NBTTagList list = nbt.getTagList("whitelist", Constants.NBT.TAG_STRING);
+                for(int i=0; i<list.tagCount(); i++){
+                    allowedPlayers.add(UUID.fromString(list.getStringTagAt(i)));
+                }
+            }
 
             //read all pass data
             this.passes = new HashMap<>();
@@ -443,6 +478,10 @@ public class DoorHandler {
                     }
                 }
             }
+        }
+
+        public boolean hasPerms(EntityPlayer player){
+            return creator.equals(player.getUniqueID()) || allowedPlayers.contains(player.getUniqueID());
         }
 
         //region Door Controls

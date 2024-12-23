@@ -1,9 +1,9 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
+import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -11,18 +11,17 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class DoorListGUI extends GuiScreen {
+public class ManagerListGUI extends GuiScreen {
     //data passed by packet
-    List<DoorNamePacket.packetDoor> doors;
-    HashMap<UUID, String> groupNames;
+    List<ManagerNamePacket.packetDoor> doors;
     //button data
     GuiButton closeButton;
-    GuiButton passButton;
-    GuiButton userButton;
-    ButtonEnum modeButton;
     GuiButton upButton;
     GuiButton downButton;
     GuiButton newButton;
@@ -32,10 +31,9 @@ public class DoorListGUI extends GuiScreen {
     //other data
     int currPage = 1;
     int maxPageLength = 5;
-    public DoorListGUI(List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames) {
+    public ManagerListGUI(List<ManagerNamePacket.packetDoor> doors) {
         super();
         this.doors = doors;
-        this.groupNames = groupNames;
     }
 
     void drawString(String string, int x, int y, int color){
@@ -58,7 +56,6 @@ public class DoorListGUI extends GuiScreen {
         this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Door"));
         this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));
         this.buttonList.add(downButton = new GuiButton(id++, this.width - 20, this.height - 20, 16, 16, "\\/"));
-        this.buttonList.add(modeButton = new ButtonEnum(id++, this.width / 2 - 200, 40, false, Arrays.asList(new ButtonEnum.groupIndex("edit", "Mode: EDIT"), new ButtonEnum.groupIndex("link", "Mode: LINK")), 0));
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
         if(!doors.isEmpty()){
@@ -117,14 +114,14 @@ public class DoorListGUI extends GuiScreen {
         }
         else if(button == newButton){
             newButton.enabled = false; //make sure it can't be spammed
-            DoorServerRequest packet = new DoorServerRequest("newdoor", "");
+            DoorServerRequest packet = new DoorServerRequest(editValidator, "newdoor", "");
             AdvBaseSecurity.instance.network.sendToServer(packet);
         }
         else{
             for (int i = 0; i < doorButtons.size(); i++) {
                 GuiButton doorButton = doorButtons.get(i);
                 if (button == doorButton) {
-                    DoorServerRequest packet = new DoorServerRequest("editdoor", doors.get(i).id.toString());
+                    DoorServerRequest packet = new DoorServerRequest(editValidator, "editdoor", doors.get(i).id.toString());
                     AdvBaseSecurity.instance.network.sendToServer(packet);
                 }
             }

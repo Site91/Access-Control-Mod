@@ -15,7 +15,7 @@ public class DoorNamedHandler implements IMessageHandler<DoorNamePacket, IMessag
                 net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
                 if (mc.world.isRemote)
                     //open up the GUI
-                    mc.displayGuiScreen(new DoorListGUI(message.editValidator, message.doors, message.groupNames));
+                    mc.displayGuiScreen(new DoorListGUI(message.doors, message.groupNames));
             });
         }
         return null;

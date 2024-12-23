@@ -25,6 +25,9 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     int groupIndex = 0;
 
     UUID editValidator;
+    String editID;
+    UUID managerId;
+
     //button data
     GuiButton backButton;
     GuiButton saveButton;
@@ -41,9 +44,11 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
 
     //other data
     boolean letPress;
-    public EditDoorGUI(UUID editValidator, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups) {
+    public EditDoorGUI(UUID editValidator, String id, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups) {
         super();
         this.editValidator = editValidator;
+        this.editID = id;
+        this.managerId = managerId;
         this.door = door;
         this.groups = groups;
         if(door.groupID != null){
@@ -149,7 +154,7 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         if(letPress) {
             if(button == backButton){
                 letPress = false;
-                DoorServerRequest packet = new DoorServerRequest(editValidator, "doorlist", ""); //get the door list again
+                DoorServerRequest packet = new DoorServerRequest(editValidator, editID, managerId, "doorlist", ""); //get the door list again
                 AdvBaseSecurity.instance.network.sendToServer(packet);
             }
             else if(button == saveButton){
@@ -181,7 +186,7 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
             else if(button == editPasses){
                 letPress = false;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
-                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, door, groups));
+                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, editID, managerId, door, groups));
             }
         }
     }

@@ -127,7 +127,7 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 			}
 			if (tile == null || !tile.pushDoor)
 				return false;
-			if (iblockstate.getValue(OPEN) || AdvBaseSecurity.instance.doorHandler.getDoorStateFromDoor(tile.getId())) { //TODO: Fix dis
+			if (iblockstate.getValue(OPEN) || (tile.getDoor() != null && tile.getDoor().getDoorStateFromDoor(tile.getId()))) {
 				toggleDoor(worldIn, pos, !iblockstate.getValue(OPEN));
 				worldIn.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, ((Boolean) state.getValue(OPEN)).booleanValue() ? SoundEvents.BLOCK_IRON_DOOR_OPEN : SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 1F, 1F);
 				return true;
