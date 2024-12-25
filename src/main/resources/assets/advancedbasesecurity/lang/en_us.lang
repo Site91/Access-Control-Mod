@@ -24,7 +24,8 @@ advancedbasesecurity.reader.text.error=ERROR
 #items
 item.advancedbasesecurity.id_card.name=ID Card
 item.advancedbasesecurity.linking_card=Linking Card
-item.advancedbasesecurity.screwdriver.name=Screwdriver
+item.advancedbasesecurity.screwdriver=Screwdriver
+item.advancedbasesecurity.door_manager=Screwdriver
 #blocks
 tile.advancedbasesecurity.card_reader.name=Card Reader
 tile.advancedbasesecurity.card_reader_small.name=Card Reader (small)

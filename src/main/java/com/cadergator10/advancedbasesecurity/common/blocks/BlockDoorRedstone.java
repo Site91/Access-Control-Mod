@@ -3,8 +3,7 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorControlRedstone;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -111,21 +110,20 @@ public class BlockDoorRedstone extends Block implements ITileEntityProvider {
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
         ItemStack heldItem;
-        if (!player.getHeldItemMainhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard) {
+        if (!player.getHeldItemMainhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemDoorManager) {
             heldItem = player.getHeldItemMainhand();
-        } else if (!player.getHeldItemOffhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard) {
+        } else if (!player.getHeldItemOffhand().isEmpty() && player.getHeldItemMainhand().getItem() instanceof ItemDoorManager) {
             heldItem = player.getHeldItemOffhand();
         } else {
             return false;
         }
 
         if (!heldItem.isEmpty()) {
-            System.out.println(heldItem.getItem().getRegistryName().toString());
             Item equipped = heldItem.getItem();
             TileEntityDoorControlRedstone tile = (TileEntityDoorControlRedstone) world.getTileEntity(pos);
 
             if (!world.isRemote) {
-                if(equipped instanceof ItemLinkingCard)
+                if(equipped instanceof ItemDoorManager)
                     tile.setDoor(heldItem);
             }
             return true;

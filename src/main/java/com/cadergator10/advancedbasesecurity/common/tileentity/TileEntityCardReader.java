@@ -4,7 +4,6 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,14 +13,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.gen.structure.StructureStrongholdPieces;
 
 import javax.annotation.Nonnull;
-import java.util.UUID;
 
 public class TileEntityCardReader extends TileEntityDeviceBase implements IReader, ITickable {
-	public UUID managerId = null;
-	public UUID deviceId = UUID.randomUUID();
 	public int lightFlag = 0;
 	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases.
 	public int tempTextDelay = 0;
@@ -58,30 +53,17 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 
 	@Override
 	public void setDoor(@Nonnull ItemStack heldItem) {
-		ItemLinkingCard.CardTag cardTag = new ItemLinkingCard.CardTag(heldItem);
-		if(cardTag.doorId != null){
-			boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, false);
-			if(found){
-				managerId = cardTag.doorId.ManagerID;
-				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
-				if(door != null) {
-					int lightFlagT = door.getReaderLight(deviceId);
-					ReaderText currTextT = door.getReaderLabel(deviceId);
-					if (lightFlagT != lightFlag || !currTextT.text.equals(currText.text) || currTextT.color != currText.color) //determine if dirty
-					{
-						this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
-						this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(), 1, 1);
-						getUpdateTag();
-					}
-				}
-				markDirty();
+		super.setDoor(heldItem);
+		if(door != null) {
+			int lightFlagT = door.getReaderLight(deviceId);
+			ReaderText currTextT = door.getReaderLabel(deviceId);
+			if (lightFlagT != lightFlag || !currTextT.text.equals(currText.text) || currTextT.color != currText.color) //determine if dirty
+			{
+				this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
+				this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(), 1, 1);
+				getUpdateTag();
 			}
 		}
-	}
-
-	@Override
-	public DoorHandler.Doors getDoor() {
-		return door;
 	}
 
 	public void setTempText(ReaderText text, int ticks, int flag){
@@ -104,12 +86,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		AdvBaseSecurity.instance.logger.info("Starting Reader NBT Read: " + nbt.toString());
-		if(nbt.hasUniqueId("deviceId"))
-			this.deviceId = nbt.getUniqueId("deviceId");
-		if(nbt.hasUniqueId("managerId"))
-			this.managerId = nbt.getUniqueId("managerId");
-		AdvBaseSecurity.instance.logger.info("Device ID r: " + deviceId);
 		if(nbt.hasKey("temptext") && nbt.hasKey("tempcol")){
 			this.tempText = new ReaderText(nbt.getString("temptext"), nbt.getByte("tempcol"));
 		}
@@ -120,8 +96,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 		else
 			this.tempLightFlag = 0;
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
-			if(managerId != null)
-				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
 			if(door != null) {
 				lightFlag = door.getReaderLight(deviceId);
 				currText = door.getReaderLabel(deviceId);
@@ -148,10 +122,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		if(this.deviceId != null)
-			nbt.setUniqueId("deviceId", this.deviceId);
-		if(this.managerId != null)
-			nbt.setUniqueId("managerId", this.managerId);
 		if(this.tempText != null){
 			nbt.setString("temptext", this.tempText.text);
 			nbt.setByte("tempcol", this.tempText.color);
@@ -179,18 +149,6 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 		}
 		nbt.setTag("currText", tag);
 		return nbt;
-	}
-
-	@Override
-	public void newId() {
-		this.deviceId = UUID.randomUUID();
-		managerId = null;
-		markDirty();
-	}
-
-	@Override
-	public UUID getId() {
-		return this.deviceId;
 	}
 
 	@Override

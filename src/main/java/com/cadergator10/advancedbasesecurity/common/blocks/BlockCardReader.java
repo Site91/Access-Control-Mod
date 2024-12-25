@@ -4,10 +4,9 @@ import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.block.Block;
@@ -131,9 +130,9 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 		if(hand == EnumHand.MAIN_HAND) {
 			ItemStack heldItem;
 			int baubleID = BaublesApi.isBaubleEquipped(player, IDCard.DEFAULTSTACK.getItem());
-			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
 				heldItem = player.getHeldItemMainhand();
-			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
 				heldItem = player.getHeldItemOffhand();
 			} else if (baubleID != -1) { //equipped in Baubles slot
 				heldItem = BaublesApi.getBaublesHandler(player).getStackInSlot(baubleID);
@@ -150,7 +149,7 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 					if (equipped instanceof IDCard) {
 						world.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, SoundHandler.card_swipe, SoundCategory.BLOCKS, 1F, 1F);
 						tile.readCard(heldItem, player, side);
-					} else if (equipped instanceof ItemLinkingCard)
+					} else if (equipped instanceof ItemDoorManager)
 						tile.setDoor(heldItem);
 				}
 				return true;

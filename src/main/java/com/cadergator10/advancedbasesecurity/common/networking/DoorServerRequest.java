@@ -4,7 +4,6 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentString;
@@ -12,7 +11,6 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import scala.util.control.Exception;
 
 import java.util.UUID;
 
@@ -122,6 +120,8 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                         if(door.hasPerms(ctx.getServerHandler().player)) {
                             ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
                             tag.managerID = door.id;
+                            item.setTagCompound(tag.writeToNBT(item.getTagCompound()));
+                            item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
                             DoorNamePacket packet = new DoorNamePacket(door);
                             AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                         }

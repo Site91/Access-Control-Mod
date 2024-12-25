@@ -6,6 +6,8 @@ import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
 import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.inventory.Container;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -14,7 +16,7 @@ import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditUserGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
+public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
     List<DoorHandler.Doors.Users> users;
     List<DoorHandler.Doors.PassValue> passes;
@@ -35,7 +37,8 @@ public class EditUserGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     List<GuiTextField> fields;
     List<String> fieldIDs;
 
-    public EditUserGUI(UUID editValidator, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes){
+    public EditUserGUI(UUID editValidator, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes, Container container){
+        super(container);
         this.editValidator = editValidator;
         this.users = users;
         this.passes = passes;
@@ -229,6 +232,11 @@ public class EditUserGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         nameField.drawTextBox();
         for(GuiTextField field : fields)
             field.drawTextBox();
+    }
+
+    @Override
+    protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
+
     }
 
     @Override

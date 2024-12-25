@@ -2,12 +2,10 @@ package com.cadergator10.advancedbasesecurity.common.blocks;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoorController;
-import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -73,21 +71,20 @@ public class BlockDoorController extends BlockCamo implements ITileEntityProvide
 		if(rightClick)
 			return true;
 		ItemStack heldItem;
-		if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
+		if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemDoorManager || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 			heldItem = player.getHeldItemMainhand();
-		} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
+		} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemDoorManager || player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 			heldItem = player.getHeldItemOffhand();
 		} else {
 			return false;
 		}
 
 		if (!heldItem.isEmpty()) {
-			System.out.println(heldItem.getItem().getRegistryName().toString());
 			Item equipped = heldItem.getItem();
 			TileEntityDoorController tile = (TileEntityDoorController) world.getTileEntity(pos);
 
 			if (!world.isRemote) {
-				if(equipped instanceof ItemLinkingCard)
+				if(equipped instanceof ItemDoorManager)
 					tile.setDoor(heldItem);
 				else
 					tile.linkDoors();

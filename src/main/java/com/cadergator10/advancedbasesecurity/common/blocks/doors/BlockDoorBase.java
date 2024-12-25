@@ -1,13 +1,10 @@
 package com.cadergator10.advancedbasesecurity.common.blocks.doors;
 
-import baubles.api.BaublesApi;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
+import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import com.cadergator10.advancedbasesecurity.common.items.ItemScrewdriver;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityDoor;
 import net.minecraft.block.Block;
@@ -24,14 +21,11 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentScore;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 	public final static String NAME = "door_base";
@@ -106,13 +100,13 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 			IBlockState iblockstate = pos.equals(blockpos) ? state : worldIn.getBlockState(blockpos);
 			TileEntityDoor tile = (TileEntityDoor) worldIn.getTileEntity(blockpos);
 			ItemStack heldItem = null;
-			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof ItemScrewdriver)) {
 				heldItem = player.getHeldItemMainhand();
-			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof ItemScrewdriver || player.getHeldItemMainhand().getItem() instanceof ItemLinkingCard)) {
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof ItemScrewdriver)) {
 				heldItem = player.getHeldItemOffhand();
 			}
 			if (heldItem != null && tile != null) { //change the door type or link
-				if(heldItem.getItem() instanceof ItemLinkingCard){
+				if(heldItem.getItem() instanceof ItemDoorManager){
 //					tile.setDoor(heldItem); //disabled since it isn't being added like that.
 				}
 				else {
@@ -133,7 +127,7 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 				return true;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	@Override

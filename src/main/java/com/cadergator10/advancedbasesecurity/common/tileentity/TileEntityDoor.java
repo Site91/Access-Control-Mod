@@ -5,20 +5,15 @@ import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
-import scala.collection.parallel.ParIterableLike;
 
 import java.util.UUID;
 
 public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 //	TileEntityDoorController currentDoor;
-	public UUID managerId;
-	public UUID deviceId = null;
 	public boolean pushDoor; //if true, door must be right clicked to open/close.
 
 	DoorHandler.Doors door = null;
@@ -26,12 +21,6 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		if(nbt.hasUniqueId("deviceId"))
-			deviceId = nbt.getUniqueId("deviceId");
-		else
-			deviceId = null;
-		if(nbt.hasUniqueId("managerId"))
-			managerId = nbt.getUniqueId("managerId");
 		if(nbt.hasKey("pushDoor"))
 			pushDoor = nbt.getBoolean("pushDoor");
 		else
@@ -66,17 +55,8 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	}
 
 	@Override
-	public DoorHandler.Doors getDoor() {
-		return door;
-	}
-
-	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		if(deviceId != null)
-			nbt.setUniqueId("deviceId", deviceId);
-		if(managerId != null)
-			nbt.setUniqueId("managerId", managerId);
 		nbt.setBoolean("pushDoor", pushDoor);
 		return nbt;
 	}
@@ -112,36 +92,8 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	}
 
 	@Override
-	public void newId() {
-		deviceId = UUID.randomUUID();
-		managerId = null;
-		markDirty();
-	}
-
-	@Override
-	public UUID getId() {
-		return deviceId;
-	}
-
-	@Override
 	public String getDevType() {
 		return "door";
-	}
-
-	@Override
-	public void setDoor(ItemStack heldItem) {
-		ItemLinkingCard.CardTag cardTag = new ItemLinkingCard.CardTag(heldItem);
-		if(cardTag.doorId != null) {
-			AdvBaseSecurity.instance.logger.info("Setting Door's ID of card id " + cardTag.doorId);
-			boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, true);
-			if(found){
-				AdvBaseSecurity.instance.logger.info("Found door! Linking...");
-				managerId = cardTag.doorId.ManagerID;
-				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
-				if(door != null)
-					openDoor(door.getDoorState(deviceId));
-			}
-		}
 	}
 
 	@Override

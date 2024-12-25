@@ -2,7 +2,7 @@ package com.cadergator10.advancedbasesecurity;
 
 import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
-import com.cadergator10.advancedbasesecurity.common.commands.BaseSecurityCommand;
+//import com.cadergator10.advancedbasesecurity.common.commands.BaseSecurityCommand;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.*;
 import com.cadergator10.advancedbasesecurity.common.networking.handlers.DoorNamedHandler;

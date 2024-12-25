@@ -1,20 +1,16 @@
 package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockDoorBase;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import com.cadergator10.advancedbasesecurity.common.interfaces.ICamo;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -23,24 +19,13 @@ import java.util.*;
 
 //Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
 public class TileEntityDoorController extends TileEntityCamoBase implements IDoorControl {
-	UUID managerId = null;
-	UUID deviceId = UUID.randomUUID();
 	boolean currentState = false;
-
-	DoorHandler.Doors door = null;
 
 	List<UUID> prevPos = new LinkedList<>();
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-
-		if(nbt.hasUniqueId("deviceId"))
-			this.deviceId = nbt.getUniqueId("deviceId");
-		else
-			this.deviceId = UUID.randomUUID();
-		if(nbt.hasUniqueId("managerId"))
-			this.managerId = nbt.getUniqueId("managerId");
 		if(nbt.hasKey("allDoors")){
 			NBTTagList tagList = nbt.getTagList("allDoors", Constants.NBT.TAG_COMPOUND);
 			prevPos = new LinkedList<>();
@@ -53,8 +38,6 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 		}
 		boolean current = this.currentState;
 		if(!nbt.hasKey("toclient") || !nbt.getBoolean("toclient")) {
-			if (managerId != null)
-				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
 			if(door != null)
 				this.currentState = door.getDoorState(deviceId);
 			else
@@ -73,10 +56,6 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		if(deviceId != null)
-			nbt.setUniqueId("deviceId", this.deviceId);
-		if(managerId != null)
-			nbt.setUniqueId("managerId", this.managerId);
 		NBTTagList tagList = new NBTTagList();
 		for(int i=0; i<prevPos.size(); i++){
 			NBTTagCompound tag = new NBTTagCompound();
@@ -142,15 +121,8 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 
 	@Override
 	public void newId() {
-		deviceId = UUID.randomUUID();
-		managerId = null;
 		currentState = false;
-		markDirty();
-	}
-
-	@Override
-	public UUID getId() {
-		return deviceId;
+		super.newId();
 	}
 
 	@Override
@@ -160,19 +132,9 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 
 	@Override
 	public void setDoor(ItemStack heldItem) {
-		ItemLinkingCard.CardTag cardTag = new ItemLinkingCard.CardTag(heldItem);
-		if(cardTag.doorId != null) {
-			AdvBaseSecurity.instance.logger.info("Setting DoorController's ID of card id " + cardTag.doorId);
-			boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, true);
-			if(found){
-				AdvBaseSecurity.instance.logger.info("Found door! Linking...");
-				managerId = cardTag.doorId.ManagerID;
-				markDirty();
-				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
-				if(door != null)
-					openDoor(door.getDoorState(deviceId));
-			}
-		}
+		super.setDoor(heldItem);
+		if(door != null)
+			openDoor(door.getDoorState(deviceId));
 	}
 
 	public void linkDoors() {

@@ -4,17 +4,13 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.blocks.BlockDoorRedstone;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
 
 import javax.annotation.Nonnull;
-import java.util.UUID;
 
 public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implements IDoorControl, ITickable {
-    UUID managerID = null;
-    UUID deviceId = UUID.randomUUID();
 
     DoorHandler.Doors door = null;
 
@@ -40,19 +36,9 @@ public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implemen
 
     @Override
     public void setDoor(@Nonnull ItemStack heldItem){
-        ItemLinkingCard.CardTag cardTag = new ItemLinkingCard.CardTag(heldItem);
-        if(cardTag.doorId != null) {
-            AdvBaseSecurity.instance.logger.info("Setting DoorRedstone's ID of card id " + cardTag.doorId);
-            boolean found = AdvBaseSecurity.instance.doorHandler.SetDevID(deviceId, cardTag.doorId, true);
-            if(found){
-                managerID = cardTag.doorId.ManagerID;
-                AdvBaseSecurity.instance.logger.info("Found door! Linking...");
-                door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerID);
-                if(door != null){
-                    door.getDoorState(deviceId);
-                }
-                markDirty();
-            }
+        super.setDoor(heldItem);
+        if(door != null){
+            door.getDoorState(deviceId);
         }
     }
 
@@ -64,22 +50,10 @@ public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implemen
     }
 
     @Override
-    public DoorHandler.Doors getDoor() {
-        return door;
-    }
-
-    @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
-        if(compound.hasUniqueId("deviceId"))
-            deviceId = compound.getUniqueId("deviceId");
-        if(compound.hasUniqueId("managerId"))
-            managerID = compound.getUniqueId("managerId");
-        AdvBaseSecurity.instance.logger.info("Device ID: " + compound);
         //get powered
         if(!compound.hasKey("toclient") || !compound.getBoolean("toclient")) {
-            if(managerID != null)
-                door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerID);
             if(door != null)
                 powered = door.getDoorState(deviceId);
             else
@@ -95,15 +69,6 @@ public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implemen
             }
         }
         AdvBaseSecurity.instance.logger.info("Powered: " + powered);
-    }
-
-    @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        super.writeToNBT(compound);
-        compound.setUniqueId("deviceId", deviceId);
-        if(managerID != null)
-            compound.setUniqueId("managerId", managerID);
-        return compound;
     }
 
     @Override
@@ -123,18 +88,6 @@ public class TileEntityDoorControlRedstone extends TileEntityDeviceBase implemen
 //            this.world.scheduleBlockUpdate(this.pos, this.world.getBlockState(this.pos).getBlock(),1,1);
 //            getUpdateTag();
         }
-    }
-
-    @Override
-    public void newId() {
-        deviceId = UUID.randomUUID();
-        managerID = null;
-        markDirty();
-    }
-
-    @Override
-    public UUID getId() {
-        return deviceId;
     }
 
     @Override
