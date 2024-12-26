@@ -1,23 +1,30 @@
 package com.cadergator10.advancedbasesecurity.common.inventory;
 
 import com.cadergator10.advancedbasesecurity.common.inventory.slot.CardInputSlot;
+import com.cadergator10.advancedbasesecurity.common.inventory.slot.CardOutputSlot;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-public class doorManagerContainer extends Container {
-    private ItemStack doorManager;
+import java.util.UUID;
 
-    public doorManagerContainer(InventoryPlayer playerInventory, ItemStack item){
+public class doorManagerContainer extends Container {
+    private InventoryDoorHandler doorManager;
+    private ItemStack managerItem;
+
+    public doorManagerContainer(InventoryPlayer playerInventory, InventoryDoorHandler item, ItemStack managerItem){
         doorManager = item;
+        this.managerItem = managerItem;
         addOwnSlots();
         addPlayerSlots(playerInventory);
+    }
+
+    public UUID getManager(){
+        return doorManager.managerID;
     }
 
     private void addPlayerSlots(IInventory playerInventory) {
@@ -40,11 +47,39 @@ public class doorManagerContainer extends Container {
 
     private void addOwnSlots() {
         this.addSlotToContainer(new CardInputSlot(doorManager, 0, 80, 36));
-        this.addSlotToContainer(new CardOutputSlot(doorManager, 0, 80, 87));
+        this.addSlotToContainer(new CardOutputSlot(doorManager, 1, 80, 87));
     }
 
     @Override
     public boolean canInteractWith(EntityPlayer playerIn) {
         return true;
+    }
+
+    @Override
+    public void detectAndSendChanges() {//copy/pasted from super method
+        boolean mainInvChange = false;
+        for (int i = 0; i < this.inventorySlots.size(); ++i)
+        {
+            Slot currSlot = this.inventorySlots.get(i);
+            ItemStack itemstack = currSlot.getStack();
+            ItemStack itemstack1 = this.inventoryItemStacks.get(i);
+
+            if (!ItemStack.areItemStacksEqual(itemstack1, itemstack))
+            {
+                boolean clientStackChanged = !ItemStack.areItemStacksEqualUsingNBTShareTag(itemstack1, itemstack);
+                itemstack1 = itemstack.isEmpty() ? ItemStack.EMPTY : itemstack.copy();
+                this.inventoryItemStacks.set(i, itemstack1);
+                if(currSlot.getSlotIndex() == 0 || currSlot.getSlotIndex() == 1)
+                    mainInvChange = true;
+
+                if (clientStackChanged)
+                    for (int j = 0; j < this.listeners.size(); ++j)
+                    {
+                        ((IContainerListener)this.listeners.get(j)).sendSlotContents(this, i, itemstack1);
+                    }
+            }
+        }
+        if(mainInvChange)
+            managerItem.setTagCompound(doorManager.writeToNBT(managerItem.getTagCompound()));
     }
 }

@@ -2,10 +2,15 @@ package com.cadergator10.advancedbasesecurity.common.items;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.inventory.InventoryDoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
@@ -80,8 +85,7 @@ public class ItemDoorManager extends ItemBase {
 		public UUID managerID;
 		public int currentScanMode; //0 = none, 1 = door
 		public UUID doorIDScan;
-		public ItemStack unwrittenCard;
-		public ItemStack writtenCard;
+		public InventoryDoorHandler inventory;
 
 		public ManagerTag(ItemStack stack){
 			if(stack.getItem() instanceof ItemDoorManager)
@@ -97,14 +101,6 @@ public class ItemDoorManager extends ItemBase {
 				if (nbt.hasUniqueId("managerID")) {
 					managerID = nbt.getUniqueId("managerID");
 				}
-				if(nbt.hasKey("slotunwritten"))
-					unwrittenCard = new ItemStack(nbt.getCompoundTag("slotunwritten"));
-				else
-					unwrittenCard = ItemStack.EMPTY;
-				if(nbt.hasKey("slotwritten"))
-					writtenCard = new ItemStack(nbt.getCompoundTag("slotwritten"));
-				else
-					writtenCard = ItemStack.EMPTY;
 				if(nbt.hasKey("scanmode"))
 					currentScanMode = nbt.getInteger("scanmode");
 				else
@@ -113,14 +109,17 @@ public class ItemDoorManager extends ItemBase {
 					doorIDScan = nbt.getUniqueId("scanID");
 				else
 					doorIDScan = null;
+				if(nbt.hasKey("inventory"))
+					inventory = new InventoryDoorHandler(nbt.getCompoundTag("inventory"), managerID); //managerID passed to container yeah
+				else
+					inventory = new InventoryDoorHandler(managerID);
 			}
 		}
 
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt){
 			if(managerID != null)
 				nbt.setUniqueId("managerID", managerID);
-			nbt.setTag("slotunwritten", unwrittenCard.writeToNBT(new NBTTagCompound()));
-			nbt.setTag("slotwritten", writtenCard.writeToNBT(new NBTTagCompound()));
+			nbt.setTag("inventory", inventory.writeToNBT(new NBTTagCompound()));
 			nbt.setInteger("scanmode", currentScanMode);
 			if(doorIDScan != null)
 				nbt.setUniqueId("scanID", doorIDScan);

@@ -4,6 +4,8 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
+import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -17,10 +19,15 @@ import java.util.*;
 
 @SideOnly(Side.CLIENT)
 public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiResponder {
-    UUID editValidator;
+
+    UUID editValidator = null;
+    String editKey = null;
+
     List<DoorHandler.Doors.Users> users;
     List<DoorHandler.Doors.PassValue> passes;
+    //inventorySlots is container
     boolean letPress = true;
+    boolean finished = false;
 
     DoorHandler.Doors.Users user;
     //buttons
@@ -37,11 +44,16 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     List<GuiTextField> fields;
     List<String> fieldIDs;
 
-    public EditUserGUI(UUID editValidator, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes, Container container){
+    int id = -1;
+    int xoff = -70;
+    int yoff = 60;
+
+    public EditUserGUI(doorManagerContainer container){
         super(container);
-        this.editValidator = editValidator;
-        this.users = users;
-        this.passes = passes;
+        this.users = null;
+        this.passes = null;
+//        this.users = users;
+//        this.passes = passes;
 //        for(int i=0; i<passes.size(); i++){
 //            if(!user.passes.containsKey(passes.get(i).passId)){
 //
@@ -92,11 +104,8 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     @Override
     public void initGui() {
         super.initGui();
-        int id = -1;
-        int xoff = -70;
-        int yoff = 60;
         this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Save & Exit"));
-        this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 250, 20, 80, 16, false, processUsers(), 0));
+        this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 250, 20, 80, 16, false, new LinkedList<>(), 0));
         this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 290, 40, 35, 16, "Add User"));
         this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 210, 40, 35, 16, "Delete User"));
         nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 80, 16);
@@ -104,6 +113,18 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         this.buttonList.add(staffButton = new ButtonToggle(id++, this.width / 2 - 120, 40, 100, 16, "Staff", false));
         this.buttonList.add(resetID =  new GuiButton(id++, this.width / 2 + 20, 40, 80, 16, "reset ID"));
         this.buttonList.add(blockedButton = new ButtonToggle(id++, this.width / 2 - 120, 60, 100, 16, "Blocked", false));
+        //set default while waiting to finish
+        updateWithPasses();
+        allUsers.enabled = false;
+        addUser.enabled = false;
+        delUser.enabled = false;
+        saveButton.enabled = false;
+        //no user data here yet so request with packet
+        UUID ide = ((doorManagerContainer)inventorySlots).getManager();
+        DoorServerRequest packet = new DoorServerRequest("getuserdata", ide != null ? ide.toString() : null);
+    }
+
+    private void finishButtons(){
         //add to lists
         restButtons = new LinkedList<>();
         restButtonsIDs = new LinkedList<>();
@@ -146,7 +167,6 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
                     yoff += 20;
             }
         }
-        updateWithPasses();
     }
 
     private void updateWithPasses(){
@@ -157,11 +177,13 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
             staffButton.enabled = false;
             resetID.enabled = false;
             blockedButton.enabled = false;
-            for(GuiButton button : restButtons){
-                button.enabled = false;
-            }
-            for(GuiTextField field : fields){
-                field.setEnabled(false);
+            if(restButtons != null && fields != null) {
+                for (GuiButton button : restButtons) {
+                    button.enabled = false;
+                }
+                for (GuiTextField field : fields) {
+                    field.setEnabled(false);
+                }
             }
         }
         else{
@@ -202,6 +224,28 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
                     }
                 }
             }
+        }
+    }
+
+    public void finishInit(boolean worked, UUID editValidator, String key, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes)
+    {
+        if(worked){
+            this.editValidator = editValidator;
+            this.editKey = key;
+            this.users = users;
+            this.passes = passes;
+            //finish buttons
+            allUsers.changeList(processUsers());
+            finishButtons();
+            //allow edit of users now
+            allUsers.enabled = true;
+            addUser.enabled = true;
+            delUser.enabled = true;
+            updateWithPasses();
+            finished = true;
+        }
+        else{
+            AdvBaseSecurity.instance.logger.warn("Failed to retrieve users: might not be authenticated or already in use?");
         }
     }
 

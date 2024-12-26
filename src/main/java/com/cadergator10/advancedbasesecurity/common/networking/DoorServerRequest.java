@@ -129,6 +129,11 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 });
                 return null;
             }
+            else if(message.request.equals("openusermenu")){
+                ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                   ctx.getServerHandler().player.openGui(AdvBaseSecurity.instance, 1, ctx.getServerHandler().player.world, 0,0,0);
+                });
+            }
             return null;
         }
     }
