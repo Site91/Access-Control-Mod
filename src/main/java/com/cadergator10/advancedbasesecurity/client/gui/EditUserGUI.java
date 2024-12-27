@@ -21,7 +21,6 @@ import java.util.*;
 public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiResponder {
 
     UUID editValidator = null;
-    String editKey = null;
 
     List<DoorHandler.Doors.Users> users;
     List<DoorHandler.Doors.PassValue> passes;
@@ -121,7 +120,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         saveButton.enabled = false;
         //no user data here yet so request with packet
         UUID ide = ((doorManagerContainer)inventorySlots).getManager();
-        DoorServerRequest packet = new DoorServerRequest("getuserdata", ide != null ? ide.toString() : null);
+        DoorServerRequest packet = new DoorServerRequest(ide, "getuserdata", null);
     }
 
     private void finishButtons(){
@@ -227,11 +226,10 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         }
     }
 
-    public void finishInit(boolean worked, UUID editValidator, String key, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes)
+    public void finishInit(boolean worked, UUID editValidator, List<DoorHandler.Doors.Users> users, List<DoorHandler.Doors.PassValue> passes)
     {
         if(worked){
             this.editValidator = editValidator;
-            this.editKey = key;
             this.users = users;
             this.passes = passes;
             //finish buttons
@@ -313,7 +311,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         if(letPress){
             if(button == saveButton){ //TODO: Finish the User gui
                 finishLastMinute();
-                UserEditPacket packet = new UserEditPacket(editValidator, users, false);
+                UserEditPacket packet = new UserEditPacket(true, editValidator, users, ((doorManagerContainer)inventorySlots).getManager());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 mc.player.closeScreen();
             }

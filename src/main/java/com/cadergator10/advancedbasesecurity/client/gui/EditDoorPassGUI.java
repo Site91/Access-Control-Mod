@@ -19,7 +19,6 @@ import java.util.*;
 @SideOnly(Side.CLIENT)
 public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
 	UUID editValidator;
-	String editId;
 	UUID managerId;
 	DoorHandler.Doors.OneDoor door;
 	List<ButtonEnum.groupIndex> groups; //just used to preserve it for going back to the other door.
@@ -48,9 +47,8 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 //	List<HashMap<String, GuiButton>> allButtons = new LinkedList<>();
 
 
-	public EditDoorPassGUI(UUID editValidator, String id, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
+	public EditDoorPassGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
 		this.editValidator = editValidator;
-		this.editId = id;
 		this.managerId = managerId;
 		this.door = door;
 		this.groups = groups;
@@ -330,7 +328,7 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 			if(button == backButton){
 				letPress = false;
 				lastMinuteUpdate();
-				Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, editId, managerId, door, groups));
+				Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, managerId, door, groups));
 			}
 			else if(button == typeButton){
 				typeButton.onClick();

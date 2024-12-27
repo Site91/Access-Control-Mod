@@ -53,7 +53,7 @@ public class ManagerListGUI extends GuiScreen {
         doorButtons = new LinkedList<>();
         buttonLevel = new LinkedList<>();
         this.buttonList.add(closeButton = new GuiButton(id++, this.width / 2 - 150, this.height - (this.height / 4) + 10, "Close"));
-        this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Door"));
+        this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Manager"));
         this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));
         this.buttonList.add(downButton = new GuiButton(id++, this.width - 20, this.height - 20, 16, 16, "\\/"));
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
@@ -61,7 +61,7 @@ public class ManagerListGUI extends GuiScreen {
         if(!doors.isEmpty()){
             int pageCount = 1;
             int thisCount = 0;
-            for(DoorNamePacket.packetDoor door : doors){
+            for(ManagerNamePacket.packetDoor door : doors){
                 AdvBaseSecurity.instance.logger.info("Button for door " + door.name);
                 GuiButton temp = new GuiButton(id++, this.width / 2 - 100, (this.height / 8) + (thisCount * 30), 200, 16, door.name);
                 this.buttonList.add(temp);
@@ -114,14 +114,14 @@ public class ManagerListGUI extends GuiScreen {
         }
         else if(button == newButton){
             newButton.enabled = false; //make sure it can't be spammed
-            DoorServerRequest packet = new DoorServerRequest(editValidator, "newdoor", "");
+            DoorServerRequest packet = new DoorServerRequest("newmanager", "");
             AdvBaseSecurity.instance.network.sendToServer(packet);
         }
         else{
             for (int i = 0; i < doorButtons.size(); i++) {
                 GuiButton doorButton = doorButtons.get(i);
                 if (button == doorButton) {
-                    DoorServerRequest packet = new DoorServerRequest(editValidator, "editdoor", doors.get(i).id.toString());
+                    DoorServerRequest packet = new DoorServerRequest("linkdoormanager", doors.get(i).id.toString());
                     AdvBaseSecurity.instance.network.sendToServer(packet);
                 }
             }

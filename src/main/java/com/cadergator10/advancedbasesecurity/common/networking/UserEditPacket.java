@@ -2,11 +2,13 @@ package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.EditDoorGUI;
+import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.EditUserGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -20,17 +22,27 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class UserEditPacket implements IMessage {
-    UUID editValidator; //Used to try and ensure that the recieved door is authorized.
-    List<DoorHandler.Doors.Users> users;
-    List<DoorHandler.Doors.PassValue> passes;
+    boolean worked;
+    UUID editValidator = null; //Used to try and ensure that the recieved door is authorized.
+    List<DoorHandler.Doors.Users> users = null;
+    List<DoorHandler.Doors.PassValue> passes = null;
+    UUID managerID = null;
     boolean isServer;
     public UserEditPacket(){
 
     }
-    public UserEditPacket(UUID editValidator, List<DoorHandler.Doors.Users> users, boolean isServer){
+    public UserEditPacket(boolean worked, UUID editValidator, List<DoorHandler.Doors.Users> users, boolean isServer){
+        this.worked = worked;
         this.editValidator = editValidator;
         this.users = users;
         this.isServer = isServer;
+    }
+    public UserEditPacket(boolean worked, UUID editValidator, List<DoorHandler.Doors.Users> users, UUID managerID){
+        this.worked = worked;
+        this.editValidator = editValidator;
+        this.users = users;
+        this.isServer = false;
+        this.managerID = managerID;
     }
 
     private void writeList(ByteBuf buf, HashMap<String, DoorHandler.Doors.Users.UserPass> passe){
@@ -69,6 +81,9 @@ public class UserEditPacket implements IMessage {
     public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
+        buf.writeBoolean(worked);
+        if(!worked)
+            return;
         ByteBufUtils.writeUTF8String(buf, editValidator.toString());
         buf.writeInt(users.size());
         for(int i=0; i<users.size(); i++){
@@ -85,12 +100,17 @@ public class UserEditPacket implements IMessage {
         if(isServer){
             RequestPassesPacket.writeList(buf);
         }
+        else
+            ByteBufUtils.writeUTF8String(buf, managerID.toString());
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
+        worked = buf.readBoolean();
+        if(!worked)
+            return;
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         users = new LinkedList<>();
         int count = buf.readInt();
@@ -112,6 +132,8 @@ public class UserEditPacket implements IMessage {
         if(isServer){
             passes = RequestPassesPacket.readList(buf);
         }
+        else
+            managerID = UUID.fromString(ByteBufUtils.readUTF8String(buf));
     }
 
     public static class Handler implements IMessageHandler<UserEditPacket, IMessage> {
@@ -123,7 +145,11 @@ public class UserEditPacket implements IMessage {
                     Minecraft mc = Minecraft.getMinecraft();
                     if(mc.world.isRemote) {
                         //open up the GUI
-                        Minecraft.getMinecraft().displayGuiScreen(new EditUserGUI(message.editValidator, message.users, message.passes));
+                        GuiScreen screen = Minecraft.getMinecraft().currentScreen;
+                        if(screen instanceof EditUserGUI){
+                            ((EditUserGUI) screen).finishInit(message.worked, message.editValidator, message.users, message.passes);
+                        }
+                        //Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.groups));
                     }
                     else{
                         //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
@@ -144,9 +170,16 @@ public class UserEditPacket implements IMessage {
 
         @Override
         public IMessage onMessage(UserEditPacket message, MessageContext ctx) {
-            if(AdvBaseSecurity.instance.doorHandler.checkValidator(message.editValidator)) {
-                AdvBaseSecurity.instance.doorHandler.DoorGroups.users = message.users;
-                AdvBaseSecurity.instance.doorHandler.verifyUserPasses();
+            DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerID);
+            if(manager != null) {
+                if (manager.validator.hasPermissions("useredit", message.editValidator)) {
+                    manager.users = message.users;
+                    manager.verifyUserPasses();
+                    manager.validator.removePerm("useredit");
+                    //redirect back to door name gui
+                    DoorNamePacket packet = new DoorNamePacket(manager);
+                    AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
+                }
             }
             return null;
         }

@@ -18,14 +18,16 @@ import java.util.function.BiConsumer;
 
 public class OneDoorDataPacket implements IMessage {
     UUID editValidator; //Used to try and ensure that the recieved door is authorized.
+    UUID managerID;
     DoorHandler.Doors.OneDoor door;
     boolean checkGroup;
     List<ButtonEnum.groupIndex> groups;
     public OneDoorDataPacket(){
 
     }
-    public OneDoorDataPacket(UUID editValidator, DoorHandler.Doors.OneDoor door, boolean checkGroup){
+    public OneDoorDataPacket(UUID editValidator, UUID managerID, DoorHandler.Doors.OneDoor door, boolean checkGroup){
         this.editValidator = editValidator;
+        this.managerID = managerID;
         this.door = door;
         this.checkGroup = checkGroup;
     }
@@ -105,6 +107,7 @@ public class OneDoorDataPacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
         ByteBufUtils.writeUTF8String(buf, editValidator.toString());
+        ByteBufUtils.writeUTF8String(buf, managerID.toString());
         ByteBufUtils.writeUTF8String(buf, door.doorId.toString());
         ByteBufUtils.writeUTF8String(buf, door.doorName);
         buf.writeByte(door.doorStatus.getInt());
@@ -144,6 +147,7 @@ public class OneDoorDataPacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        managerID = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         door = new DoorHandler.Doors.OneDoor();
         door.doorId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         door.doorName = ByteBufUtils.readUTF8String(buf);
@@ -184,7 +188,7 @@ public class OneDoorDataPacket implements IMessage {
                     Minecraft mc = Minecraft.getMinecraft();
                     if(mc.world.isRemote) {
                         //open up the GUI
-                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.groups));
+                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.managerID, message.door, message.groups));
                     }
                     else{
                         //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);

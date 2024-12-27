@@ -29,6 +29,13 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
         this.request = request;
         this.requestData = requestData;
     }
+    public DoorServerRequest(UUID managerId, String request, String requestData){
+        this.editValidator = null;
+        this.validatorID = null;
+        this.managerId = managerId;
+        this.request = request;
+        this.requestData = requestData;
+    }
     public DoorServerRequest(String request, String requestData){
         this.editValidator = null;
         this.validatorID = null;
@@ -44,20 +51,24 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
         if(canMore){
             editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
             validatorID = ByteBufUtils.readUTF8String(buf);
-            managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         }
+        canMore = buf.readBoolean();
+        if(canMore)
+            managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         request = ByteBufUtils.readUTF8String(buf);
         requestData = ByteBufUtils.readUTF8String(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeBoolean(editValidator == null);
+        buf.writeBoolean(editValidator != null);
         if(editValidator != null){
             ByteBufUtils.writeUTF8String(buf, editValidator.toString());
             ByteBufUtils.writeUTF8String(buf, validatorID);
-            ByteBufUtils.writeUTF8String(buf, managerId.toString());
         }
+        buf.writeBoolean(managerId != null);
+        if(managerId != null)
+            ByteBufUtils.writeUTF8String(buf, managerId.toString());
         ByteBufUtils.writeUTF8String(buf, request);
         ByteBufUtils.writeUTF8String(buf, requestData);
     }
@@ -69,10 +80,12 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
             //server side only so all good
             boolean canUse = false; //if true, they can edit stuff
             DoorHandler.Doors manager = null;
-            if(message.editValidator != null){
+            if(message.managerId != null){
                 manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
-                if(manager != null)
-                    canUse = manager.validator.hasPermissions(message.validatorID, message.editValidator);
+                if(manager != null) {
+                    if(message.editValidator != null && message.validatorID != null)
+                        canUse = manager.validator.hasPermissions(message.validatorID, message.editValidator);
+                }
             }
             EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
             if(message.request.equals("newdoor")){ //make new door
@@ -129,10 +142,40 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 });
                 return null;
             }
+            else if(message.request.equals("newmanager")){ //create another manager and link it
+                ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                    ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
+                    if(item.getItem() instanceof ItemDoorManager){
+                        //ideally, check max doormanagers allowed here.
+                        UUID newid = UUID.randomUUID();
+                        DoorHandler.Doors door = AdvBaseSecurity.instance.doorHandler.addDoorManager(ctx.getServerHandler().player, message.requestData);
+                        //their door, so they already got perms
+                        ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
+                        tag.managerID = door.id;
+                        item.setTagCompound(tag.writeToNBT(item.getTagCompound()));
+                        item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
+                        DoorNamePacket packet = new DoorNamePacket(door);
+                        AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
+                    }
+                });
+                return null;
+            }
             else if(message.request.equals("openusermenu")){
                 ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
                    ctx.getServerHandler().player.openGui(AdvBaseSecurity.instance, 1, ctx.getServerHandler().player.world, 0,0,0);
                 });
+            }
+            else if(message.request.equals("getuserdata")){
+                if(manager != null){
+                    UUID eV = UUID.randomUUID(); //edit validator ID
+                    boolean worked = manager.validator.addPermissions("useredit", eV, false);
+                    if(worked) {
+                        UserEditPacket packet = new UserEditPacket(true, eV, manager.users, true);
+                    }
+                    else{
+                        UserEditPacket packet = new UserEditPacket(false, null, null, true);
+                    }
+                }
             }
             return null;
         }

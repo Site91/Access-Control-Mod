@@ -174,6 +174,18 @@ public class DoorHandler {
         return null;
     }
 
+    public Doors addDoorManager(EntityPlayer player, String name){
+        UUID id = UUID.randomUUID();
+        Doors door = Doors.get(player.world, id.toString());
+        doorData.doors.add(id);
+        doorData.markDirty();
+        door.id = id;
+        door.creator = player.getUniqueID();
+        door.name = name != null ? name : "new";
+        door.markDirty();
+        return door;
+    }
+
 
     //region Reader/Door Management
     public boolean SetDevID(UUID devID, DoorIdentifier doorID, boolean isDoor){
