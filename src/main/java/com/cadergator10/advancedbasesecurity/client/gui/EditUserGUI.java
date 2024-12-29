@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiPageButtonList;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -37,6 +38,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     GuiButton addUser;
     GuiButton delUser;
     GuiButton resetID;
+    GuiButton writeCard;
     GuiTextField nameField;
     ButtonToggle staffButton;
     ButtonToggle blockedButton;
@@ -48,6 +50,11 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     int id = -1;
     int xoff = -70;
     int yoff = 60;
+
+    public static final int WIDTH = 175;
+    public static final int HEIGHT = 195;
+
+    private static final ResourceLocation background = new ResourceLocation(AdvBaseSecurity.MODID, "textures/gui/writecard.png");
 
     public EditUserGUI(doorManagerContainer container){
         super(container);
@@ -284,7 +291,8 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
-
+        mc.getTextureManager().bindTexture(background);
+        drawTexturedModalRect((this.width - WIDTH) / 2, (this.height - HEIGHT) / 2, 0, 0, WIDTH, HEIGHT);
     }
 
     @Override

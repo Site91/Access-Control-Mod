@@ -1,14 +1,16 @@
 package com.cadergator10.advancedbasesecurity.common.inventory;
 
+import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.slot.CardInputSlot;
 import com.cadergator10.advancedbasesecurity.common.inventory.slot.CardOutputSlot;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.*;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IContainerListener;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
 
 import java.util.UUID;
 
@@ -81,5 +83,12 @@ public class doorManagerContainer extends Container {
         }
         if(mainInvChange)
             managerItem.setTagCompound(doorManager.writeToNBT(managerItem.getTagCompound()));
+    }
+
+    public boolean writeCard(EntityPlayer player, DoorHandler.DoorIdentifier id, String displayName){
+        boolean work = doorManager.writeCard(id, displayName);
+        if(work && player instanceof EntityPlayerMP)
+            ((EntityPlayerMP)player).sendContainerToPlayer(this);
+        return work;
     }
 }

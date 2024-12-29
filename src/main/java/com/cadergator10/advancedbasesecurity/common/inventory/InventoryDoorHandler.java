@@ -3,10 +3,8 @@ package com.cadergator10.advancedbasesecurity.common.inventory;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ItemStackHelper;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
@@ -157,8 +155,12 @@ public class InventoryDoorHandler implements IInventory {
     public NBTTagCompound writeToNBT(NBTTagCompound nbt){
         if(!inv.get(0).isEmpty())
             nbt.setTag("unwritten", inv.get(0).writeToNBT(new NBTTagCompound()));
+        else
+            nbt.removeTag("unwritten");
         if(!inv.get(1).isEmpty())
             nbt.setTag("written", inv.get(1).writeToNBT(new NBTTagCompound()));
+        else
+            nbt.removeTag("written");
         return nbt;
     }
 

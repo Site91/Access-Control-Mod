@@ -2,9 +2,11 @@ package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
 import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
@@ -212,6 +214,28 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 }
                 else
                     serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (session in progress)"));
+            }
+            else if(message.request.equals("producecard")) { //when the create card button on doormanager is pressed.
+                if(canUse && manager.hasPerms(serverPlayer) && message.requestData != null){ //manager always not null if canUse
+                    try {
+                        DoorHandler.Doors.Users user = manager.getUser(UUID.fromString(message.requestData));
+                        if (user != null) {
+                            ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                                ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
+                                if (item.getItem() instanceof ItemDoorManager) {
+                                    Container cont = serverPlayer.openContainer;
+                                    if(cont instanceof doorManagerContainer) {
+                                        boolean work = ((doorManagerContainer)cont).writeCard(serverPlayer, new DoorHandler.DoorIdentifier(message.managerId, user.id), user.name);
+                                        AdvBaseSecurity.instance.logger.info("User " + serverPlayer.getName() + " wrote a card with ID " + user.id + " and name " + user.name);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    catch(Exception ignored){
+
+                    }
+                }
             }
             return null;
         }

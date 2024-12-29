@@ -1,23 +1,22 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
 public class ManagerListGUI extends GuiScreen {
+
     //data passed by packet
     List<ManagerNamePacket.packetDoor> doors;
     //button data
@@ -28,6 +27,9 @@ public class ManagerListGUI extends GuiScreen {
 //    GuiLabel noneLabel;
     List<GuiButton> doorButtons;
     List<Integer> buttonLevel;
+
+    private static final ResourceLocation background = new ResourceLocation(AdvBaseSecurity.MODID, "textures/gui/basic.png");
+
     //other data
     int currPage = 1;
     int maxPageLength = 5;
@@ -93,6 +95,8 @@ public class ManagerListGUI extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        mc.getTextureManager().bindTexture(background);
+        drawTexturedModalRect(width, height, 0, 0, 176, 166);
         super.drawScreen(mouseX, mouseY, partialTicks);
         if(doors.isEmpty())
             drawCenteredString("No doors created yet", this.height / 2 + 40, 0xFFFFFF);

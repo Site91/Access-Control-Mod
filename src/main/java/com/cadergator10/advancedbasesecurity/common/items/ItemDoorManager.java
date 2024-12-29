@@ -94,6 +94,7 @@ public class ItemDoorManager extends ItemBase {
 
 		public void readFromNBT(NBTTagCompound nbt){
 			if(nbt != null) {
+				AdvBaseSecurity.instance.logger.info(nbt);
 				if (nbt.hasUniqueId("managerID")) {
 					managerID = nbt.getUniqueId("managerID");
 				}
@@ -105,20 +106,19 @@ public class ItemDoorManager extends ItemBase {
 					doorIDScan = nbt.getUniqueId("scanID");
 				else
 					doorIDScan = null;
-				if(nbt.hasKey("inventory"))
-					inventory = new InventoryDoorHandler(nbt.getCompoundTag("inventory"), managerID); //managerID passed to container yeah
-				else
-					inventory = new InventoryDoorHandler(managerID);
+				inventory = new InventoryDoorHandler(nbt, managerID); //managerID passed to container yeah
 			}
 		}
 
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt){
 			if(managerID != null)
 				nbt.setUniqueId("managerID", managerID);
-			nbt.setTag("inventory", inventory.writeToNBT(new NBTTagCompound()));
+			AdvBaseSecurity.instance.logger.info(inventory.writeToNBT(new NBTTagCompound()));
+			nbt = inventory.writeToNBT(nbt);
 			nbt.setInteger("scanmode", currentScanMode);
 			if(doorIDScan != null)
 				nbt.setUniqueId("scanID", doorIDScan);
+			AdvBaseSecurity.instance.logger.info(nbt);
 			return nbt;
 		}
 	}
