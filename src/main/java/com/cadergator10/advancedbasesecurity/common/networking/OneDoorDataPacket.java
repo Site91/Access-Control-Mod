@@ -35,7 +35,7 @@ public class OneDoorDataPacket implements IMessage {
         //use groups from doorhandler. DO NOT CHECK IF NOT SERVER
         groups = new LinkedList<>();
         BiConsumer<UUID, DoorHandler.Doors.Groups> grouper = (s,v) -> groups.add(new ButtonEnum.groupIndex(s.toString(), v.name));
-        AdvBaseSecurity.instance.doorHandler.DoorGroups.groups.forEach(grouper);
+        AdvBaseSecurity.instance.doorHandler.getDoorManager(managerID).groups.forEach(grouper);
     }
     private void writePass(ByteBuf buf, List<DoorHandler.Doors.OneDoor.OnePass> passes){
         int count = passes.size();
@@ -210,8 +210,9 @@ public class OneDoorDataPacket implements IMessage {
         @Override
         public IMessage onMessage(OneDoorDataPacket message, MessageContext ctx) {
             ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-                AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
-                DoorNamePacket packet = new DoorNamePacket(AdvBaseSecurity.instance.doorHandler.DoorGroups, AdvBaseSecurity.instance.doorHandler.getEditValidator());
+                DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerID);
+                manager.recievedUpdate(message.editValidator, message.door);
+                DoorNamePacket packet = new DoorNamePacket(manager);
                 AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
             });
             return null;

@@ -1,10 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.EditDoorGUI;
-import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassGUI;
 import com.cadergator10.advancedbasesecurity.client.gui.EditUserGUI;
-import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -13,7 +10,6 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import scala.util.control.Exception;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,8 +27,9 @@ public class UserEditPacket implements IMessage {
     public UserEditPacket(){
 
     }
-    public UserEditPacket(boolean worked, UUID editValidator, List<DoorHandler.Doors.Users> users, boolean isServer){
+    public UserEditPacket(boolean worked, UUID editValidator, List<DoorHandler.Doors.Users> users, boolean isServer, UUID managerID){
         this.worked = worked;
+        this.managerID = managerID;
         this.editValidator = editValidator;
         this.users = users;
         this.isServer = isServer;
@@ -98,7 +95,7 @@ public class UserEditPacket implements IMessage {
         }
         buf.writeBoolean(isServer);
         if(isServer){
-            RequestPassesPacket.writeList(buf);
+            RequestPassesPacket.writeList(buf, managerID);
         }
         else
             ByteBufUtils.writeUTF8String(buf, managerID.toString());

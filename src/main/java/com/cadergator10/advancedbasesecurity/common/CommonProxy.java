@@ -1,8 +1,10 @@
 package com.cadergator10.advancedbasesecurity.common;
 
+import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 public class CommonProxy {
 
@@ -19,8 +21,7 @@ public class CommonProxy {
 //        MinecraftForge.EVENT_BUS.register(new TickHandler());
     }
     public void init(FMLInitializationEvent event){
-        System.out.println("Hey yall! Scott here! And today, we're going to be sending REQUESTS!!!");
-        event.getSide();
+        NetworkRegistry.INSTANCE.registerGuiHandler(AdvBaseSecurity.instance, new GuiHandler());
 //        String test = null;
 //        HTTPBinRequest request = new HTTPBinRequest();
 //        HttpResponse resp = request.executeGet("http://httpbin.org/get");//request.executePostJson("http://httpbin.org/anything","{\"ping\":\"pong\"}");

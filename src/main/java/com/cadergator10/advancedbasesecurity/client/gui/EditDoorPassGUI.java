@@ -7,11 +7,9 @@ import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.RequestPassesPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
-import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
-import scala.Int;
 
 import java.io.IOException;
 import java.util.*;
@@ -161,7 +159,7 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 		passListButton.enabled = false;
 		addPass.enabled = false;
 		//send the packet to request PassValue
-		RequestPassesPacket packet = new RequestPassesPacket(editValidator, false);
+		RequestPassesPacket packet = new RequestPassesPacket(editValidator, managerId, false);
 		AdvBaseSecurity.instance.network.sendToServer(packet);
 	}
 

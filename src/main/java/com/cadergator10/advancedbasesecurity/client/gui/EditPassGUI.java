@@ -4,19 +4,16 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import org.lwjgl.input.Keyboard;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
+    UUID managerId;
     HashMap<String, DoorHandler.Doors.PassValue> passes;
     DoorHandler.Doors.PassValue pass;
 
@@ -28,8 +25,9 @@ public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     ButtonEnum typeInput;
     GuiTextField groupInput;
 
-    public EditPassGUI(UUID editValidator, HashMap<String, DoorHandler.Doors.PassValue> passes){
+    public EditPassGUI(UUID editValidator, UUID managerId, HashMap<String, DoorHandler.Doors.PassValue> passes){
         this.editValidator = editValidator;
+        this.managerId = managerId;
         this.passes = passes;
     }
 
@@ -163,7 +161,7 @@ public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     protected void actionPerformed(GuiButton button) throws IOException {
         if(button == saveButton){
             lastMinuteUpdate();
-            PassEditPacket packet = new PassEditPacket(editValidator, passes);
+            PassEditPacket packet = new PassEditPacket(editValidator, managerId, passes);
             AdvBaseSecurity.instance.network.sendToServer(packet);
             mc.player.closeScreen();
         }

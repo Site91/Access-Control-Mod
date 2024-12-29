@@ -152,14 +152,16 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         if(letPress) {
             if(button == backButton){
                 letPress = false;
-                DoorServerRequest packet = new DoorServerRequest(editValidator, editID, managerId, "doorlist", ""); //get the door list again
+                DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId, managerId, "removeperm", null);
+                AdvBaseSecurity.instance.network.sendToServer(packet);
+                packet = new DoorServerRequest(managerId, "doorlist", ""); //get the door list again
                 AdvBaseSecurity.instance.network.sendToServer(packet);
             }
             else if(button == saveButton){
                 letPress = false;
                 door.defaultTick = !doorDelayInput.getText().equals("") ? Math.max(1, Integer.parseInt(doorDelayInput.getText())) * 20 : 100;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
-                OneDoorDataPacket packet = new OneDoorDataPacket(editValidator, door, false);
+                OneDoorDataPacket packet = new OneDoorDataPacket(editValidator, managerId, door, false);
                 AdvBaseSecurity.instance.network.sendToServer(packet);
             }
             else if(button == groupSelect){

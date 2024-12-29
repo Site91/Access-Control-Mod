@@ -7,7 +7,6 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.*;
@@ -15,7 +14,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.structure.StructureStrongholdPieces;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldSavedData;
 import net.minecraftforge.common.util.Constants;
@@ -25,7 +23,6 @@ import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import scala.collection.immutable.Stream;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -183,6 +180,7 @@ public class DoorHandler {
         door.creator = player.getUniqueID();
         door.name = name != null ? name : "new";
         door.markDirty();
+        DoorGroups.put(id, door);
         return door;
     }
 
@@ -262,16 +260,18 @@ public class DoorHandler {
     }
     //endregion
 
-    public Doors createManager(World world, EntityPlayer player, String name){
-        UUID id = UUID.randomUUID();
-        Doors door = Doors.get(world, id.toString());
-        door.name = name;
-        if(player != null)
-            door.creator = player.getUniqueID();
-        door.markDirty();
-        DoorGroups.put(id, door);
-        return door;
-    }
+//    public Doors createManager(World world, EntityPlayer player, String name){
+//        UUID id = UUID.randomUUID();
+//        Doors door = Doors.get(world, id.toString());
+//        door.name = name;
+//        if(player != null)
+//            door.creator = player.getUniqueID();
+//        door.markDirty();
+//        DoorGroups.put(id, door);
+//        doorData.doors.add(id);
+//        doorData.markDirty();
+//        return door;
+//    }
 
     public List<Doors> getAllowedManagers(EntityPlayer player){
         List<Doors> doors = new LinkedList<>();
@@ -282,7 +282,14 @@ public class DoorHandler {
         return doors;
     }
 
-    
+    public int getManagerCount(EntityPlayer player){
+        int count = 0;
+        for(Doors door : DoorGroups.values()){
+            if(door.creator.equals(player.getUniqueID()))
+                count++;
+        }
+        return count;
+    }
 
 
     //region Door save file
@@ -294,7 +301,7 @@ public class DoorHandler {
         public String name;
         public UUID id;
         public UUID creator;
-        public List<UUID> allowedPlayers;
+        public List<UUID> allowedPlayers = new LinkedList<>();
         public List<OneDoor> doors = new LinkedList<>();
         public HashMap<String, PassValue> passes = new HashMap<>();
         public HashMap<UUID, Groups> groups = new HashMap<>();
@@ -329,17 +336,18 @@ public class DoorHandler {
             firstTimeSetup();
         }
         public Doors(String str){
-            super(DATA_NAME + str);
+            super(str);
             quickPassAdd();
             firstTimeSetup();
         }
 
         public static Doors get(World world, String id) {
             MapStorage storage = world.getMapStorage();
+            AdvBaseSecurity.instance.logger.info("Reading or Creating door with ID " + id);
             Doors door = (Doors) storage.getOrLoadData(Doors.class, DATA_NAME + id);
 
             if (door == null) {
-                door = new Doors();
+                door = new Doors(DATA_NAME + id);
                 storage.setData(DATA_NAME + id, door);
             }
             door.id = UUID.fromString(id);
@@ -415,7 +423,15 @@ public class DoorHandler {
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
             AdvBaseSecurity.instance.logger.info("Writing door NBT");
             nbt.setInteger("versionNum", currentDoorVer);
-
+            if(name != null)
+                nbt.setString("name", name);
+            if(creator != null)
+                nbt.setString("owner", creator.toString());
+            NBTTagList whitelist = new NBTTagList();
+            for(UUID id : allowedPlayers){
+                whitelist.appendTag(new NBTTagString(id.toString()));
+            }
+            nbt.setTag("whitelist", whitelist);
             //write all pass data
             if(this.passes != null){
                 NBTTagList list = new NBTTagList();
@@ -1783,7 +1799,7 @@ public class DoorHandler {
 
         public static DoorData get(World world) {
             MapStorage storage = world.getMapStorage();
-            instance = (DoorData) storage.getOrLoadData(Doors.class, DATA_NAME);
+            instance = (DoorData) storage.getOrLoadData(DoorData.class, DATA_NAME);
 
             if (instance == null) {
                 instance = new DoorData();
@@ -1843,7 +1859,7 @@ public class DoorHandler {
     public static class ModifierValidation{ //Contains the IDs for people allowed to modify a part of the system (to prevent overwriting)
         public static final int maxTime = 60 * 15;
 
-        private HashMap<String, OneHolder> currentHolders;
+        private HashMap<String, OneHolder> currentHolders = new HashMap<>();
 
         public void onSecond(){
             List<String> keys = new LinkedList<>();

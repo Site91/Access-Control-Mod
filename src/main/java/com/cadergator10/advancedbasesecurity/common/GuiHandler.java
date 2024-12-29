@@ -9,8 +9,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
 
 public class GuiHandler implements IGuiHandler {
     private static final int[] itemGUI = {1};
@@ -51,8 +49,9 @@ public class GuiHandler implements IGuiHandler {
                 item = player.getHeldItemOffhand();
             if(item != null){
                 if(item.getItem() instanceof ItemDoorManager)
-                    return new EditUserGUI();
+                    return new EditUserGUI(new doorManagerContainer(player.inventory, new ItemDoorManager.ManagerTag(item).inventory, item));
             }
         }
+        return null;
     }
 }

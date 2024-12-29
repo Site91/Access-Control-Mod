@@ -6,6 +6,7 @@ import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -94,7 +95,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     UUID newid = UUID.randomUUID();
                     boolean added = manager.validator.addPermissions("door:" + door.doorId.toString(), newid, true);
                     if(added) {
-                        OneDoorDataPacket doorPacket = new OneDoorDataPacket(newid, door, true);
+                        OneDoorDataPacket doorPacket = new OneDoorDataPacket(newid, manager.id, door, true);
                         AdvBaseSecurity.instance.network.sendTo(doorPacket, serverPlayer);
                     }
                 }
@@ -108,7 +109,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                         UUID newid = UUID.randomUUID();
                         boolean added = manager.validator.addPermissions("door:" + door.doorId.toString(), newid, false);
                         if(added) {
-                            OneDoorDataPacket packet = new OneDoorDataPacket(newid, door, true);
+                            OneDoorDataPacket packet = new OneDoorDataPacket(newid, manager.id, door, true);
                             AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                         }
                         else
@@ -133,7 +134,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                         if(door.hasPerms(ctx.getServerHandler().player)) {
                             ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
                             tag.managerID = door.id;
-                            item.setTagCompound(tag.writeToNBT(item.getTagCompound()));
+                            item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
                             item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
                             DoorNamePacket packet = new DoorNamePacket(door);
                             AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
@@ -146,13 +147,17 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
                     ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
                     if(item.getItem() instanceof ItemDoorManager){
-                        //ideally, check max doormanagers allowed here.
+                        //check max door managers
+                        if(AdvBaseSecurity.instance.doorHandler.getManagerCount(serverPlayer) >= 1){
+                            serverPlayer.sendMessage(new TextComponentString("Too many managers under name! Max of 1"));
+                            return;
+                        }
                         UUID newid = UUID.randomUUID();
                         DoorHandler.Doors door = AdvBaseSecurity.instance.doorHandler.addDoorManager(ctx.getServerHandler().player, message.requestData);
                         //their door, so they already got perms
                         ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
                         tag.managerID = door.id;
-                        item.setTagCompound(tag.writeToNBT(item.getTagCompound()));
+                        item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
                         item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
                         DoorNamePacket packet = new DoorNamePacket(door);
                         AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
@@ -160,9 +165,14 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 });
                 return null;
             }
+            else if(message.request.equals("removeperm")){
+                if(manager != null && canUse){
+                    manager.validator.removePerm(message.validatorID);
+                }
+            }
             else if(message.request.equals("openusermenu")){
                 ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
-                   ctx.getServerHandler().player.openGui(AdvBaseSecurity.instance, 1, ctx.getServerHandler().player.world, 0,0,0);
+                    ctx.getServerHandler().player.openGui(AdvBaseSecurity.instance, 1, ctx.getServerHandler().player.world, 0, 0, 0);
                 });
             }
             else if(message.request.equals("getuserdata")){
@@ -170,12 +180,38 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     UUID eV = UUID.randomUUID(); //edit validator ID
                     boolean worked = manager.validator.addPermissions("useredit", eV, false);
                     if(worked) {
-                        UserEditPacket packet = new UserEditPacket(true, eV, manager.users, true);
+                        UserEditPacket packet = new UserEditPacket(true, eV, manager.users, true, manager.id);
+                        AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                     }
                     else{
-                        UserEditPacket packet = new UserEditPacket(false, null, null, true);
+                        UserEditPacket packet = new UserEditPacket(false, null, null, true, manager.id);
+                        AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                     }
                 }
+            }
+            else if(message.request.equals("managerdoorlink")){ //set tag of doormanager so that doors scanned with it will update their doors.
+                if(manager != null && manager.hasPerms(serverPlayer) && message.requestData != null && manager.getDoorFromID(UUID.fromString(message.requestData)) != null){
+                    ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                        ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
+                        if(item.getItem() instanceof ItemDoorManager){
+                            ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
+                            tag.doorIDScan = UUID.fromString(message.requestData);
+                            tag.currentScanMode = 1;
+                            item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
+                            serverPlayer.sendMessage(new TextComponentString("Successfully set door manager linking to door with ID of " + message.requestData));
+                        }
+                    });
+                }
+            }
+            else if(message.request.equals("openpassmenu")){
+                UUID id = UUID.randomUUID();
+                boolean worked = manager.validator.addPermissions("passes", id, false);
+                if(worked) {
+                    PassEditPacket packet = new PassEditPacket(id, message.managerId, manager.passes);
+                    AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
+                }
+                else
+                    serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (session in progress)"));
             }
             return null;
         }

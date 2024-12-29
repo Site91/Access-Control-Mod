@@ -2,7 +2,6 @@ package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.EditPassGUI;
-import com.cadergator10.advancedbasesecurity.client.gui.EditUserGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -13,17 +12,18 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class PassEditPacket implements IMessage {
     UUID editValidator; //Used to try and ensure that the recieved door is authorized.
+    UUID managerId;
     HashMap<String, DoorHandler.Doors.PassValue> passes;
     public PassEditPacket(){
 
     }
-    public PassEditPacket(UUID editValidator, HashMap<String, DoorHandler.Doors.PassValue> passes){
+    public PassEditPacket(UUID editValidator, UUID managerId, HashMap<String, DoorHandler.Doors.PassValue> passes){
+        this.managerId = managerId;
         this.editValidator = editValidator;
         this.passes = passes;
     }
@@ -71,6 +71,7 @@ public class PassEditPacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
         ByteBufUtils.writeUTF8String(buf, editValidator.toString());
+        ByteBufUtils.writeUTF8String(buf, managerId.toString());
         writeList(buf, passes);
     }
 
@@ -79,6 +80,7 @@ public class PassEditPacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         passes = readList(buf);
     }
 
@@ -91,7 +93,7 @@ public class PassEditPacket implements IMessage {
                     Minecraft mc = Minecraft.getMinecraft();
                     if(mc.world.isRemote) {
                         //open up the GUI
-                        Minecraft.getMinecraft().displayGuiScreen(new EditPassGUI(message.editValidator, message.passes));
+                        Minecraft.getMinecraft().displayGuiScreen(new EditPassGUI(message.editValidator, message.managerId, message.passes));
                     }
                     else{
                         //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
@@ -112,9 +114,13 @@ public class PassEditPacket implements IMessage {
 
         @Override
         public IMessage onMessage(PassEditPacket message, MessageContext ctx) {
-            if(AdvBaseSecurity.instance.doorHandler.checkValidator(message.editValidator)) {
-                AdvBaseSecurity.instance.doorHandler.DoorGroups.passes = message.passes;
-                AdvBaseSecurity.instance.doorHandler.verifyUserPasses();
+            DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
+            if(manager != null && manager.validator.hasPermissions("passes", message.editValidator)) {
+                manager.validator.removePerm("passes");
+                manager.passes = message.passes;
+                manager.verifyUserPasses();
+                DoorNamePacket packet = new DoorNamePacket(manager);
+                AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
             }
             return null;
         }

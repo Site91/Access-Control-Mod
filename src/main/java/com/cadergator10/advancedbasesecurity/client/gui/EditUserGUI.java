@@ -7,9 +7,11 @@ import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.inventory.Container;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -105,8 +107,8 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         super.initGui();
         this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Save & Exit"));
         this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 250, 20, 80, 16, false, new LinkedList<>(), 0));
-        this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 290, 40, 35, 16, "Add User"));
-        this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 210, 40, 35, 16, "Delete User"));
+        this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 230, 40, 35, 16, "Add User"));
+        this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 150, 40, 35, 16, "Delete User"));
         nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 80, 16);
         nameField.setGuiResponder(this);
         this.buttonList.add(staffButton = new ButtonToggle(id++, this.width / 2 - 120, 40, 100, 16, "Staff", false));
@@ -120,7 +122,8 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
         saveButton.enabled = false;
         //no user data here yet so request with packet
         UUID ide = ((doorManagerContainer)inventorySlots).getManager();
-        DoorServerRequest packet = new DoorServerRequest(ide, "getuserdata", null);
+        DoorServerRequest packet = new DoorServerRequest(ide, "getuserdata", "");
+        AdvBaseSecurity.instance.network.sendToServer(packet);
     }
 
     private void finishButtons(){
@@ -169,7 +172,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     }
 
     private void updateWithPasses(){
-        if(users.isEmpty()){
+        if(users == null || users.isEmpty()){
             allUsers.enabled = false;
             delUser.enabled = false;
             nameField.setEnabled(false);
@@ -239,6 +242,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
             allUsers.enabled = true;
             addUser.enabled = true;
             delUser.enabled = true;
+            saveButton.enabled = true;
             updateWithPasses();
             finished = true;
         }
@@ -269,11 +273,13 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        if(!users.isEmpty())
+        if(users != null && !users.isEmpty())
             drawString(user.id.toString(),this.width / 2 + 10, 20, 0xFFFFFF);
         nameField.drawTextBox();
-        for(GuiTextField field : fields)
-            field.drawTextBox();
+        if(fields != null) {
+            for (GuiTextField field : fields)
+                field.drawTextBox();
+        }
     }
 
     @Override
@@ -302,8 +308,10 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         nameField.mouseClicked(mouseX, mouseY, mouseButton);
-        for(GuiTextField field : fields)
-            field.mouseClicked(mouseX, mouseY, mouseButton);
+        if(fields != null) {
+            for (GuiTextField field : fields)
+                field.mouseClicked(mouseX, mouseY, mouseButton);
+        }
     }
 
     @Override
@@ -353,7 +361,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
             else if(button == blockedButton){
                 user.blocked = blockedButton.onClick();
             }
-            else{ //go through restButtons
+            else if(buttonList != null){ //go through restButtons
                 for(int i=0; i<restButtonsIDs.size(); i++){
                     if(button == restButtons.get(i)){
                         if(button instanceof ButtonToggle){ //pass

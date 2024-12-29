@@ -61,6 +61,7 @@ public class ContentRegistry { //where all new items will be added
         modItems.add(IDCard.DEFAULTSTACK = new ItemStack(new IDCard()));
         modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
         modItems.add(ItemScrewdriver.DEFAULTSTACK = new ItemStack(new ItemScrewdriver()));
+        modItems.add(ItemDoorManager.DEFAULTSTACK = new ItemStack(new ItemDoorManager()));
     }
 
 

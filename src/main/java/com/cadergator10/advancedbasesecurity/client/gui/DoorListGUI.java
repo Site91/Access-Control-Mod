@@ -15,6 +15,7 @@ import java.util.*;
 
 @SideOnly(Side.CLIENT)
 public class DoorListGUI extends GuiScreen {
+    UUID managerId;
     //data passed by packet
     List<DoorNamePacket.packetDoor> doors;
     HashMap<UUID, String> groupNames;
@@ -32,8 +33,9 @@ public class DoorListGUI extends GuiScreen {
     //other data
     int currPage = 1;
     int maxPageLength = 5;
-    public DoorListGUI(List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames) {
+    public DoorListGUI(UUID managerId, List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames) {
         super();
+        this.managerId = managerId;
         this.doors = doors;
         this.groupNames = groupNames;
     }
@@ -58,8 +60,10 @@ public class DoorListGUI extends GuiScreen {
         this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Door"));
         this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));
         this.buttonList.add(downButton = new GuiButton(id++, this.width - 20, this.height - 20, 16, 16, "\\/"));
-        this.buttonList.add(modeButton = new ButtonEnum(id++, this.width / 2 - 200, 40, false, Arrays.asList(new ButtonEnum.groupIndex("edit", "Mode: EDIT"), new ButtonEnum.groupIndex("link", "Mode: LINK")), 0));
-//        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
+        this.buttonList.add(modeButton = new ButtonEnum(id++, this.width / 2 - 200, 20, false, Arrays.asList(new ButtonEnum.groupIndex("edit", "Mode: EDIT"), new ButtonEnum.groupIndex("link", "Mode: LINK")), 0));
+        this.buttonList.add(userButton = new GuiButton(id++, this.width / 2 - 150, this.height - (this.height / 4) + 30, "Users"));
+        this.buttonList.add(passButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 30, "Passes"));
+        //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
         if(!doors.isEmpty()){
             int pageCount = 1;
@@ -117,15 +121,33 @@ public class DoorListGUI extends GuiScreen {
         }
         else if(button == newButton){
             newButton.enabled = false; //make sure it can't be spammed
-            DoorServerRequest packet = new DoorServerRequest("newdoor", "");
+            DoorServerRequest packet = new DoorServerRequest(managerId, "newdoor", "");
+            AdvBaseSecurity.instance.network.sendToServer(packet);
+        }
+        else if(button == modeButton){
+            modeButton.onClick();
+        }
+        else if(button == passButton){
+            DoorServerRequest packet = new DoorServerRequest(managerId, "openpassmenu", "");
+            AdvBaseSecurity.instance.network.sendToServer(packet);
+        }
+        else if(button == userButton){
+            DoorServerRequest packet = new DoorServerRequest(managerId, "openusermenu", "");
             AdvBaseSecurity.instance.network.sendToServer(packet);
         }
         else{
             for (int i = 0; i < doorButtons.size(); i++) {
                 GuiButton doorButton = doorButtons.get(i);
                 if (button == doorButton) {
-                    DoorServerRequest packet = new DoorServerRequest("editdoor", doors.get(i).id.toString());
-                    AdvBaseSecurity.instance.network.sendToServer(packet);
+                    if(modeButton.getUUID().equals("link")) {
+                        DoorServerRequest packet = new DoorServerRequest(managerId, "managerdoorlink", doors.get(i).id.toString());
+                        AdvBaseSecurity.instance.network.sendToServer(packet);
+                        mc.player.closeScreen();
+                    }
+                    else{
+                        DoorServerRequest packet = new DoorServerRequest(managerId, "editdoor", doors.get(i).id.toString());
+                        AdvBaseSecurity.instance.network.sendToServer(packet);
+                    }
                 }
             }
         }

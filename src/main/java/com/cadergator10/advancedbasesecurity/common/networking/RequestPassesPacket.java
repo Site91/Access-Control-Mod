@@ -18,13 +18,15 @@ import java.util.function.BiConsumer;
 
 public class RequestPassesPacket implements IMessage {
     UUID editValidator; //Used to try and ensure that the recieved door is authorized.
+    UUID managerId;
     boolean isServer;
     List<DoorHandler.Doors.PassValue> passes;
     public RequestPassesPacket(){
 
     }
-    public RequestPassesPacket(UUID editValidator, boolean isServer){
+    public RequestPassesPacket(UUID editValidator, UUID managerId, boolean isServer){
         this.editValidator = editValidator;
+        this.managerId = managerId;
         this.isServer = isServer;
     }
     private void formatGroups(){
@@ -80,23 +82,29 @@ public class RequestPassesPacket implements IMessage {
         }
         return passes;
     }
-    public static void writeList(ByteBuf buf){
-        buf.writeInt(AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.size());
-        BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k,v) -> {
-            AdvBaseSecurity.instance.logger.info(v.passId + " : " + v.passName);
-            ByteBufUtils.writeUTF8String(buf, v.passId);
-            ByteBufUtils.writeUTF8String(buf, v.passName);
-            buf.writeShort(v.passType.getInt());
-            boolean isGood = v.groupNames != null && !v.groupNames.isEmpty();
-            buf.writeBoolean(isGood);
-            if(isGood){
-                buf.writeInt(v.groupNames.size());
-                for(String str : v.groupNames){
-                    ByteBufUtils.writeUTF8String(buf, str);
+    public static void writeList(ByteBuf buf, UUID managerId){
+        DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
+        if(manager != null) {
+            buf.writeInt(manager.passes.size());
+            BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k, v) -> {
+                AdvBaseSecurity.instance.logger.info(v.passId + " : " + v.passName);
+                ByteBufUtils.writeUTF8String(buf, v.passId);
+                ByteBufUtils.writeUTF8String(buf, v.passName);
+                buf.writeShort(v.passType.getInt());
+                boolean isGood = v.groupNames != null && !v.groupNames.isEmpty();
+                buf.writeBoolean(isGood);
+                if (isGood) {
+                    buf.writeInt(v.groupNames.size());
+                    for (String str : v.groupNames) {
+                        ByteBufUtils.writeUTF8String(buf, str);
+                    }
                 }
-            }
-        };
-        AdvBaseSecurity.instance.doorHandler.DoorGroups.passes.forEach(biConsumer);
+            };
+            manager.passes.forEach(biConsumer);
+        }
+        else{
+            buf.writeInt(0);
+        }
     }
     public static List<DoorHandler.Doors.PassValue> readList(ByteBuf buf){
         List<DoorHandler.Doors.PassValue> passeder = new LinkedList<>();
@@ -123,7 +131,11 @@ public class RequestPassesPacket implements IMessage {
     public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
-        ByteBufUtils.writeUTF8String(buf, editValidator.toString());
+        buf.writeBoolean(editValidator != null);
+        if(editValidator != null) {
+            ByteBufUtils.writeUTF8String(buf, editValidator.toString());
+            ByteBufUtils.writeUTF8String(buf, managerId.toString());
+        }
         buf.writeBoolean(isServer);
         if(isServer){
             //add in passes
@@ -136,7 +148,7 @@ public class RequestPassesPacket implements IMessage {
 //            for(DoorHandler.Doors.PassValue pass : passes){
 //
 //            }
-            writeList(buf);
+            writeList(buf, managerId);
         }
     }
 
@@ -144,7 +156,11 @@ public class RequestPassesPacket implements IMessage {
     public void fromBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
-        editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        boolean check = buf.readBoolean();
+        if(check) {
+            editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+            managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        }
         isServer = buf.readBoolean();
         if(isServer){
             passes = readList(buf);
@@ -180,10 +196,11 @@ public class RequestPassesPacket implements IMessage {
 
         @Override
         public IMessage onMessage(RequestPassesPacket message, MessageContext ctx) {
-            if(AdvBaseSecurity.instance.doorHandler.checkValidator(message.editValidator))
-                return new RequestPassesPacket(AdvBaseSecurity.instance.doorHandler.getEditValidator(), true);
+            DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
+            if(manager != null && manager.validator.hasPermissions("passes", message.editValidator))
+                return new RequestPassesPacket(null, null, true);
             else
-                return new RequestPassesPacket(message.editValidator, false); //invalid edit validator.
+                return new RequestPassesPacket(null, null, false); //invalid edit validator.
         }
     }
 }

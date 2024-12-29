@@ -7,10 +7,6 @@ import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryBasic;
-import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
@@ -43,7 +39,7 @@ public class ItemDoorManager extends ItemBase {
 		if(door == null){
 			player.sendMessage(new TextComponentString("Door manager missing. May have been deleted or misconfigured. Please use the item again to set manager."));
 			tag.managerID = null;
-			heldItem.setTagCompound(tag.writeToNBT(heldItem.getTagCompound()));
+			heldItem.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
 			heldItem.setStackDisplayName(getItemName());
 			return EnumActionResult.FAIL;
 		}
@@ -83,9 +79,9 @@ public class ItemDoorManager extends ItemBase {
 
 	public static class ManagerTag { //inspired by OpenSecurity's approach. a lot is as I learn
 		public UUID managerID;
-		public int currentScanMode; //0 = none, 1 = door
+		public int currentScanMode = 0; //0 = none, 1 = door
 		public UUID doorIDScan;
-		public InventoryDoorHandler inventory;
+		public InventoryDoorHandler inventory = new InventoryDoorHandler();
 
 		public ManagerTag(ItemStack stack){
 			if(stack.getItem() instanceof ItemDoorManager)
