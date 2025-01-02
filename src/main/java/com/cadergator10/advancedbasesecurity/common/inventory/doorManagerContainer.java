@@ -48,8 +48,8 @@ public class doorManagerContainer extends Container {
     }
 
     private void addOwnSlots() {
-        this.addSlotToContainer(new CardInputSlot(doorManager, 0, 80, 36));
-        this.addSlotToContainer(new CardOutputSlot(doorManager, 1, 80, 87));
+        this.addSlotToContainer(new CardInputSlot(doorManager, 0, 116, 87));
+        this.addSlotToContainer(new CardOutputSlot(doorManager, 1, 151, 87));
     }
 
     @Override

@@ -2,10 +2,12 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
+import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.relauncher.Side;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
+public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
     //data passed by packet
     DoorHandler.Doors.OneDoor door;
     List<ButtonEnum.groupIndex> groups;
@@ -28,18 +30,18 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     UUID managerId;
 
     //button data
-    GuiButton backButton;
-    GuiButton saveButton;
+    ButtonImg backButton;
+    ButtonImg saveButton;
     //GUI buttons
-    GuiButton editPasses;
+    ButtonImg editPasses;
     //door values
     GuiTextField nameField;
     ButtonToggle toggleDoor;
-    GuiButton doorDelayUp;
-    GuiButton doorDelayDown;
+    ButtonImg doorDelayUp;
+    ButtonImg doorDelayDown;
     GuiTextField doorDelayInput;
     ButtonEnum groupSelect;
-    GuiButton clearDevices;
+    ButtonImg clearDevices;
 
     //other data
     boolean letPress;
@@ -73,18 +75,18 @@ public class EditDoorGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         super.initGui();
         int id=-1;
         letPress = true;
-        this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, 90, 16, "Back"));
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 + 10, this.height - (this.height / 4) + 10, 90, 16, "Save"));
+        this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
+        this.buttonList.add(saveButton = new ButtonImg(id++, this.width / 2 + 10, this.height - (this.height / 4) + 10, ButtonTooltip.SaveDoor));
 
         nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 60, 16);
         nameField.setGuiResponder(this);
         nameField.setText(door.doorName);
         this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 20, 20, 80, 16, true, groups, groupIndex));
-        this.buttonList.add(editPasses = new GuiButton(id++, this.width / 2 - 120, 40, 60, 16, "Edit passes"));
-        this.buttonList.add(clearDevices = new GuiButton(id++, this.width / 2 + 20, 40, 60, 16, "Clear " + (door.Readers.size() + door.Doors.size()) + " Devices"));
+        this.buttonList.add(editPasses = new ButtonImg(id++, this.width / 2 - 120, 40, ButtonTooltip.EditPass));
+        this.buttonList.add(clearDevices = new ButtonImg(id++, this.width / 2 + 20, 40, ButtonTooltip.ClearDevices, new String[] {(Integer.toString(door.Readers.size() + door.Doors.size()))}));
         this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 120, 60, 80, 16, "Stay Open", door.defaultToggle));
-        this.buttonList.add(doorDelayDown = new GuiButton(id++, this.width / 2 + 20, 60, 16, 16, "<"));
-        this.buttonList.add(doorDelayUp = new GuiButton(id++, this.width / 2 + 94, 60, 16, 16, ">"));
+        this.buttonList.add(doorDelayDown = new ButtonImg(id++, this.width / 2 + 20, 60, ButtonTooltip.DelayDown));
+        this.buttonList.add(doorDelayUp = new ButtonImg(id++, this.width / 2 + 94, 60, ButtonTooltip.DelayUp));
         doorDelayInput = new GuiTextField(id++, fontRenderer, this.width / 2 + 50, 60, 30, 16);
         doorDelayInput.setText(Integer.toString(door.defaultTick / 20));
         doorDelayInput.setGuiResponder(this);

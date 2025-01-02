@@ -1,8 +1,10 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
+import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -20,10 +22,10 @@ public class ManagerListGUI extends GuiScreen {
     //data passed by packet
     List<ManagerNamePacket.packetDoor> doors;
     //button data
-    GuiButton closeButton;
-    GuiButton upButton;
-    GuiButton downButton;
-    GuiButton newButton;
+    ButtonImg closeButton;
+    ButtonImg upButton;
+    ButtonImg downButton;
+    ButtonImg newButton;
 //    GuiLabel noneLabel;
     List<GuiButton> doorButtons;
     List<Integer> buttonLevel;
@@ -54,10 +56,10 @@ public class ManagerListGUI extends GuiScreen {
         int id=-1;
         doorButtons = new LinkedList<>();
         buttonLevel = new LinkedList<>();
-        this.buttonList.add(closeButton = new GuiButton(id++, this.width / 2 - 150, this.height - (this.height / 4) + 10, "Close"));
-        this.buttonList.add(newButton = new GuiButton(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, "New Manager"));
-        this.buttonList.add(upButton = new GuiButton(id++, this.width - 20, this.height - 40, 16, 16, "/\\"));
-        this.buttonList.add(downButton = new GuiButton(id++, this.width - 20, this.height - 20, 16, 16, "\\/"));
+        this.buttonList.add(closeButton = new ButtonImg(id++, this.width / 2 - 150, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
+        this.buttonList.add(newButton = new ButtonImg(id++, this.width / 2 + 50, this.height - (this.height / 4) + 10, ButtonTooltip.AddManager));
+        this.buttonList.add(upButton = new ButtonImg(id++, this.width - 20, this.height - 40, ButtonTooltip.UpButton));
+        this.buttonList.add(downButton = new ButtonImg(id++, this.width - 20, this.height - 20, ButtonTooltip.DownButton));
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
         if(!doors.isEmpty()){

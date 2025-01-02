@@ -2,9 +2,11 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonSelect;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.RequestPassesPacket;
+import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraftforge.fml.relauncher.Side;
@@ -25,18 +27,18 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 	boolean letPress = true;
 	//buttons
 	int currentIndex;
-	GuiButton backButton;
+	ButtonImg backButton;
 	ButtonEnum typeButton;
 	ButtonEnum passButton;
 	ButtonEnum priority;
 	ButtonSelect addPassList;
-	GuiButton selectAddPass;
+	ButtonImg selectAddPass;
 	GuiTextField passValueI;
 	ButtonEnum passValueG;
 	//add/del
 	ButtonEnum passListButton;
-	GuiButton addPass;
-	GuiButton delPass;
+	ButtonImg addPass;
+	ButtonImg delPass;
 	DoorHandler.Doors.PassValue passSelected;
 	private DoorHandler.Doors.OneDoor.OnePass doorPass;
 
@@ -141,7 +143,7 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 		passes = new LinkedList<>();
 		int id = -1;
 		//gen edit buttons first
-		this.buttonList.add(backButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Back"));
+		this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
 		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 20, 60, 80, 16, false, new LinkedList<>(),0));
 		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 120, 60, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
 		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 20, 80, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
@@ -149,11 +151,11 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 		passValueI.setGuiResponder(this);
 		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 120, 80, 80, 16, false, new LinkedList<>(),0));
 		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 20, 100, 80, 16, new LinkedList<>(),0));
-		this.buttonList.add(selectAddPass = new GuiButton(id++, this.width / 2 + 120, 100, 80, 16, "Toggle Add Pass"));
+		this.buttonList.add(selectAddPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.SelectAddPass));
 		//pass modify buttons
 		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 200, 80, 120, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(addPass = new GuiButton(id++, this.width / 2 + 80, 100, 30, 16, "Add Pass"));
-		this.buttonList.add(delPass = new GuiButton(id++, this.width / 2 + 120, 100, 30, 16, "Delete Pass"));
+		this.buttonList.add(addPass = new ButtonImg(id++, this.width / 2 + 80, 100, ButtonTooltip.AddDoorPass));
+		this.buttonList.add(delPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.DelDoorPass));
 		//set default while waiting for finish
 		updateWithPasses();
 		passListButton.enabled = false;

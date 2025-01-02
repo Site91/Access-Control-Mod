@@ -6,7 +6,12 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
 
-public class CardInputSlot extends Slot {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public class CardInputSlot extends Slot implements ISlotTooltip{
     public CardInputSlot(IInventory inventoryIn, int index, int xPosition, int yPosition) {
         super(inventoryIn, index, xPosition, yPosition);
     }
@@ -14,5 +19,10 @@ public class CardInputSlot extends Slot {
     @Override
     public boolean isItemValid(ItemStack stack) {
         return stack.getItem() instanceof IDCard;
+    }
+
+    @Override
+    public List<String> getTooltip() {
+        return new ArrayList<>(Collections.singletonList("Accepts ID cards"));
     }
 }

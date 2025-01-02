@@ -2,11 +2,14 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ContainerGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
+import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiPageButtonList;
@@ -16,12 +19,13 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiResponder {
+public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiResponder {
 
     UUID editValidator = null;
 
@@ -33,12 +37,12 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
 
     DoorHandler.Doors.Users user;
     //buttons
-    GuiButton saveButton;
+    ButtonImg saveButton;
     ButtonEnum allUsers;
-    GuiButton addUser;
-    GuiButton delUser;
-    GuiButton resetID;
-    GuiButton writeCard;
+    ButtonImg addUser;
+    ButtonImg delUser;
+    ButtonImg resetID;
+    ButtonImg writeCard;
     GuiTextField nameField;
     ButtonToggle staffButton;
     ButtonToggle blockedButton;
@@ -57,7 +61,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     private static final ResourceLocation background = new ResourceLocation(AdvBaseSecurity.MODID, "textures/gui/writecard.png");
 
     public EditUserGUI(doorManagerContainer container){
-        super(container);
+        super(container, WIDTH, HEIGHT);
         this.users = null;
         this.passes = null;
 //        this.users = users;
@@ -69,13 +73,16 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
 //        }
     }
 
-    void drawString(String string, int x, int y, int color){
+    void drawString(String string, int x, int y, int color, double scale){
+        GL11.glScaled(scale, scale, scale);
         FontRenderer fr = mc.fontRenderer;
-        fr.drawString(string, x, y, color);
+        double reverse = 1/scale;
+        fr.drawString(string, (int) (x * reverse), (int) (y * reverse), color);
+        GL11.glScaled(reverse, reverse, reverse);
     }
 
-    void drawCenteredString(String string, int y, int color){
-        drawString(string, this.width/2 - mc.fontRenderer.getStringWidth(string)/2, y, color);
+    void drawCenteredString(String string, int y, int color, double scale){
+        drawString(string, this.width/2 - mc.fontRenderer.getStringWidth(string)/2, y, color, scale);
     }
 
     DoorHandler.Doors.PassValue getPass(String id){
@@ -112,15 +119,15 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     @Override
     public void initGui() {
         super.initGui();
-        this.buttonList.add(saveButton = new GuiButton(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, 90, 16, "Save & Exit"));
-        this.buttonList.add(allUsers = new ButtonEnum(id++, this.width / 2 - 250, 20, 80, 16, false, new LinkedList<>(), 0));
-        this.buttonList.add(addUser = new GuiButton(id++, this.width / 2 - 230, 40, 35, 16, "Add User"));
-        this.buttonList.add(delUser = new GuiButton(id++, this.width / 2 - 150, 40, 35, 16, "Delete User"));
-        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 80, 16);
+        this.buttonList.add(saveButton = new ButtonImg(id++, guiLeft + 116, guiTop + 65, ButtonTooltip.SaveUsers));
+        this.buttonList.add(allUsers = new ButtonEnum(id++, guiLeft + 1, guiTop + 1, 80, 16, false, new LinkedList<>(), 0));
+        this.buttonList.add(addUser = new ButtonImg(id++, guiLeft + 86, guiTop + 1, ButtonTooltip.AddUser));
+        this.buttonList.add(delUser = new ButtonImg(id++, guiLeft + 107, guiTop + 1, ButtonTooltip.DelUser));
+        nameField = new GuiTextField(id++, fontRenderer, guiLeft + 128, guiTop + 1, 80, 16);
         nameField.setGuiResponder(this);
-        this.buttonList.add(staffButton = new ButtonToggle(id++, this.width / 2 - 120, 40, 100, 16, "Staff", false));
-        this.buttonList.add(resetID =  new GuiButton(id++, this.width / 2 + 20, 40, 80, 16, "reset ID"));
-        this.buttonList.add(blockedButton = new ButtonToggle(id++, this.width / 2 - 120, 60, 100, 16, "Blocked", false));
+        this.buttonList.add(staffButton = new ButtonToggle(id++, guiLeft + 1, guiTop + 41, 80, 16, "Staff", false));
+        this.buttonList.add(resetID =  new ButtonImg(id++, guiLeft + WIDTH - 17, guiTop + 21, ButtonTooltip.ResetUUID));
+        this.buttonList.add(blockedButton = new ButtonToggle(id++, this.width / 2 + 1, guiTop + + 41, 100, 16, "Blocked", false));
         //set default while waiting to finish
         updateWithPasses();
         allUsers.enabled = false;
@@ -281,7 +288,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
         if(users != null && !users.isEmpty())
-            drawString(user.id.toString(),this.width / 2 + 10, 20, 0xFFFFFF);
+            drawString(user.id.toString(),guiLeft + 10, guiTop + 25, 0xFFFFFF, 0.5F);
         nameField.drawTextBox();
         if(fields != null) {
             for (GuiTextField field : fields)
@@ -292,7 +299,7 @@ public class EditUserGUI extends GuiContainer implements GuiPageButtonList.GuiRe
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         mc.getTextureManager().bindTexture(background);
-        drawTexturedModalRect((this.width - WIDTH) / 2, (this.height - HEIGHT) / 2, 0, 0, WIDTH, HEIGHT);
+        drawTexturedModalRect( guiLeft, guiTop, 0, 0, xSize, ySize);
     }
 
     @Override
