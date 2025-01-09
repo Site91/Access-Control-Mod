@@ -3,17 +3,19 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
+import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.text.translation.I18n;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
+public class EditPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
     UUID managerId;
     HashMap<String, DoorHandler.Doors.PassValue> passes;
@@ -23,7 +25,7 @@ public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
     ButtonEnum passList;
     ButtonImg addPass;
     ButtonImg delPass;
-    GuiTextField nameInput;
+    GUITextFieldTooltip nameInput;
     ButtonEnum typeInput;
     GuiTextField groupInput;
 
@@ -71,13 +73,13 @@ public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         super.initGui();
         int id = -1;
         this.buttonList.add(saveButton = new ButtonImg(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, ButtonTooltip.SavePasses));
-        nameInput = new GuiTextField(id++, fontRenderer, this.width / 2 - 50, 20, 100, 16);
+        nameInput = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 - 50, 20, 100, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.passname"));
         nameInput.setGuiResponder(this);
-        this.buttonList.add(typeInput = new ButtonEnum(id++, this.width / 2 - 50, 40, 100, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Pass"),new ButtonEnum.groupIndex("1", "Level"),new ButtonEnum.groupIndex("2", "Group"),new ButtonEnum.groupIndex("3", "Text"),new ButtonEnum.groupIndex("4", "Multi-Text")),0));
+        this.buttonList.add(typeInput = new ButtonEnum(id++, this.width / 2 - 50, 40, 100, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.passtype"), false, Arrays.asList(new ButtonEnum.groupIndex("0", "Pass"),new ButtonEnum.groupIndex("1", "Level"),new ButtonEnum.groupIndex("2", "Group"),new ButtonEnum.groupIndex("3", "Text"),new ButtonEnum.groupIndex("4", "Multi-Text")),0));
         groupInput = new GuiTextField(id++, fontRenderer, this.width / 2 - 50, 60, 100, 16);
         groupInput.setGuiResponder(this);
 
-        this.buttonList.add(passList = new ButtonEnum(id++, this.width / 2 - 60, 80, 120, 16, false, processPasses(passes),0));
+        this.buttonList.add(passList = new ButtonEnum(id++, this.width / 2 - 60, 80, 120, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allpasses"), false, processPasses(passes),0));
         this.buttonList.add(addPass = new ButtonImg(id++, this.width / 2 - 70, 100, ButtonTooltip.AddDoorPass));
         this.buttonList.add(delPass = new ButtonImg(id++, this.width / 2 + 10, 100, ButtonTooltip.DelDoorPass));
         updateWithPasses(false);
@@ -137,6 +139,7 @@ public class EditPassGUI extends GuiScreen implements GuiPageButtonList.GuiRespo
         super.drawScreen(mouseX, mouseY, partialTicks);
         nameInput.drawTextBox();
         groupInput.drawTextBox();
+        processField(nameInput, mouseX, mouseY);
     }
 
     @Override

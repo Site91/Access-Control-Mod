@@ -4,22 +4,22 @@ import net.minecraftforge.fml.client.config.GuiButtonExt;
 
 import java.util.List;
 
-public class ButtonEnum extends GuiButtonExt{
+public class ButtonEnum extends GUIButtonTooltip{
 	int currentIndex = 0;
 	int size = 0;
 	boolean includeNone;
 	List<groupIndex> map;
 
-	public ButtonEnum(int buttonId, int x, int y, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, includeNone && !map.isEmpty() ? map.get(index).name : "none");
+	public ButtonEnum(int buttonId, int x, int y, String tooltip, boolean includeNone, List<groupIndex> map, int index) {
+		super(buttonId, x, y, includeNone && !map.isEmpty() ? map.get(index).name : "none", tooltip);
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;
 		this.map = map;
 	}
 
-	public ButtonEnum(int buttonId, int x, int y, int widthIn, int heightIn, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, widthIn, heightIn, includeNone && !map.isEmpty() ? map.get(index).name : "none");
+	public ButtonEnum(int buttonId, int x, int y, int widthIn, int heightIn, String tooltip, boolean includeNone, List<groupIndex> map, int index) {
+		super(buttonId, x, y, widthIn, heightIn, includeNone && !map.isEmpty() ? map.get(index).name : "none", tooltip);
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;

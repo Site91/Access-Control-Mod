@@ -857,7 +857,7 @@ public class DoorHandler {
                 for (String s : exists){ //check for incorrect inputs.
                     Doors.PassValue pass = passes.get(s);
                     if(!exists2.contains(s) || user.passes.get(s).type != pass.passType.getInt() || (pass.passType == Doors.PassValue.type.Group && Integer.parseInt(user.passes.get(s).passValue.get(0)) > pass.groupNames.size())){
-                        user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? null : Arrays.asList("none") , pass.passType.getInt()));
+                        user.passes.put(s, new Doors.Users.UserPass(pass.passId,pass.passType == Doors.PassValue.type.Level || pass.passType == Doors.PassValue.type.Group ? Arrays.asList("0") : pass.passType == Doors.PassValue.type.Pass ? Arrays.asList("false") : Arrays.asList("none") , pass.passType.getInt()));
                     }
                 }
             }

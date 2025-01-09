@@ -1,8 +1,10 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
+import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ITooltip;
 import com.google.common.collect.Lists;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.Arrays;
@@ -20,6 +22,20 @@ public class BaseGUI extends GuiScreen {
                 this.drawTooltip( (ITooltip) c, mouseX, mouseY );
             }
         }
+    }
+    public void drawScreen(int mouseX, int mouseY, float partialTicks, List<GuiTextField> fields) {
+        drawScreen(mouseX, mouseY, partialTicks);
+        for( final Object c : fields )
+        {
+            if( c instanceof ITooltip)
+            {
+                this.drawTooltip( (ITooltip) c, mouseX, mouseY );
+            }
+        }
+    }
+
+    public void processField(ITooltip field, int mouseX, int mouseY){
+        this.drawTooltip( (ITooltip) field, mouseX, mouseY );
     }
 
     private void drawTooltip(ITooltip tooltip, int mouseX, int mouseY )
@@ -47,7 +63,7 @@ public class BaseGUI extends GuiScreen {
 
     protected void drawTooltip( int x, int y, String message )
     {
-        String[] lines = message.split( "\n" );
+        String[] lines = message.split( "/n" );
         this.drawTooltip( x, y, Arrays.asList( lines ) );
     }
 

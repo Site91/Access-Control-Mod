@@ -56,7 +56,8 @@ public class IDCard extends ItemBase implements IBauble {
 		}
 
 		public NBTTagCompound writeToNBT(NBTTagCompound nbt){
-			nbt.setUniqueId("playerId", playerId);
+			if(playerId != null)
+				nbt.setUniqueId("playerId", playerId);
 			if(cardId != null)
 				nbt.setTag("cardId", cardId.writeToNBT(new NBTTagCompound()));
 

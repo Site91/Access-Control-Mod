@@ -65,11 +65,12 @@ public class ButtonImg extends GuiButton implements ITooltip {
 
                 par1Minecraft.renderEngine.bindTexture( new ResourceLocation( "advancedbasesecurity", "textures/gui/buttonicons.png" ) );
                 this.hovered = par2 >= this.x && par3 >= this.y && par2 < this.x + this.width && par3 < this.y + this.height;
+                int offset = hovered ? 32 : 16;
 
                 final int uv_y = (int) Math.floor( iconIndex / 16 );
                 final int uv_x = iconIndex - uv_y * 16;
 
-                this.drawTexturedModalRect( 0, 0, 256 - 16, 256 - 16, 16, 16 );
+                this.drawTexturedModalRect( 0, 0, 256 - offset, 256 - 16, 16, 16 );
                 this.drawTexturedModalRect( 0, 0, uv_x * 16, uv_y * 16, 16, 16 );
                 this.mouseDragged( par1Minecraft, par2, par3 );
 
@@ -88,11 +89,12 @@ public class ButtonImg extends GuiButton implements ITooltip {
 
                 par1Minecraft.renderEngine.bindTexture( new ResourceLocation( "advancedbasesecurity", "textures/gui/buttonicons.png" ) );
                 this.hovered = par2 >= this.x && par3 >= this.y && par2 < this.x + this.width && par3 < this.y + this.height;
+                int offset = hovered ? 32 : 16;
 
                 final int uv_y = (int) Math.floor( iconIndex / 16 );
                 final int uv_x = iconIndex - uv_y * 16;
 
-                this.drawTexturedModalRect( this.x, this.y, 256 - 16, 256 - 16, 16, 16 );
+                this.drawTexturedModalRect( this.x, this.y, 256 - offset, 256 - 16, 16, 16 );
                 this.drawTexturedModalRect( this.x, this.y, uv_x * 16, uv_y * 16, 16, 16 );
                 this.mouseDragged( par1Minecraft, par2, par3 );
             }

@@ -1,9 +1,10 @@
 package com.cadergator10.advancedbasesecurity.client.gui.components;
 
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiButtonToggle;
 import net.minecraft.util.ResourceLocation;
 
-public class ButtonToggle extends GuiButton {
+public class ButtonToggle extends GUIButtonTooltip {
     String buttonName;
     protected ResourceLocation resourceLocation;
     protected boolean stateTriggered;
@@ -12,9 +13,9 @@ public class ButtonToggle extends GuiButton {
     protected int xDiffTex;
     protected int yDiffTex;
 
-    public ButtonToggle(int buttonId, int xIn, int yIn, int widthIn, int heightIn, String buttonText, boolean toggled)
+    public ButtonToggle(int buttonId, int xIn, int yIn, int widthIn, int heightIn, String buttonText, String tooltip, boolean toggled)
     {
-        super(buttonId, xIn, yIn, widthIn, heightIn, buttonText + (toggled ? " (true)" : " (false)"));
+        super(buttonId, xIn, yIn, widthIn, heightIn, buttonText + (toggled ? " (true)" : " (false)"), tooltip);
         buttonName = buttonText;
         this.stateTriggered = toggled;
     }

@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
-public class ManagerListGUI extends GuiScreen {
+public class ManagerListGUI extends BaseGUI {
 
     //data passed by packet
     List<ManagerNamePacket.packetDoor> doors;

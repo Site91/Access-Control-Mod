@@ -9,6 +9,7 @@ import com.cadergator10.advancedbasesecurity.common.networking.RequestPassesPack
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -17,7 +18,7 @@ import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiResponder {
+public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
 	UUID editValidator;
 	UUID managerId;
 	DoorHandler.Doors.OneDoor door;
@@ -144,16 +145,16 @@ public class EditDoorPassGUI extends GuiScreen implements GuiPageButtonList.GuiR
 		int id = -1;
 		//gen edit buttons first
 		this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
-		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 20, 60, 80, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 120, 60, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
-		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 20, 80, 80, 16, false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
+		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 20, 60, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, new LinkedList<>(),0));
+		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 120, 60, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpasstype"), false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
+		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 20, 80, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.passpriority"), false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
 		passValueI = new GuiTextField(id++, fontRenderer, this.width / 2 + 120, 80, 80, 16);
 		passValueI.setGuiResponder(this);
-		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 120, 80, 80, 16, false, new LinkedList<>(),0));
-		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 20, 100, 80, 16, new LinkedList<>(),0));
+		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 120, 80, 80, 16, null, false, new LinkedList<>(),0));
+		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 20, 100, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.addpassselect"), new LinkedList<>(),0));
 		this.buttonList.add(selectAddPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.SelectAddPass));
 		//pass modify buttons
-		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 200, 80, 120, 16, false, new LinkedList<>(),0));
+		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 200, 80, 120, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(),0));
 		this.buttonList.add(addPass = new ButtonImg(id++, this.width / 2 + 80, 100, ButtonTooltip.AddDoorPass));
 		this.buttonList.add(delPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.DelDoorPass));
 		//set default while waiting for finish

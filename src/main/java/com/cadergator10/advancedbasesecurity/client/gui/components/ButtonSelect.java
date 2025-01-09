@@ -7,14 +7,14 @@ import java.util.List;
 public class ButtonSelect extends ButtonEnum{
     List<Boolean> isToggled;
 
-    public ButtonSelect(int buttonId, int x, int y, List<groupIndex> map, int index) {
-        super(buttonId, x, y, false, map, index);
+    public ButtonSelect(int buttonId, int x, int y, String tooltip, List<groupIndex> map, int index) {
+        super(buttonId, x, y, tooltip,false, map, index);
         isToggled = new LinkedList<>();
         for(int i=0; i<size; i++)
             isToggled.add(false);
     }
-    public ButtonSelect(int buttonId, int x, int y, int widthIn, int heightIn, List<groupIndex> map, int index) {
-        super(buttonId, x, y, widthIn, heightIn, false, map, index);
+    public ButtonSelect(int buttonId, int x, int y, int widthIn, int heightIn, String tooltip, List<groupIndex> map, int index) {
+        super(buttonId, x, y, widthIn, heightIn, tooltip, false, map, index);
         isToggled = new LinkedList<>();
         for(int i=0; i<size; i++)
             isToggled.add(false);
@@ -23,7 +23,7 @@ public class ButtonSelect extends ButtonEnum{
     @Override
     protected void updateDisplay() {
         if(!map.isEmpty())
-            displayString = map.get(currentIndex).name + " (" + (isToggled.get(currentIndex) ? "true)" : "false)");
+            displayString = " (" + (isToggled.get(currentIndex) ? " )" : "X)") + map.get(currentIndex).name;
         else
             displayString = "none";
     }

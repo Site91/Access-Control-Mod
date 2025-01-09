@@ -4,12 +4,14 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
+import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -35,11 +37,11 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
     //GUI buttons
     ButtonImg editPasses;
     //door values
-    GuiTextField nameField;
+    GUITextFieldTooltip nameField;
     ButtonToggle toggleDoor;
     ButtonImg doorDelayUp;
     ButtonImg doorDelayDown;
-    GuiTextField doorDelayInput;
+    GUITextFieldTooltip doorDelayInput;
     ButtonEnum groupSelect;
     ButtonImg clearDevices;
 
@@ -78,16 +80,16 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
         this.buttonList.add(saveButton = new ButtonImg(id++, this.width / 2 + 10, this.height - (this.height / 4) + 10, ButtonTooltip.SaveDoor));
 
-        nameField = new GuiTextField(id++, fontRenderer, this.width / 2 - 120, 20, 60, 16);
+        nameField = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 - 120, 20, 60, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorname"));
         nameField.setGuiResponder(this);
         nameField.setText(door.doorName);
-        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 20, 20, 80, 16, true, groups, groupIndex));
+        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 20, 20, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorgroup"), true, groups, groupIndex));
         this.buttonList.add(editPasses = new ButtonImg(id++, this.width / 2 - 120, 40, ButtonTooltip.EditPass));
         this.buttonList.add(clearDevices = new ButtonImg(id++, this.width / 2 + 20, 40, ButtonTooltip.ClearDevices, new String[] {(Integer.toString(door.Readers.size() + door.Doors.size()))}));
-        this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 120, 60, 80, 16, "Stay Open", door.defaultToggle));
+        this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 120, 60, 80, 16, "Stay Open", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.togglebutton"), door.defaultToggle));
         this.buttonList.add(doorDelayDown = new ButtonImg(id++, this.width / 2 + 20, 60, ButtonTooltip.DelayDown));
         this.buttonList.add(doorDelayUp = new ButtonImg(id++, this.width / 2 + 94, 60, ButtonTooltip.DelayUp));
-        doorDelayInput = new GuiTextField(id++, fontRenderer, this.width / 2 + 50, 60, 30, 16);
+        doorDelayInput = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 + 50, 60, 30, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.delayinput"));
         doorDelayInput.setText(Integer.toString(door.defaultTick / 20));
         doorDelayInput.setGuiResponder(this);
         doorDelayInput.setValidator((r) -> {
@@ -114,6 +116,8 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         super.drawScreen(mouseX, mouseY, partialTicks);
         nameField.drawTextBox();
         doorDelayInput.drawTextBox();
+        processField(nameField, mouseX, mouseY);
+        processField(doorDelayInput, mouseX, mouseY);
     }
 
     private char[] allowedChars = {
