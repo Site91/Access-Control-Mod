@@ -92,7 +92,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
             }
             EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
             if(message.request.equals("newdoor")){ //make new door
-                if(canUse){
+                if(manager != null && manager.hasPerms(serverPlayer)){
                     DoorHandler.Doors.OneDoor door = manager.addNewDoor();
                     UUID newid = UUID.randomUUID();
                     boolean added = manager.validator.addPermissions("door:" + door.doorId.toString(), newid, true);
@@ -105,7 +105,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (invalid session id)"));
             }
             else if(message.request.equals("editdoor")){//edit door with ID.
-                if(canUse) {
+                if(manager != null && manager.hasPerms(serverPlayer)) {
                     DoorHandler.Doors.OneDoor door = manager.getDoorFromID(UUID.fromString(message.requestData));
                     if (door != null) {
                         UUID newid = UUID.randomUUID();

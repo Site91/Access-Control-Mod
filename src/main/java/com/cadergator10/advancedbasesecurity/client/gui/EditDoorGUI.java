@@ -11,6 +11,7 @@ import com.cadergator10.advancedbasesecurity.common.networking.OneDoorDataPacket
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -31,6 +32,8 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
     UUID editValidator;
     UUID managerId;
 
+    boolean clean = false;
+
     //button data
     ButtonImg backButton;
     ButtonImg saveButton;
@@ -45,10 +48,14 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
     ButtonEnum groupSelect;
     ButtonImg clearDevices;
 
+    private static final ResourceLocation background = new ResourceLocation(AdvBaseSecurity.MODID, "textures/gui/basic.png");
+    static final int WIDTH = 175;
+    static final int HEIGHT = 195;
+
     //other data
     boolean letPress;
     public EditDoorGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups) {
-        super();
+        super(WIDTH, HEIGHT);
         this.editValidator = editValidator;
         this.managerId = managerId;
         this.door = door;
@@ -77,19 +84,20 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         super.initGui();
         int id=-1;
         letPress = true;
-        this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 100, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
-        this.buttonList.add(saveButton = new ButtonImg(id++, this.width / 2 + 10, this.height - (this.height / 4) + 10, ButtonTooltip.SaveDoor));
+        int botm = GUITop + HEIGHT - 19;
+        this.buttonList.add(backButton = new ButtonImg(id++, GUILeft + 3, botm, ButtonTooltip.Back));
+        this.buttonList.add(saveButton = new ButtonImg(id++, GUILeft + WIDTH - 19, botm, ButtonTooltip.SaveDoor));
 
-        nameField = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 - 120, 20, 60, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorname"));
+        nameField = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 - ((WIDTH - 40) / 2), GUITop + 3, WIDTH - 40, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorname"));
         nameField.setGuiResponder(this);
         nameField.setText(door.doorName);
-        this.buttonList.add(groupSelect = new ButtonEnum(id++, this.width / 2 + 20, 20, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorgroup"), true, groups, groupIndex));
-        this.buttonList.add(editPasses = new ButtonImg(id++, this.width / 2 - 120, 40, ButtonTooltip.EditPass));
-        this.buttonList.add(clearDevices = new ButtonImg(id++, this.width / 2 + 20, 40, ButtonTooltip.ClearDevices, new String[] {(Integer.toString(door.Readers.size() + door.Doors.size()))}));
-        this.buttonList.add(toggleDoor = new ButtonToggle(id++, this.width / 2 - 120, 60, 80, 16, "Stay Open", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.togglebutton"), door.defaultToggle));
-        this.buttonList.add(doorDelayDown = new ButtonImg(id++, this.width / 2 + 20, 60, ButtonTooltip.DelayDown));
-        this.buttonList.add(doorDelayUp = new ButtonImg(id++, this.width / 2 + 94, 60, ButtonTooltip.DelayUp));
-        doorDelayInput = new GUITextFieldTooltip(id++, fontRenderer, this.width / 2 + 50, 60, 30, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.delayinput"));
+        this.buttonList.add(groupSelect = new ButtonEnum(id++, GUILeft + 3, GUITop + 23, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorgroup"), true, groups, groupIndex));
+        this.buttonList.add(editPasses = new ButtonImg(id++, GUILeft + WIDTH - 43, GUITop + 43, ButtonTooltip.EditPass));
+        this.buttonList.add(clearDevices = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 43, ButtonTooltip.ClearDevices, new String[] {(Integer.toString(door.Readers.size() + door.Doors.size()))}));
+        this.buttonList.add(toggleDoor = new ButtonToggle(id++, GUILeft + WIDTH - 83, GUITop + 23, 80, 16, "Stay Open", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.togglebutton"), door.defaultToggle));
+        this.buttonList.add(doorDelayDown = new ButtonImg(id++, GUILeft + 57, GUITop + 43, ButtonTooltip.DelayDown));
+        this.buttonList.add(doorDelayUp = new ButtonImg(id++, GUILeft + 37, GUITop + 43, ButtonTooltip.DelayUp));
+        doorDelayInput = new GUITextFieldTooltip(id++, fontRenderer, GUILeft + 3, GUITop + 43, 30, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.delayinput"));
         doorDelayInput.setText(Integer.toString(door.defaultTick / 20));
         doorDelayInput.setGuiResponder(this);
         doorDelayInput.setValidator((r) -> {
@@ -113,9 +121,11 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        mc.getTextureManager().bindTexture(background);
+        drawTexturedModalRect(GUILeft, GUITop, 0, 0, WIDTH, HEIGHT);
         nameField.drawTextBox();
         doorDelayInput.drawTextBox();
+        super.drawScreen(mouseX, mouseY, partialTicks);
         processField(nameField, mouseX, mouseY);
         processField(doorDelayInput, mouseX, mouseY);
     }
@@ -158,13 +168,15 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         if(letPress) {
             if(button == backButton){
                 letPress = false;
-                DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId, managerId, "removeperm", null);
+                clean = true;
+                DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId, managerId, "removeperm", "");
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 packet = new DoorServerRequest(managerId, "doorlist", ""); //get the door list again
                 AdvBaseSecurity.instance.network.sendToServer(packet);
             }
             else if(button == saveButton){
                 letPress = false;
+                clean = true;
                 door.defaultTick = !doorDelayInput.getText().equals("") ? Math.max(1, Integer.parseInt(doorDelayInput.getText())) * 20 : 100;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
                 OneDoorDataPacket packet = new OneDoorDataPacket(editValidator, managerId, door, false);
@@ -190,12 +202,22 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 door.defaultToggle = toggleDoor.onClick();
             }
             else if(button == editPasses){
+                clean = true;
                 letPress = false;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
                 Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, managerId, door, groups));
             }
         }
     }
+    @Override
+    public void onGuiClosed() { //done to ensure the perm is removed even if esc pressed
+        super.onGuiClosed();
+        if(clean)
+            return;
+        DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId.toString(), managerId,"removeperm", "");
+        AdvBaseSecurity.instance.network.sendToServer(packet);
+    }
+
 
     @Override
     public void setEntryValue(int id, boolean value) {

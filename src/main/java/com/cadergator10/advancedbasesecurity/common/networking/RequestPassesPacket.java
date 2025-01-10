@@ -197,8 +197,8 @@ public class RequestPassesPacket implements IMessage {
         @Override
         public IMessage onMessage(RequestPassesPacket message, MessageContext ctx) {
             DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
-            if(manager != null && manager.validator.hasPermissions("passes", message.editValidator))
-                return new RequestPassesPacket(null, null, true);
+            if(manager != null/* && !manager.validator.hasPermissions("passes", message.editValidator)*/) //removed portion because there is no validator needed for it
+                return new RequestPassesPacket(null, manager.id, true);
             else
                 return new RequestPassesPacket(null, null, false); //invalid edit validator.
         }

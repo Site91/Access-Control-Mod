@@ -35,6 +35,7 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
     //inventorySlots is container
     boolean letPress = true;
     boolean finished = false;
+    boolean clean = false;
 
     DoorHandler.Doors.Users user;
     //buttons
@@ -128,11 +129,20 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
     @Override
     public void initGui() {
         super.initGui();
+        this.buttonList.add(addUser = new ButtonImg(id++, guiLeft + 86, guiTop + 3, ButtonTooltip.AddUser));
+        this.buttonList.add(saveButton = new ButtonImg(id++, guiLeft - 19, guiTop + 23, ButtonTooltip.SaveUsers));
+        if(!finished){
+            this.buttonList.add(allUsers = new ButtonEnum(id++, guiLeft - 85, guiTop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allusers"), false, new LinkedList<>(), 0));
+            allUsers.enabled = false;
+            addUser.enabled = false;
+            saveButton.enabled = false;
+        }
+        else{
+            this.buttonList.add(allUsers = new ButtonEnum(id++, guiLeft - 85, guiTop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allusers"), false, processUsers(), 0));
+        }
         this.buttonList.add(slider = new Slider(this, id++, this.width / 2 + 3, guiTop + 52, 20, 60, 0, 0.99999f, 0));
         this.buttonList.add(writeCard = new ButtonImg(id++, guiLeft + 116, guiTop + 65, ButtonTooltip.WriteCard));
-        this.buttonList.add(saveButton = new ButtonImg(id++, guiLeft - 19, guiTop + 23, ButtonTooltip.SaveUsers));
         this.buttonList.add(allUsers = new ButtonEnum(id++, guiLeft - 85, guiTop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allusers"), false, new LinkedList<>(), 0));
-        this.buttonList.add(addUser = new ButtonImg(id++, guiLeft + 86, guiTop + 3, ButtonTooltip.AddUser));
         this.buttonList.add(delUser = new ButtonImg(id++, guiLeft + 107, guiTop + 3, ButtonTooltip.DelUser));
         nameField = new GUITextFieldTooltip(id++, fontRenderer, guiLeft + 3, guiTop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.username"));
         nameField.setGuiResponder(this);
@@ -143,13 +153,24 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
         buttonCount = 0;
         //set default while waiting to finish
         updateWithPasses();
-        allUsers.enabled = false;
-        addUser.enabled = false;
         delUser.enabled = false;
-        saveButton.enabled = false;
         //no user data here yet so request with packet
-        UUID ide = ((doorManagerContainer)inventorySlots).getManager();
-        DoorServerRequest packet = new DoorServerRequest(ide, "getuserdata", "");
+        if(!finished) {
+            UUID ide = ((doorManagerContainer) inventorySlots).getManager();
+            DoorServerRequest packet = new DoorServerRequest(ide, "getuserdata", "");
+            AdvBaseSecurity.instance.network.sendToServer(packet);
+        }
+        else{
+            finishButtons();
+        }
+    }
+
+    @Override
+    public void onGuiClosed() { //done to ensure the perm is removed even if esc pressed
+        super.onGuiClosed();
+        if(clean)
+            return;
+        DoorServerRequest packet = new DoorServerRequest(editValidator, "useredit", ((doorManagerContainer) inventorySlots).getManager(),"removeperm", "");
         AdvBaseSecurity.instance.network.sendToServer(packet);
     }
 
@@ -331,10 +352,10 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
         if(users != null && !users.isEmpty())
             drawString("UUID: " + user.id.toString(),guiLeft + 10, guiTop + 24, 0xFFFFFF, 0.5F);
         nameField.drawTextBox();
+        super.drawScreen(mouseX, mouseY, partialTicks);
         if(fields != null) {
             for (GuiTextField field : fields)
                 field.drawTextBox();
@@ -448,6 +469,7 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
     protected void actionPerformed(GuiButton button) throws IOException {
         if(letPress){
             if(button == saveButton){ //TODO: Finish the User gui
+                clean = true;
                 finishLastMinute();
                 UserEditPacket packet = new UserEditPacket(true, editValidator, users, ((doorManagerContainer)inventorySlots).getManager());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
@@ -520,7 +542,7 @@ public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiRe
     public void setEntryValue(int id, float value) {
         if(id == slider.id){
             yPos = value;
-            currOffsetNormalized = (int)Math.floor(value * buttonCount);
+            currOffsetNormalized = (int)Math.floor(value * Math.max(1, buttonCount - shown));
             currOffset = currOffsetNormalized * space;
             if(lastOffsetNormal != currOffsetNormalized){
                 lastOffsetNormal = currOffsetNormalized;

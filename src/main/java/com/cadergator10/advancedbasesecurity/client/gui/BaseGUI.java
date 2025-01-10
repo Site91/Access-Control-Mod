@@ -3,6 +3,7 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ITooltip;
 import com.google.common.collect.Lists;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.text.TextFormatting;
@@ -11,6 +12,30 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BaseGUI extends GuiScreen {
+    private int wdth;
+    private int hght;
+    int GUILeft;
+    int GUITop;
+    public BaseGUI(int WIDTH, int HEIGHT){
+        super();
+        wdth = WIDTH;
+        hght = HEIGHT;
+    }
+
+    @Override
+    public void initGui() {
+        super.initGui();
+        GUILeft = (this.width / 2) - (wdth / 2);
+        GUITop = (this.height / 2) - (hght / 2);
+    }
+
+    @Override
+    public void onResize(Minecraft mcIn, int w, int h) {
+        super.onResize(mcIn, w, h);
+        GUILeft = (this.width / 2) - (wdth / 2);
+        GUITop = (this.height / 2) - (hght / 2);
+    }
+
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         super.drawDefaultBackground();

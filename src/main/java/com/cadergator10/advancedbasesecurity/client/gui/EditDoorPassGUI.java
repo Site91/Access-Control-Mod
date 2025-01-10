@@ -5,10 +5,12 @@ import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonSelect;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.RequestPassesPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -26,6 +28,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	List<DoorHandler.Doors.PassValue> passes;
 	boolean finished = false;
 	boolean letPress = true;
+	boolean clean = false;
 	//buttons
 	int currentIndex;
 	ButtonImg backButton;
@@ -43,12 +46,17 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	DoorHandler.Doors.PassValue passSelected;
 	private DoorHandler.Doors.OneDoor.OnePass doorPass;
 
+	private static final ResourceLocation background = new ResourceLocation(AdvBaseSecurity.MODID, "textures/gui/basic.png");
+	static final int WIDTH = 175;
+	static final int HEIGHT = 195;
+
 	//GuiScrollingList passList;
 //	List<GuiButton> passList;
 //	List<HashMap<String, GuiButton>> allButtons = new LinkedList<>();
 
 
 	public EditDoorPassGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
+		super(WIDTH, HEIGHT);
 		this.editValidator = editValidator;
 		this.managerId = managerId;
 		this.door = door;
@@ -141,34 +149,47 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	@Override
 	public void initGui() {
 		super.initGui();
-		passes = new LinkedList<>();
+		if(!finished)
+			passes = new LinkedList<>();
 		int id = -1;
 		//gen edit buttons first
-		this.buttonList.add(backButton = new ButtonImg(id++, this.width / 2 - 45, this.height - (this.height / 4) + 10, ButtonTooltip.Back));
-		this.buttonList.add(passButton = new ButtonEnum(id++, this.width / 2 - 20, 60, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, new LinkedList<>(),0));
-		this.buttonList.add(typeButton = new ButtonEnum(id++, this.width / 2 + 120, 60, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpasstype"), false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
-		this.buttonList.add(priority = new ButtonEnum(id++, this.width / 2 - 20, 80, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.passpriority"), false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
-		passValueI = new GuiTextField(id++, fontRenderer, this.width / 2 + 120, 80, 80, 16);
+		int botm = GUITop + HEIGHT - 19;
+		this.buttonList.add(backButton = new ButtonImg(id++, GUILeft + 3, botm, ButtonTooltip.Back));
+		this.buttonList.add(typeButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpasstype"), false, Arrays.asList(new ButtonEnum.groupIndex("0", "Supreme"),new ButtonEnum.groupIndex("1", "Base"),new ButtonEnum.groupIndex("2", "Reject"),new ButtonEnum.groupIndex("3", "Add")),0));
+		this.buttonList.add(priority = new ButtonEnum(id++, GUILeft + 3, GUITop + 23, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.passpriority"), false, Arrays.asList(new ButtonEnum.groupIndex("1", "1"),new ButtonEnum.groupIndex("2", "2"),new ButtonEnum.groupIndex("3", "3"),new ButtonEnum.groupIndex("4", "4"), new ButtonEnum.groupIndex("5", "5")),0));
+		passValueI = new GuiTextField(id++, fontRenderer, GUILeft + WIDTH - 83, GUITop + 23, 80, 16);
 		passValueI.setGuiResponder(this);
-		this.buttonList.add(passValueG = new ButtonEnum(id++, this.width / 2 + 120, 80, 80, 16, null, false, new LinkedList<>(),0));
-		this.buttonList.add(addPassList = new ButtonSelect(id++, this.width / 2 - 20, 100, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.addpassselect"), new LinkedList<>(),0));
-		this.buttonList.add(selectAddPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.SelectAddPass));
 		//pass modify buttons
-		this.buttonList.add(passListButton = new ButtonEnum(id++, this.width / 2 - 200, 80, 120, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(),0));
-		this.buttonList.add(addPass = new ButtonImg(id++, this.width / 2 + 80, 100, ButtonTooltip.AddDoorPass));
-		this.buttonList.add(delPass = new ButtonImg(id++, this.width / 2 + 120, 100, ButtonTooltip.DelDoorPass));
+		this.buttonList.add(addPass = new ButtonImg(id++, GUILeft + WIDTH - 39, botm, ButtonTooltip.AddDoorPass));
+		this.buttonList.add(delPass = new ButtonImg(id++, GUILeft + WIDTH - 19, botm, ButtonTooltip.DelDoorPass));
+
+		if(!finished) {
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, botm, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(), 0));
+			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, new LinkedList<>(),0));
+			passListButton.enabled = false;
+			addPass.enabled = false;
+		}
+		else{
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, botm, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, processDoorPasses(door.passes), 0));
+			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, processPass(passes),0));
+		}
+
+		this.buttonList.add(passValueG = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 23, 80, 16, null, false, new LinkedList<>(),0));
+		this.buttonList.add(addPassList = new ButtonSelect(id++, GUILeft + 3, GUITop + 53, WIDTH - 26, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.addpassselect"), new LinkedList<>(),0));
+		this.buttonList.add(selectAddPass = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 53, ButtonTooltip.SelectAddPass));
 		//set default while waiting for finish
 		updateWithPasses();
-		passListButton.enabled = false;
-		addPass.enabled = false;
 		//send the packet to request PassValue
-		RequestPassesPacket packet = new RequestPassesPacket(editValidator, managerId, false);
-		AdvBaseSecurity.instance.network.sendToServer(packet);
+		if(!finished) {
+			RequestPassesPacket packet = new RequestPassesPacket(editValidator, managerId, false);
+			AdvBaseSecurity.instance.network.sendToServer(packet);
+		}
 	}
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-		super.drawScreen(mouseX, mouseY, partialTicks);
+		mc.getTextureManager().bindTexture(background);
+		drawTexturedModalRect(GUILeft, GUITop, 0, 0, WIDTH, HEIGHT);
 		if(finished){
 			drawCenteredString("Waiting for pass list from Server", 40, 0xFFFFFF);
 		}
@@ -179,6 +200,17 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 			drawCenteredString(passSelected.passName, 40, 0xFFFFFF);
 		}
 		passValueI.drawTextBox();
+		drawHorizontalLine(GUILeft + 2, GUILeft + WIDTH - 2, GUITop + HEIGHT - 22, 6052956); //5c5c5c
+		super.drawScreen(mouseX, mouseY, partialTicks);
+	}
+
+	@Override
+	public void onGuiClosed() { //done to ensure the perm is removed even if esc pressed
+		super.onGuiClosed();
+		if(clean)
+			return;
+		DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId.toString(), managerId,"removeperm", "");
+		AdvBaseSecurity.instance.network.sendToServer(packet);
 	}
 
 	@Override
@@ -328,6 +360,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		if(letPress){
 			if(button == backButton){
 				letPress = false;
+				clean = true;
 				lastMinuteUpdate();
 				Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, managerId, door, groups));
 			}
@@ -338,6 +371,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 				 updateWithPasses();
 			}
 			else if(button == passButton){
+				clean = true;
 				passButton.onClick();
 				doorPass.passID = passButton.getUUID();
 				//get pass
