@@ -1,33 +1,12 @@
 package com.cadergator10.advancedbasesecurity.common.blocks;
 
-import baubles.api.BaublesApi;
-import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
-import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
-import com.cadergator10.advancedbasesecurity.common.items.ItemLinkingCard;
-import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReaderSmall;
-import com.cadergator10.advancedbasesecurity.util.ReaderText;
-import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 

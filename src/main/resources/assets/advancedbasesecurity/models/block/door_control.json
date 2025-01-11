@@ -1,11 +1,11 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "north": "advancedbasesecurity:block/machine_side",
-    "east": "advancedbasesecurity:block/machine_side",
-    "south": "advancedbasesecurity:block/machine_side",
-    "west": "advancedbasesecurity:block/machine_side",
-    "up": "advancedbasesecurity:block/machine_side",
-    "down": "advancedbasesecurity:block/machine_side"
+    "north": "advancedbasesecurity:block/door_controller",
+    "east": "advancedbasesecurity:block/door_controller",
+    "south": "advancedbasesecurity:block/door_controller",
+    "west": "advancedbasesecurity:block/door_controller",
+    "up": "advancedbasesecurity:block/door_controller",
+    "down": "advancedbasesecurity:block/door_controller"
   }
 }

@@ -119,7 +119,7 @@ public class PassEditPacket implements IMessage {
                 manager.validator.removePerm("passes");
                 manager.passes = message.passes;
                 manager.verifyUserPasses();
-                DoorNamePacket packet = new DoorNamePacket(manager);
+                DoorNamePacket packet = new DoorNamePacket(manager, true);
                 AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
             }
             return null;

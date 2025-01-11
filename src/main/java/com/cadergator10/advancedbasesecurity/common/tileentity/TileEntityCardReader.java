@@ -1,9 +1,8 @@
 package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.SwipeCard;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -23,15 +22,18 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	public ReaderText currText = new ReaderText("ERROR", (byte)4);
 	public int tempLightFlag;
 
-	DoorHandler.Doors door = null;
-
 	public TileEntityCardReader(){
 		super();
 	}
 
 	public String readCard(@Nonnull ItemStack itemStack, EntityPlayer em, EnumFacing side) {
 		if (door != null){
-			IDCard.CardTag cardTag = new IDCard.CardTag(itemStack);
+			SwipeCard.CardTag cardTag = new SwipeCard.CardTag(itemStack);
+			if(cardTag.cardId == null)
+			{
+				setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.nouser").getUnformattedText(), (byte) 4), 20 * 3, 3);
+				return "access";
+			}
 			//perform request to the global system
 			int value = door.checkSwipe(cardTag.cardId.DoorID, deviceId, true);
 			AdvBaseSecurity.instance.logger.debug("Received value of " + value);

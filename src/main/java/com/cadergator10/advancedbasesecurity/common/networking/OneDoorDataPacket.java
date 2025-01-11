@@ -212,7 +212,7 @@ public class OneDoorDataPacket implements IMessage {
             ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
                 DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerID);
                 manager.recievedUpdate(message.editValidator, message.door);
-                DoorNamePacket packet = new DoorNamePacket(manager);
+                DoorNamePacket packet = new DoorNamePacket(manager, true);
                 AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
             });
             return null;

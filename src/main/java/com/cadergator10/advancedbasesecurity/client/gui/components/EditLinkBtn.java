@@ -7,8 +7,8 @@ import java.util.List;
 
 public class EditLinkBtn extends ButtonImg{
 
-	public EditLinkBtn(int buttonId, int x, int y) {
-		super(buttonId, x, y, ButtonTooltip.EditDoor);
+	public EditLinkBtn(int buttonId, int x, int y, boolean isEdit) {
+		super(buttonId, x, y, isEdit ? ButtonTooltip.EditDoor : ButtonTooltip.LinkDoor);
 	}
 
 	public void onClick(){

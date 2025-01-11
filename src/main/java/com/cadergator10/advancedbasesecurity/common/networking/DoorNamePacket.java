@@ -15,6 +15,7 @@ public class DoorNamePacket implements IMessage {
     public List<packetDoor> doors;
     public HashMap<UUID, String> groupNames;
     public HashMap<UUID, DoorHandler.Doors.Groups> groups;
+    public boolean isEdit;
 
     public static class packetDoor{
         public UUID id;
@@ -39,8 +40,9 @@ public class DoorNamePacket implements IMessage {
     public DoorNamePacket(){
 
     }
-    public DoorNamePacket(DoorHandler.Doors door){
+    public DoorNamePacket(DoorHandler.Doors door, boolean isEdit){
         this.managerId = door.id;
+        this.isEdit = isEdit;
         doors = new LinkedList<>();
         for(DoorHandler.Doors.OneDoor doore : door.doors){
             doors.add(new packetDoor(doore.doorId, doore.doorName, doore.doorStatus.getInt(), doore.Readers.size(), doore.Doors.size(), doore.groupID));
@@ -53,6 +55,7 @@ public class DoorNamePacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
         ByteBufUtils.writeUTF8String(buf, managerId.toString());
+        buf.writeBoolean(isEdit);
         buf.writeInt(doors.size());
         List<UUID> tempList = new LinkedList<>();
         for(packetDoor door : doors){
@@ -80,6 +83,7 @@ public class DoorNamePacket implements IMessage {
 //        Gson gson = new GsonBuilder().create();
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
+        isEdit = buf.readBoolean();
         int size = buf.readInt();
         doors = new LinkedList<>();
         for(int i=0; i<size; i++){

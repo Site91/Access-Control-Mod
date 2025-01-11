@@ -174,7 +174,7 @@ public class UserEditPacket implements IMessage {
                     manager.verifyUserPasses();
                     manager.validator.removePerm("useredit");
                     //redirect back to door name gui
-                    DoorNamePacket packet = new DoorNamePacket(manager);
+                    DoorNamePacket packet = new DoorNamePacket(manager, true);
                     AdvBaseSecurity.instance.network.sendTo(packet, ctx.getServerHandler().player);
                 }
             }

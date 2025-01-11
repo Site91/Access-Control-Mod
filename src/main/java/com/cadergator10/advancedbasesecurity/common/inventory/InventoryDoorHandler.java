@@ -1,7 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.inventory;
 
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.SwipeCard;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ItemStackHelper;
@@ -180,7 +180,7 @@ public class InventoryDoorHandler implements IInventory {
         if(!item.isEmpty()) //just increase stack size
             item.grow(1);
         else { //add card with data to output
-            IDCard.CardTag tag = new IDCard.CardTag(newCard);
+            SwipeCard.CardTag tag = new SwipeCard.CardTag(newCard);
             tag.cardId = id;
             newCard.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
             newCard.setStackDisplayName(displayName);

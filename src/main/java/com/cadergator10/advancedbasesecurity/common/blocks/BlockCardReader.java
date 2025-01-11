@@ -5,7 +5,7 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
+import com.cadergator10.advancedbasesecurity.common.items.SwipeCard;
 import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
@@ -129,10 +129,10 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ) {
 		if(hand == EnumHand.MAIN_HAND) {
 			ItemStack heldItem;
-			int baubleID = BaublesApi.isBaubleEquipped(player, IDCard.DEFAULTSTACK.getItem());
-			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
+			int baubleID = BaublesApi.isBaubleEquipped(player, SwipeCard.DEFAULTSTACK.getItem());
+			if (!player.getHeldItemMainhand().isEmpty() && (player.getHeldItemMainhand().getItem() instanceof SwipeCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
 				heldItem = player.getHeldItemMainhand();
-			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof IDCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
+			} else if (!player.getHeldItemOffhand().isEmpty() && (player.getHeldItemOffhand().getItem() instanceof SwipeCard || player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)) {
 				heldItem = player.getHeldItemOffhand();
 			} else if (baubleID != -1) { //equipped in Baubles slot
 				heldItem = BaublesApi.getBaublesHandler(player).getStackInSlot(baubleID);
@@ -146,7 +146,7 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 				TileEntityCardReader tile = (TileEntityCardReader) world.getTileEntity(pos);
 
 				if (!world.isRemote) {
-					if (equipped instanceof IDCard) {
+					if (equipped instanceof SwipeCard) {
 						world.playSound(null, pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F, SoundHandler.card_swipe, SoundCategory.BLOCKS, 1F, 1F);
 						tile.readCard(heldItem, player, side);
 					} else if (equipped instanceof ItemDoorManager)

@@ -52,6 +52,10 @@ public class CentralDoorNBT extends WorldSavedData {
                         door.clonedId = tag.getUniqueId("cloned");
                     else
                         door.clonedId = null;
+                    if(tag.hasUniqueId("clonedM"))
+                        door.clonedManager = tag.getUniqueId("clonedM");
+                    else
+                        door.clonedManager = null;
                     doors.add(door);
                 }
             }
@@ -66,10 +70,21 @@ public class CentralDoorNBT extends WorldSavedData {
             tag.setUniqueId("id", door.deviceId);
             if(door.clonedId != null)
                 tag.setUniqueId("cloned", door.clonedId);
+            if(door.clonedManager != null)
+                tag.setUniqueId("clonedM", door.clonedManager);
             list.appendTag(tag);
         }
         nbt.setTag("doors", list);
         return nbt;
+    }
+
+    public UUID getIndDoorManager(UUID deviceID){
+        for(doorHoldr door : doors){
+            if(door.deviceId.equals(deviceID)){
+                return door.clonedManager;
+            }
+        }
+        return null;
     }
 
     public static class doorHoldr{
@@ -79,12 +94,15 @@ public class CentralDoorNBT extends WorldSavedData {
         public doorHoldr(UUID id){
             deviceId = id;
             clonedId = null;
+            clonedManager = null;
         }
-        public doorHoldr(UUID id, UUID cloned){
+        public doorHoldr(UUID id, UUID cloned, UUID clonedManager){
             this.deviceId = id;
             this.clonedId = cloned;
+            this.clonedManager = clonedManager;
         }
         public UUID deviceId;
         public UUID clonedId;
+        public UUID clonedManager;
     }
 }

@@ -2,9 +2,9 @@
   "forge_marker": 1,
   "defaults": {
     "textures": {
-      "top": "advancedbasesecurity:block/machine_side",
-      "front": "advancedbasesecurity:block/machine_side",
-      "side": "advancedbasesecurity:block/machine_side"
+      "top": "advancedbasesecurity:block/door_controller",
+      "front": "advancedbasesecurity:block/door_controller",
+      "side": "advancedbasesecurity:block/door_controller"
     },
     "model": "minecraft:orientable"
   },

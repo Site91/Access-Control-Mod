@@ -2,21 +2,25 @@ package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
+import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiPageButtonList;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
@@ -24,10 +28,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
-public class ManagerListGUI extends BaseGUI {
+public class ManagerListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
 
     //data passed by packet
     List<ManagerNamePacket.packetDoor> doors;
+    GUITextFieldTooltip doorName;
     //button data
     ButtonImg closeButton;
 //    ButtonImg upButton;
@@ -70,6 +75,9 @@ public class ManagerListGUI extends BaseGUI {
         managerList = new ManagerList(mc, WIDTH, 100, GUITop, GUILeft, width, height, doors);
         this.buttonList.add(closeButton = new ButtonImg(id++, GUILeft + 3, GUITop + HEIGHT - 19, ButtonTooltip.Back));
         this.buttonList.add(newButton = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + HEIGHT - 19, ButtonTooltip.AddManager));
+        doorName = new GUITextFieldTooltip(id++, fontRenderer, GUILeft + WIDTH - 123, GUITop + HEIGHT - 19, 100, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.managername"));
+        doorName.setGuiResponder(this);
+        doorName.setText("new");
 //        this.buttonList.add(upButton = new ButtonImg(id++, this.width - 20, this.height - 40, ButtonTooltip.UpButton));
 //        this.buttonList.add(downButton = new ButtonImg(id++, this.width - 20, this.height - 20, ButtonTooltip.DownButton));
 //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
@@ -116,7 +124,25 @@ public class ManagerListGUI extends BaseGUI {
         else if(managerList != null){
             managerList.drawScreen(mouseX, mouseY, partialTicks);
         }
+        doorName.drawTextBox();
         super.drawScreen(mouseX, mouseY, partialTicks);
+        processField(doorName, mouseX, mouseY);
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode != Keyboard.KEY_ESCAPE) {
+            if(doorName.isFocused()) {
+                doorName.textboxKeyTyped(typedChar, keyCode);
+            }
+        }
+        else
+            super.keyTyped(typedChar, keyCode);
+    }
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        doorName.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -134,9 +160,11 @@ public class ManagerListGUI extends BaseGUI {
 //            changeDoorBtn();
 //        }
         else if(button == newButton){
-            newButton.enabled = false; //make sure it can't be spammed
-            DoorServerRequest packet = new DoorServerRequest("newmanager", "");
-            AdvBaseSecurity.instance.network.sendToServer(packet);
+            if(!doorName.getText().equals("")) {
+                newButton.enabled = false; //make sure it can't be spammed
+                DoorServerRequest packet = new DoorServerRequest("newmanager", doorName.getText());
+                AdvBaseSecurity.instance.network.sendToServer(packet);
+            }
         }
         else{
 //            for (int i = 0; i < doorButtons.size(); i++) {
@@ -148,6 +176,21 @@ public class ManagerListGUI extends BaseGUI {
 //            }
         }
         //TODO: Set this up to do stuff and modify a door table
+    }
+
+    @Override
+    public void setEntryValue(int id, boolean value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, float value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, String value) {
+
     }
 
     class ManagerList extends GuiScrollingList {

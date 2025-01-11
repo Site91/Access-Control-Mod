@@ -58,6 +58,7 @@ public class ContentRegistry { //where all new items will be added
 //
 //        modItems.add(ItemRFIDCard.DEFAULTSTACK = new ItemStack(new ItemRFIDCard()));
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
+        modItems.add(SwipeCard.DEFAULTSTACK = new ItemStack(new SwipeCard()));
         modItems.add(IDCard.DEFAULTSTACK = new ItemStack(new IDCard()));
         modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
         modItems.add(ItemScrewdriver.DEFAULTSTACK = new ItemStack(new ItemScrewdriver()));

@@ -147,7 +147,9 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 					CentralDoorNBT.doorHoldr doore = door.indDoorsContains(te.deviceId);
 					if (doore != null) {
 						doore.clonedId = deviceId;
+						doore.clonedManager = managerId;
 						prevPos.add(doore.deviceId);
+						te.setDoorM(managerId);
 					}
 				}
 			}

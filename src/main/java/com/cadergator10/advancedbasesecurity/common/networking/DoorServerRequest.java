@@ -1,6 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.client.config.DoorConfig;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
 import com.cadergator10.advancedbasesecurity.common.items.ItemDoorManager;
@@ -10,6 +11,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -124,7 +126,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
             }
             else if(message.request.equals("doorlist")){ //send them the door list (same as command)
                 if(manager != null) {
-                    DoorNamePacket packet = new DoorNamePacket(manager);
+                    DoorNamePacket packet = new DoorNamePacket(manager, true);
                     AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                 }
             }
@@ -137,8 +139,8 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                             ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
                             tag.managerID = door.id;
                             item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
-                            item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
-                            DoorNamePacket packet = new DoorNamePacket(door);
+                            item.setStackDisplayName(new TextComponentTranslation(ItemDoorManager.getItemName() + ".name").getUnformattedText() + " (" + door.name + ")");
+                            DoorNamePacket packet = new DoorNamePacket(door, true);
                             AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                         }
                     }
@@ -150,8 +152,8 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
                     if(item.getItem() instanceof ItemDoorManager){
                         //check max door managers
-                        if(AdvBaseSecurity.instance.doorHandler.getManagerCount(serverPlayer) >= 1){
-                            serverPlayer.sendMessage(new TextComponentString("Too many managers under name! Max of 1"));
+                        if(AdvBaseSecurity.instance.doorHandler.getManagerCount(serverPlayer) >= DoorConfig.managerLimit){
+                            serverPlayer.sendMessage(new TextComponentString("Too many managers under name! Max of " + DoorConfig.managerLimit));
                             return;
                         }
                         UUID newid = UUID.randomUUID();
@@ -160,8 +162,8 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                         ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
                         tag.managerID = door.id;
                         item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
-                        item.setStackDisplayName(ItemDoorManager.getItemName() + " (" + door.name + ")");
-                        DoorNamePacket packet = new DoorNamePacket(door);
+                        item.setStackDisplayName(new TextComponentTranslation(ItemDoorManager.getItemName() + ".name").getUnformattedText() + " (" + door.name + ")");
+                        DoorNamePacket packet = new DoorNamePacket(door, true);
                         AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                     }
                 });
@@ -192,7 +194,11 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 }
             }
             else if(message.request.equals("managerdoorlink")){ //set tag of doormanager so that doors scanned with it will update their doors.
-                if(manager != null && manager.hasPerms(serverPlayer) && message.requestData != null && manager.getDoorFromID(UUID.fromString(message.requestData)) != null){
+                if(manager != null && manager.hasPerms(serverPlayer) && message.requestData != null){
+                    DoorHandler.Doors.OneDoor door = manager.getDoorFromID(UUID.fromString(message.requestData));
+                    if(door == null)
+                        return null;
+                    String name = manager.name;
                     ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
                         ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
                         if(item.getItem() instanceof ItemDoorManager){
@@ -200,7 +206,8 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                             tag.doorIDScan = UUID.fromString(message.requestData);
                             tag.currentScanMode = 1;
                             item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
-                            serverPlayer.sendMessage(new TextComponentString("Successfully set door manager linking to door with ID of " + message.requestData));
+                            item.setStackDisplayName(new TextComponentTranslation(ItemDoorManager.getItemName() + ".name").getFormattedText() + " (" + name + ") §9LINKING DOOR " + door.doorName);
+                            serverPlayer.sendMessage(new TextComponentString("Successfully set door manager linking to door with ID of " + message.requestData + " and name " + door.doorName));
                         }
                     });
                 }
@@ -226,7 +233,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                                     Container cont = serverPlayer.openContainer;
                                     if(cont instanceof doorManagerContainer) {
                                         boolean work = ((doorManagerContainer)cont).writeCard(serverPlayer, new DoorHandler.DoorIdentifier(message.managerId, user.id), user.name);
-                                        AdvBaseSecurity.instance.logger.info("User " + serverPlayer.getName() + " wrote a card with ID " + user.id + " and name " + user.name);
+                                        AdvBaseSecurity.instance.logger.info("User " + serverPlayer.getName() + " wrote a card with ID " + user.id + " and name " + user.name + ". Success: " + work);
                                     }
                                 }
                             });
@@ -235,6 +242,23 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     catch(Exception ignored){
 
                     }
+                }
+            }
+            else if(message.request.equals("modeButtonHit")){
+                if(manager != null && manager.hasPerms(serverPlayer) && message.requestData != null){ //manager always not null if canUse
+                    String name = manager.name;
+                    ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                        ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
+                        if (item.getItem() instanceof ItemDoorManager) {
+                            ItemDoorManager.ManagerTag tag = new ItemDoorManager.ManagerTag(item);
+                            if(message.requestData.equals("true") && tag.currentScanMode == 1) { //reset linking
+                                tag.currentScanMode = 0;
+                                tag.doorIDScan = null;
+                                item.setTagCompound(tag.writeToNBT(new NBTTagCompound()));
+                                item.setStackDisplayName(new TextComponentTranslation(ItemDoorManager.getItemName() + ".name").getUnformattedText() + " (" + name + ")");
+                            }
+                        }
+                    });
                 }
             }
             return null;

@@ -30,6 +30,7 @@ import java.util.*;
 @SideOnly(Side.CLIENT)
 public class DoorListGUI extends BaseGUI {
     UUID managerId;
+    boolean isEdit = false;
     //data passed by packet
     List<DoorNamePacket.packetDoor> doors;
     HashMap<UUID, String> groupNames;
@@ -53,11 +54,12 @@ public class DoorListGUI extends BaseGUI {
     static final int WIDTH = 175;
     static final int HEIGHT = 195;
 
-    public DoorListGUI(UUID managerId, List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames) {
+    public DoorListGUI(UUID managerId, List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames, boolean isEdit) {
         super(WIDTH, HEIGHT);
         this.managerId = managerId;
         this.doors = doors;
         this.groupNames = groupNames;
+        this.isEdit = isEdit;
     }
 
     void drawString(String string, int x, int y, int color){
@@ -81,9 +83,14 @@ public class DoorListGUI extends BaseGUI {
         this.buttonList.add(newButton = new ButtonImg(id++, GUILeft + WIDTH - 19, botm, ButtonTooltip.AddDoor));
 //        this.buttonList.add(upButton = new ButtonImg(id++, this.width - 20, this.height - 40, ButtonTooltip.UpButton));
 //        this.buttonList.add(downButton = new ButtonImg(id++, this.width - 20, this.height - 20, ButtonTooltip.DownButton));
-        this.buttonList.add(modeButton = new EditLinkBtn(id++, GUILeft + 3, GUITop + 133));
+        this.buttonList.add(modeButton = new EditLinkBtn(id++, GUILeft + 3, GUITop + 133, isEdit));
         this.buttonList.add(userButton = new ButtonImg(id++, this.width / 2 - WIDTH / 6 - 4, botm, ButtonTooltip.EditUser));
         this.buttonList.add(passButton = new ButtonImg(id++, this.width / 2 + WIDTH / 6 - 4, botm, ButtonTooltip.EditPass));
+        if(!isEdit){
+            userButton.enabled = false;
+            passButton.enabled = false;
+            newButton.enabled = false;
+        }
         //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
         //now for the doors
 //        if(!doors.isEmpty()){
@@ -153,6 +160,19 @@ public class DoorListGUI extends BaseGUI {
         }
         else if(button == modeButton){
             modeButton.onClick();
+            isEdit = modeButton.isEdit();
+            DoorServerRequest packet = new DoorServerRequest(managerId, "modeButtonHit", isEdit ? "true" : "false");
+            AdvBaseSecurity.instance.network.sendToServer(packet);
+            if(!isEdit){
+                userButton.enabled = false;
+                passButton.enabled = false;
+                newButton.enabled = false;
+            }
+            else{
+                userButton.enabled = true;
+                passButton.enabled = true;
+                newButton.enabled = true;
+            }
         }
         else if(button == passButton){
             DoorServerRequest packet = new DoorServerRequest(managerId, "openpassmenu", "");
@@ -200,12 +220,12 @@ public class DoorListGUI extends BaseGUI {
         @Override
         protected void elementClicked(int index, boolean doubleClick) {
             if(!modeButton.isEdit()) {
-                DoorServerRequest packet = new DoorServerRequest(managerId, "managerdoorlink", doors.get(i).id.toString());
+                DoorServerRequest packet = new DoorServerRequest(managerId, "managerdoorlink", doors.get(index).id.toString());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 mc.player.closeScreen();
             }
             else{
-                DoorServerRequest packet = new DoorServerRequest(managerId, "editdoor", doors.get(i).id.toString());
+                DoorServerRequest packet = new DoorServerRequest(managerId, "editdoor", doors.get(index).id.toString());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
             }
         }

@@ -16,8 +16,6 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 //	TileEntityDoorController currentDoor;
 	public boolean pushDoor; //if true, door must be right clicked to open/close.
 
-	DoorHandler.Doors door = null;
-
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
@@ -33,6 +31,11 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 					((BlockDoor) world.getBlockState(pos).getBlock()).toggleDoor(world, pos, stated);
 			}
 		}
+		else{
+			managerId = AdvBaseSecurity.instance.doorHandler.IndDoors.getIndDoorManager(deviceId);
+			if(managerId != null)
+				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
+		}
 //		if(currentDoor != null && !world.getBlockState(pos).getValue(BlockDoor.OPEN).equals(currentDoor.currentState)){
 //			((BlockDoor)world.getBlockState(pos).getBlock()).toggleDoor(world, pos, currentDoor.currentState);
 //		}
@@ -42,6 +45,7 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	public void onLoad() {
 		super.onLoad();
 		if(!world.isRemote) {
+			managerId = AdvBaseSecurity.instance.doorHandler.IndDoors.getIndDoorManager(deviceId);
 			if(managerId != null)
 				door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
 			if(door != null) {
@@ -89,6 +93,12 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 		else{
 			((BlockDoor)world.getBlockState(pos).getBlock()).toggleDoor(world, pos, toggle);
 		}
+	}
+
+	public void setDoorM(UUID managerId){
+		this.managerId = managerId;
+		if(managerId != null)
+			door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);
 	}
 
 	@Override

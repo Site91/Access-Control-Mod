@@ -1,6 +1,5 @@
 package com.cadergator10.advancedbasesecurity.common.inventory.slot;
 
-import com.cadergator10.advancedbasesecurity.common.items.IDCard;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
