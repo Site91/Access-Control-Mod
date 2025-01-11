@@ -222,6 +222,16 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 else
                     serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (session in progress)"));
             }
+            else if(message.request.equals("opensectormenu")){
+                UUID id = UUID.randomUUID();
+                boolean worked = manager.validator.addPermissions("sectors", id, false);
+                if(worked) {
+                    SectorEditPacket packet = new SectorEditPacket(id, message.managerId, manager.groups);
+                    AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
+                }
+                else
+                    serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (session in progress)"));
+            }
             else if(message.request.equals("producecard")) { //when the create card button on doormanager is pressed.
                 if(canUse && manager.hasPerms(serverPlayer) && message.requestData != null){ //manager always not null if canUse
                     try {

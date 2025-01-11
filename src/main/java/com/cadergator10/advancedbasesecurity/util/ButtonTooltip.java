@@ -26,8 +26,10 @@ public enum ButtonTooltip{
     WriteCard(icontype.WriteCard, "writecard"),
     ResetUUID(icontype.WhiteReset, "resetuuid"),
     SaveUsers(icontype.BlueDisc, "saveusers"),
+    SaveSectors(icontype.BlueDisc, "savesectors"),
     LinkDoor(icontype.Link, "linkdoor"),
     EditDoor(icontype.Pencil, "editdoor"),
+    SectorMenu(icontype.SectorOrange, "editsector"),
     Add(icontype.WhitePlus, "add"),
     Delete(icontype.WhiteMinus, "delete"),
     Edit(icontype.Pencil, "edit");
@@ -58,7 +60,8 @@ public enum ButtonTooltip{
         WhiteSelect(6,1),
         WriteCard(7,1),
         WhiteReset(8,1),
-        Link(9,1);
+        Link(9,1),
+        SectorOrange(10,1);
 
 
         private int x;

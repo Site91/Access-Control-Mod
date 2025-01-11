@@ -77,3 +77,5 @@ gui.tooltips.advancedbasesecurity.passtype=The type of Pass/nPass: simple true/f
 gui.tooltips.advancedbasesecurity.allpasses=The currently selected pass you are editing/nclick to change the selection
 gui.tooltips.advancedbasesecurity.username=Set the name of this User
 gui.tooltips.advancedbasesecurity.managername=Set the name of the new Manager
+gui.tooltips.advancedbasesecurity.editsector=Edit the Sectors
+gui.tooltips.advancedbasesecurity.savesectors=Save Sectors

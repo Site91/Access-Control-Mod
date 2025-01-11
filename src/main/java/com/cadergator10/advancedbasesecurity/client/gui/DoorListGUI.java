@@ -38,6 +38,7 @@ public class DoorListGUI extends BaseGUI {
     ButtonImg closeButton;
     ButtonImg passButton;
     ButtonImg userButton;
+    ButtonImg sectorButton;
     EditLinkBtn modeButton;
 //    ButtonImg upButton;
 //    ButtonImg downButton;
@@ -86,9 +87,11 @@ public class DoorListGUI extends BaseGUI {
         this.buttonList.add(modeButton = new EditLinkBtn(id++, GUILeft + 3, GUITop + 133, isEdit));
         this.buttonList.add(userButton = new ButtonImg(id++, this.width / 2 - WIDTH / 6 - 4, botm, ButtonTooltip.EditUser));
         this.buttonList.add(passButton = new ButtonImg(id++, this.width / 2 + WIDTH / 6 - 4, botm, ButtonTooltip.EditPass));
+        this.buttonList.add(sectorButton = new ButtonImg(id++, this.width / 2 + 8, botm, ButtonTooltip.SectorMenu));
         if(!isEdit){
             userButton.enabled = false;
             passButton.enabled = false;
+            sectorButton.enabled = false;
             newButton.enabled = false;
         }
         //        this.labelList.add(noneLabel = new GuiLabel(fontRenderer, id++, this.width / 2 - 20, this.height / 2 + 40, 300, 20, 0xFFFFFF));
@@ -167,11 +170,13 @@ public class DoorListGUI extends BaseGUI {
                 userButton.enabled = false;
                 passButton.enabled = false;
                 newButton.enabled = false;
+                sectorButton.enabled = false;
             }
             else{
                 userButton.enabled = true;
                 passButton.enabled = true;
                 newButton.enabled = true;
+                sectorButton.enabled = true;
             }
         }
         else if(button == passButton){
@@ -180,6 +185,10 @@ public class DoorListGUI extends BaseGUI {
         }
         else if(button == userButton){
             DoorServerRequest packet = new DoorServerRequest(managerId, "openusermenu", "");
+            AdvBaseSecurity.instance.network.sendToServer(packet);
+        }
+        else if(button == sectorButton){
+            DoorServerRequest packet = new DoorServerRequest(managerId, "opensectormenu", "");
             AdvBaseSecurity.instance.network.sendToServer(packet);
         }
         else{
