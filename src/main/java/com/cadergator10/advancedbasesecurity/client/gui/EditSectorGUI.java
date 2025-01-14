@@ -6,24 +6,27 @@ import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
-import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.SectorEditPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiPageButtonList;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
     UUID editValidator;
     UUID managerId;
     HashMap<UUID, DoorHandler.Doors.Groups> sectors;
+    List<ButtonEnum.groupIndex> sectorsProcessed;
     DoorHandler.Doors.Groups sector;
     boolean clean = false;
     ButtonImg saveButton;
@@ -54,27 +57,50 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         drawString(string, this.width/2 - mc.fontRenderer.getStringWidth(string)/2, y, color);
     }
 
-    List<ButtonEnum.groupIndex> processGroup(DoorHandler.Doors.PassValue pass){
-        List<ButtonEnum.groupIndex> btn = new LinkedList<>();
-        if(pass.passType == DoorHandler.Doors.PassValue.type.Group && pass.groupNames != null){
-            for(int i=0; i<pass.groupNames.size(); i++){
-                btn.add(new ButtonEnum.groupIndex(Integer.toString(i), pass.groupNames.get(i)));
+    int sectorIndex(UUID id){
+        if(id != null){
+            for(int i=0; i<sectorsProcessed.size(); i++){
+                if(sectorsProcessed.get(i).id.equals(id.toString())){
+                    return i + 1;
+                }
             }
-            return btn;
         }
-        return null;
+        return 0;
     }
-    ButtonEnum.groupIndex processPass(DoorHandler.Doors.PassValue pass){
-        return new ButtonEnum.groupIndex(pass.passId, pass.passName);
+
+    ButtonEnum.groupIndex processSector(DoorHandler.Doors.Groups v){
+        return new ButtonEnum.groupIndex(v.id.toString(), v.name);
     }
-    List<ButtonEnum.groupIndex> processPasses(HashMap<String, DoorHandler.Doors.PassValue> passes){
+
+    void processSectors(HashMap<UUID, DoorHandler.Doors.Groups> sectors){
         List<ButtonEnum.groupIndex> btn = new LinkedList<>();
-        BiConsumer<String, DoorHandler.Doors.PassValue> biConsumer = (k, v) -> {
-            if (!k.equals("staff"))
-                btn.add(processPass(v));
+        BiConsumer<UUID, DoorHandler.Doors.Groups> biConsumer = (k, v) -> {
+            btn.add(processSector(v));
         };
-        passes.forEach(biConsumer);
-        return btn;
+        sectors.forEach(biConsumer);
+        sectorsProcessed = btn;
+    }
+
+    public static boolean infiniteLoopCheck(HashMap<UUID, DoorHandler.Doors.Groups> map, List<UUID> currentList){ //Check if the parents loop at all and return true if alright and false if looping
+        boolean cascade = true;
+        if(currentList == null) {
+            currentList = new LinkedList<>();
+            cascade = false;
+        }
+        for (UUID id : map.keySet()) {
+            DoorHandler.Doors.Groups currentOne = map.get(id);
+            if(!cascade || currentOne.id.equals(currentList.get(currentList.size() - 1))){
+                if(currentList.contains(currentOne.id))
+                    return false;
+                List<UUID> newList = currentList.subList(0, currentList.size());
+                if (currentOne.parentID != null) {
+                    newList.add(currentOne.parentID);
+                    if (!infiniteLoopCheck(map, newList))
+                        return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
@@ -85,59 +111,43 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         this.buttonList.add(saveButton = new ButtonImg(id++, GUILeft + WIDTH - 19, botm, ButtonTooltip.SaveSectors));
         nameInput = new GUITextFieldTooltip(id++, fontRenderer, GUILeft + 3, GUITop + 3, WIDTH - 6, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorname"));
         nameInput.setGuiResponder(this);
-
-        this.buttonList.add(passList = new ButtonEnum(id++, GUILeft + 3, GUITop + 63, WIDTH - 46, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allpasses"), false, processPasses(passes),0));
-        this.buttonList.add(addPass = new ButtonImg(id++, GUILeft + WIDTH - 39, GUITop + 63, ButtonTooltip.AddDoorPass));
-        this.buttonList.add(delPass = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 63, ButtonTooltip.DelDoorPass));
+        this.buttonList.add(addSector = new ButtonImg(id++, GUILeft + WIDTH - 39, GUITop + 63, ButtonTooltip.AddSector));
+        this.buttonList.add(delSector = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 63, ButtonTooltip.DelSector));
+        processSectors(sectors);
+        this.buttonList.add(sectorList = new ButtonEnum(id++, GUILeft + 3, GUITop + 63, WIDTH - 46, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.allsectors"), false, sectorsProcessed, 0));
+        this.buttonList.add(parentInput = new ButtonEnum(id++, GUILeft + 3, GUITop + 23, WIDTH - 46, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.parentsector"), true, sectorsProcessed, 0));
         updateWithPasses(false);
     }
 
     public void updateWithPasses(boolean safe){
         if(sectors.size() <= 0){
             AdvBaseSecurity.instance.logger.info("Disabled all sector editing");
-            pass = null;
-            delPass.enabled = false;
-            passList.enabled = false;
+            sector = null;
+            delSector.enabled = false;
+            sectorList.enabled = false;
             nameInput.setEnabled(false);
-            typeInput.enabled = false;
-            groupInput.setEnabled(false);
-            groupInput.setVisible(false);
+            parentInput.enabled = false;
         }
         else{
             AdvBaseSecurity.instance.logger.info("Enabled all sector editing");
             if(!safe)
-                pass = sectors.get(passList.getUUID());
-            if (pass != null) {
+                sector = sectors.get(sectorList.getUUID() != null ? UUID.fromString(sectorList.getUUID()) : null);
+            if (sector != null) {
                 if(!safe){
-                    delPass.enabled = true;
-                    passList.enabled = true;
+                    delSector.enabled = true;
+                    sectorList.enabled = true;
                     nameInput.setEnabled(true);
-                    nameInput.setText(pass.passName);
-                    typeInput.enabled = true;
-                    typeInput.changeIndex(pass.passType.getInt());
-                }
-                if(pass.passType == DoorHandler.Doors.PassValue.type.Group) {
-                    groupInput.setEnabled(true);
-                    groupInput.setVisible(true);
-                    groupInput.setText(String.join(",", pass.groupNames));
-                }
-                else{
-                    groupInput.setEnabled(false);
-                    groupInput.setVisible(false);
+                    nameInput.setText(sector.name);
+                    parentInput.enabled = true;
+                    parentInput.changeIndex(sectorIndex(sector.parentID));
                 }
             }
         }
     }
 
     public void lastMinuteUpdate(){
-        if(pass != null){
-            pass.passName = !nameInput.getText().isEmpty() ? nameInput.getText() : "new pass";
-            if(pass.passType == DoorHandler.Doors.PassValue.type.Group){
-                pass.groupNames = Arrays.asList(groupInput.getText().split(","));
-            }
-            else{
-                pass.groupNames = null;
-            }
+        if(sector != null){
+            sector.name = !nameInput.getText().isEmpty() ? nameInput.getText() : "new sector";
         }
     }
 
@@ -146,7 +156,6 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         mc.getTextureManager().bindTexture(background);
         drawTexturedModalRect(GUILeft, GUITop, 0, 0, WIDTH, HEIGHT);
         nameInput.drawTextBox();
-        groupInput.drawTextBox();
         drawHorizontalLine(GUILeft + 2, GUILeft + WIDTH - 2, GUITop + 61, 14408667); //5c5c5c
         super.drawScreen(mouseX, mouseY, partialTicks);
         processField(nameInput, mouseX, mouseY);
@@ -157,7 +166,7 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         super.onGuiClosed();
         if(clean)
             return;
-        DoorServerRequest packet = new DoorServerRequest(editValidator, "passes", managerId,"removeperm", "");
+        DoorServerRequest packet = new DoorServerRequest(editValidator, "sectors", managerId,"removeperm", "");
         AdvBaseSecurity.instance.network.sendToServer(packet);
     }
 
@@ -167,9 +176,6 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
             if(nameInput.isFocused()) {
                 nameInput.textboxKeyTyped(typedChar, keyCode);
             }
-            else if(groupInput.isFocused()) {
-                groupInput.textboxKeyTyped(typedChar, keyCode);
-            }
         }
         else
             super.keyTyped(typedChar, keyCode);
@@ -178,47 +184,60 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
         nameInput.mouseClicked(mouseX, mouseY, mouseButton);
-        groupInput.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
         if(button == saveButton){
-            clean = true;
+            clean = infiniteLoopCheck(sectors, null);
+            if(!clean){
+                AdvBaseSecurity.instance.logger.info("There is an infinite loop among the sectors. Ensure no sectors loop on each other through the Parent Sectors!");
+                return;
+            }
             lastMinuteUpdate();
-            PassEditPacket packet = new PassEditPacket(editValidator, managerId, passes);
+            SectorEditPacket packet = new SectorEditPacket(editValidator, managerId, sectors);
             AdvBaseSecurity.instance.network.sendToServer(packet);
             mc.player.closeScreen();
         }
-        else if(button == passList){
+        else if(button == sectorList){
             lastMinuteUpdate();
-            passList.onClick();
+            sectorList.onClick();
             updateWithPasses(false);
         }
-        else if(button == addPass){
+        else if(button == addSector){
             lastMinuteUpdate();
-            DoorHandler.Doors.PassValue passd = new DoorHandler.Doors.PassValue();
-            passd.passId = UUID.randomUUID().toString();
-            passd.passType = DoorHandler.Doors.PassValue.type.Pass;
-            passd.passName = "new pass";
-            passd.groupNames = null;
-            passes.put(passd.passId, passd);
-            passList.insertList(processPass(passd));
-            passList.changeIndex(passes.size() - 1);
+            DoorHandler.Doors.Groups passd = new DoorHandler.Doors.Groups();
+            passd.id = UUID.randomUUID();
+            passd.parentID = null;
+            passd.name = "new sector";
+            passd.override = null;
+            passd.status = DoorHandler.Doors.OneDoor.allDoorStatuses.ACCESS;
+            sectors.put(passd.id, passd);
+            processSectors(sectors);
+            sectorList.changeList(sectorsProcessed);
+            sectorList.changeIndex(sectorIndex(passd.id));
+            parentInput.changeList(sectorsProcessed);
+            parentInput.changeIndex(0);
             updateWithPasses(false);
         }
-        else if(button == delPass){
-            passes.remove(pass.passId);
-            passList.removeList();
+        else if(button == delSector){
+            sectors.remove(sector.id);
+            sectorList.removeList();
+            parentInput.removeList(sectorIndex(sector.id));
+            processSectors(sectors);
             updateWithPasses(false);
         }
-        else if(button == typeInput){
-            typeInput.onClick();
-            pass.passType = DoorHandler.Doors.PassValue.type.fromInt(typeInput.getIndex());
-            lastMinuteUpdate();
+        else if(button == parentInput){
+            parentInput.onClick();
+            UUID id = parentInput.getUUID() != null ? UUID.fromString(parentInput.getUUID()) : null;
+            if(id != null && UUID.fromString(sectorList.getUUID()).equals(id)){
+                parentInput.onClick();
+                id = parentInput.getUUID() != null ? UUID.fromString(parentInput.getUUID()) : null;
+            }
+            sector.parentID = id;
             updateWithPasses(true);
         }
-        AdvBaseSecurity.instance.logger.info(pass.toString());
+        AdvBaseSecurity.instance.logger.info(sector.toString());
     }
 
     @Override
@@ -234,7 +253,7 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
     @Override
     public void setEntryValue(int id, String value) {
         if(id == nameInput.getId()){
-            passList.changeCurrentName(value);
+            sectorList.changeCurrentName(value);
         }
     }
 }

@@ -2,8 +2,6 @@ package com.cadergator10.advancedbasesecurity.util;
 
 import net.minecraft.util.text.translation.I18n;
 
-import java.util.Arrays;
-
 public enum ButtonTooltip{
 
     AddDoor(icontype.GreenPlus,"newdoor"),
@@ -30,6 +28,8 @@ public enum ButtonTooltip{
     LinkDoor(icontype.Link, "linkdoor"),
     EditDoor(icontype.Pencil, "editdoor"),
     SectorMenu(icontype.SectorOrange, "editsector"),
+    AddSector(icontype.WhitePlus, "addsector"),
+    DelSector(icontype.WhiteMinus, "delsector"),
     Add(icontype.WhitePlus, "add"),
     Delete(icontype.WhiteMinus, "delete"),
     Edit(icontype.Pencil, "edit");
