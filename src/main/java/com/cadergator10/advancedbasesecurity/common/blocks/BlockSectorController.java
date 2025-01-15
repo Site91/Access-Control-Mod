@@ -44,4 +44,20 @@ public class BlockSectorController extends Block implements ITileEntityProvider 
 		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
 		//TODO: Add in functionality
 	}
+
+	@Override
+	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
+		if (!world.isRemote) {
+			TileEntity tile = world.getTileEntity(pos);
+
+			if (tile instanceof TileEntitySectorController) {
+				TileEntitySectorController te = (TileEntitySectorController) tile;
+				te.redstoneSignalRecieved(world.isBlockPowered(pos));
+//				if (te.isActivatedByRedstone()) {
+//					te.setActive(world.isBlockPowered(pos));
+//					te.sync();
+//				}
+			}
+		}
+	}
 }
