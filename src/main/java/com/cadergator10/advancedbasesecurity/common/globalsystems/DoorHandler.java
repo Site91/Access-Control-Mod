@@ -1447,6 +1447,43 @@ public class DoorHandler {
                     }
                 }
 
+                public OnePass(NBTTagCompound tag, PassValue.type typed){
+                    if(tag.hasUniqueId("id"))
+                        id = tag.getUniqueId("id");
+                    else
+                        id = UUID.randomUUID();
+                    if(tag.hasKey("passId"))
+                        passID = tag.getString("passId");
+                    else
+                        passID = "NAN";
+                    if(tag.hasKey("type"))
+                        passType = type.fromInt(tag.getShort("type"));
+                    else
+                        passType = type.Supreme;
+                    if(tag.hasKey("priority"))
+                        priority = (short)Math.max(1, Math.min(5, tag.getShort("priority"))); //clamp
+                    else
+                        priority = 1;
+                    //stuff that depends on prev values
+                    if(passType == type.Base){
+                        addPasses = new LinkedList<>();
+                        if(tag.hasKey("addPasses")){
+                            NBTTagList tlist = tag.getTagList("addPasses", Constants.NBT.TAG_STRING);
+                            for(int i=0; i<tlist.tagCount(); i++){
+                                addPasses.add(UUID.fromString(tlist.getStringTagAt(i)));
+                            }
+                        }
+                    }
+                    if(tag.hasKey("value")){
+                        if(typed == PassValue.type.Text || typed == PassValue.type.MultiText){
+                            passValueS = tag.getString("value");
+                        }
+                        else if(typed == PassValue.type.Group || typed == PassValue.type.Level){
+                            passValueI = tag.getInteger("value");
+                        }
+                    }
+                }
+
                 public NBTTagCompound returnNBT(HashMap<String, PassValue> passMap){
                     NBTTagCompound tag = new NBTTagCompound();
                     if(id != null)

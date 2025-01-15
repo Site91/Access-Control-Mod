@@ -48,6 +48,7 @@ public class ContentRegistry { //where all new items will be added
         modBlocks.add(BlockCardReaderSmall.DEFAULTITEM = new BlockCardReaderSmall());
         modBlocks.add(BlockCardReaderDouble.DEFAULTITEM = new BlockCardReaderDouble());
         modBlocks.add(BlockDoorRedstone.DEFAULTITEM = new BlockDoorRedstone());
+        modBlocks.add(BlockSectorController.DEFAULTITEM = new BlockSectorController());
 
         modCamoBlocks.add(BlockDoorController.DEFAULTITEM = new BlockDoorController());
 //
@@ -83,6 +84,7 @@ public class ContentRegistry { //where all new items will be added
         registerTileEntity(TileEntityDoorControlRedstone.class, BlockDoorRedstone.NAME);
         registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
         registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);
+        registerTileEntity(TileEntitySectorController.class, BlockSectorController.NAME);
     }
 
     private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {
