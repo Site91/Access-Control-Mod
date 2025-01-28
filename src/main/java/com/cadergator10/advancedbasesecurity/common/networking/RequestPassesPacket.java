@@ -17,15 +17,13 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class RequestPassesPacket implements IMessage {
-    UUID editValidator; //Used to try and ensure that the recieved door is authorized.
     UUID managerId;
     boolean isServer;
     List<DoorHandler.Doors.PassValue> passes;
     public RequestPassesPacket(){
 
     }
-    public RequestPassesPacket(UUID editValidator, UUID managerId, boolean isServer){
-        this.editValidator = editValidator;
+    public RequestPassesPacket(UUID managerId, boolean isServer){
         this.managerId = managerId;
         this.isServer = isServer;
     }
@@ -131,9 +129,8 @@ public class RequestPassesPacket implements IMessage {
     public void toBytes(ByteBuf buf) {
 //        Gson gson = new GsonBuilder().create();
 //        ByteBufUtils.writeUTF8String(buf, gson.toJson(door));
-        buf.writeBoolean(editValidator != null);
-        if(editValidator != null) {
-            ByteBufUtils.writeUTF8String(buf, editValidator.toString());
+        buf.writeBoolean(managerId != null);
+        if(managerId != null) {
             ByteBufUtils.writeUTF8String(buf, managerId.toString());
         }
         buf.writeBoolean(isServer);
@@ -158,7 +155,6 @@ public class RequestPassesPacket implements IMessage {
 //        door = gson.fromJson(ByteBufUtils.readUTF8String(buf), DoorHandler.Doors.OneDoor.class);
         boolean check = buf.readBoolean();
         if(check) {
-            editValidator = UUID.fromString(ByteBufUtils.readUTF8String(buf));
             managerId = UUID.fromString(ByteBufUtils.readUTF8String(buf));
         }
         isServer = buf.readBoolean();
@@ -178,7 +174,7 @@ public class RequestPassesPacket implements IMessage {
                         //open up the GUI
                         GuiScreen screen = Minecraft.getMinecraft().currentScreen;
                         if(screen instanceof EditDoorPassGUI){
-                            ((EditDoorPassGUI) screen).finishInit(message.isServer, message.editValidator, message.passes);
+                            ((EditDoorPassGUI) screen).finishInit(message.isServer, message.passes);
                         }
                         //Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.groups));
                     }
@@ -198,9 +194,9 @@ public class RequestPassesPacket implements IMessage {
         public IMessage onMessage(RequestPassesPacket message, MessageContext ctx) {
             DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
             if(manager != null/* && !manager.validator.hasPermissions("passes", message.editValidator)*/) //removed portion because there is no validator needed for it
-                return new RequestPassesPacket(null, manager.id, true);
+                return new RequestPassesPacket(manager.id, true);
             else
-                return new RequestPassesPacket(null, null, false); //invalid edit validator.
+                return new RequestPassesPacket(null, false); //invalid edit validator.
         }
     }
 }

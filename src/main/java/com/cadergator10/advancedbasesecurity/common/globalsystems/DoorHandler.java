@@ -522,6 +522,8 @@ public class DoorHandler {
         }
         //Check permissions list of a door
         private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
+            if(door == null)
+                return false; //in case overrides is null
             for(int i=1; i<=5; i++){ //priorities
                 int isThrough = 0; //-1 = reject pass. 0 = nope. 1 = allowed base.
                 for(Doors.OneDoor.OnePass pass : door){
@@ -1477,10 +1479,13 @@ public class DoorHandler {
                     if(tag.hasKey("value")){
                         if(typed == PassValue.type.Text || typed == PassValue.type.MultiText){
                             passValueS = tag.getString("value");
+                            passValueI = -1;
                         }
                         else if(typed == PassValue.type.Group || typed == PassValue.type.Level){
                             passValueI = tag.getInteger("value");
                         }
+                        else
+                            passValueI = -1;
                     }
                 }
 

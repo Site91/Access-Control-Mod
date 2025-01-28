@@ -2,6 +2,7 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
+import com.cadergator10.advancedbasesecurity.common.networking.SectControllerPacket;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -18,9 +19,9 @@ import java.util.List;
 public class TileEntitySectorController extends TileEntity { //basic tile entity, so none of the device base stuff needed.
 	DoorHandler.DoorIdentifier ids = null;
 	List<DoorHandler.Doors.OneDoor.OnePass> overrides = null;
-	DoorHandler.Doors.OneDoor.allDoorStatuses thisStatus;
-	boolean pushToChildren;
-	boolean toggle;
+	public DoorHandler.Doors.OneDoor.allDoorStatuses thisStatus;
+	public boolean pushToChildren;
+	public boolean toggle;
 	boolean currentPower;
 
 	@Override
@@ -96,6 +97,15 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return nbt;
 	}
 
+	public void newUpdate(SectControllerPacket packet){
+		ids = packet.ids;
+		pushToChildren = packet.pushToChildren;
+		toggle = packet.toggle;
+		overrides = packet.overrides;
+		thisStatus = packet.thisStatus;
+		redstoneSignalRecieved(currentPower, true); //marks dirty in function
+	}
+
 	public NBTTagCompound pushMoreToUpdate(NBTTagCompound nbt){
 		nbt.setBoolean("toclient", true);
 		if(nbt.hasKey("overrides")){
@@ -109,6 +119,13 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 			nbt.setTag("overrides", list);
 		}
 		return nbt;
+	}
+
+	public DoorHandler.DoorIdentifier getIds(){
+		return ids;
+	}
+	public List<DoorHandler.Doors.OneDoor.OnePass> getOverrides(){
+		return overrides;
 	}
 
 	@Override
@@ -133,9 +150,13 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 	}
 
 	public void redstoneSignalRecieved(boolean signal){
+		redstoneSignalRecieved(signal, false);
+	}
+
+	public void redstoneSignalRecieved(boolean signal, boolean override){
 		//TODO: actually recieve the signal. yes.
 		if(!world.isRemote) {
-			if(currentPower != signal) {
+			if(currentPower != signal || override) {
 				DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(ids);
 				if (manager != null) {
 					DoorHandler.Doors.Groups group = manager.groups.get(ids.DoorID);
