@@ -205,7 +205,7 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 clean = true;
                 letPress = false;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
-                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, managerId, door, groups));
+                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassAndSectorGUI(editValidator, managerId, door, groups));
             }
         }
     }

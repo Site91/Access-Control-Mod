@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
+/*
+Edits both door passes (edit a door then its classes), and can also edit sector controller settings.
+ */
 @SideOnly(Side.CLIENT)
-public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
 	UUID editValidator;
 	DoorHandler.DoorIdentifier managerId;
 	//if door
@@ -87,7 +90,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		sect.forEach(grouper);
 	}
 
-	public EditDoorPassGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
+	public EditDoorPassAndSectorGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
 		super(WIDTH, HEIGHT);
 		this.isDoor = true;
 		this.editValidator = editValidator;
@@ -100,7 +103,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		this.pos = null;
 		this.thisStatus = null;
 	}
-	public EditDoorPassGUI(SectControllerPacket packet, BlockPos pos, HashMap<UUID, DoorHandler.Doors.Groups> sectors){
+	public EditDoorPassAndSectorGUI(SectControllerPacket packet, BlockPos pos, HashMap<UUID, DoorHandler.Doors.Groups> sectors){
 		super(WIDTH, HEIGHT);
 		this.isDoor = false;
 		this.editValidator = null;

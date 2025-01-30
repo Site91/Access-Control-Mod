@@ -1,7 +1,9 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
+import com.cadergator10.advancedbasesecurity.client.gui.DoorListGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
@@ -13,6 +15,7 @@ import java.util.UUID;
 public class DoorNamePacket implements IMessage {
     public UUID managerId;
     public List<packetDoor> doors;
+    public List<DoorListGUI.nameHeld> users;
     public HashMap<UUID, String> groupNames;
     public HashMap<UUID, DoorHandler.Doors.Groups> groups;
     public boolean isEdit;
@@ -48,6 +51,13 @@ public class DoorNamePacket implements IMessage {
             doors.add(new packetDoor(doore.doorId, doore.doorName, doore.doorStatus.getInt(), doore.Readers.size(), doore.Doors.size(), doore.groupID));
         }
         groups = door.groups;
+        users = new LinkedList<>();
+    }
+    public DoorNamePacket(DoorHandler.Doors door, boolean isEdit, List<UUID> users){
+        this(door, isEdit);
+        for(UUID id : users){
+            this.users.add(new DoorListGUI.nameHeld(id, FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(id).getName()));
+        }
     }
 
     @Override
@@ -76,6 +86,11 @@ public class DoorNamePacket implements IMessage {
             ByteBufUtils.writeUTF8String(buf, groups.get(id).id.toString());
             ByteBufUtils.writeUTF8String(buf, groups.get(id).name);
         }
+        buf.writeInt(users.size());
+        for(DoorListGUI.nameHeld nme : users){
+            ByteBufUtils.writeUTF8String(buf, nme.id.toString());
+            ByteBufUtils.writeUTF8String(buf, nme.name);
+        }
     }
 
     @Override
@@ -93,6 +108,11 @@ public class DoorNamePacket implements IMessage {
         groupNames = new HashMap<>();
         for(int i=0; i<size; i++){
             groupNames.put(UUID.fromString(ByteBufUtils.readUTF8String(buf)), ByteBufUtils.readUTF8String(buf));
+        }
+        size = buf.readInt();
+        users = new LinkedList<>();
+        for(int i=0; i<size; i++){
+            users.add(new DoorListGUI.nameHeld(UUID.fromString(ByteBufUtils.readUTF8String(buf)), ByteBufUtils.readUTF8String(buf)));
         }
     }
 }

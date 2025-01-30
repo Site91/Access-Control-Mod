@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -269,6 +270,33 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                             }
                         }
                     });
+                }
+            }
+            else if(message.request.equals("removemanagerplayer") && message.requestData != null){
+                if(manager != null && manager.creator.equals(serverPlayer.getUniqueID())){
+                    UUID id = UUID.fromString(message.requestData);
+                    for(int i=0; i<manager.allowedPlayers.size(); i++){
+                        if(manager.allowedPlayers.get(i).equals(id)){
+                            manager.allowedPlayers.remove(i);
+                            manager.markDirty();
+                            return null;
+                        }
+                    }
+                }
+            }
+            else if(message.request.equals("addmanagerplayer") && message.requestData != null){
+                if(manager != null && manager.creator.equals(serverPlayer.getUniqueID())){
+                    EntityPlayerMP play = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUsername(message.requestData);
+                    if(play == null)
+                        return null;
+                    UUID id = play.getUniqueID();
+                    for(int i=0; i<manager.allowedPlayers.size(); i++){
+                        if(manager.allowedPlayers.get(i).equals(id)){
+                            return null;
+                        }
+                    }
+                    manager.allowedPlayers.add(id);
+                    manager.markDirty();
                 }
             }
             return null;

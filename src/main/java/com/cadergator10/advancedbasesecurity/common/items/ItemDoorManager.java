@@ -1,11 +1,11 @@
 package com.cadergator10.advancedbasesecurity.common.items;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockSectorController;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.InventoryDoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -19,8 +19,6 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.util.List;
 import java.util.UUID;
 
 public class ItemDoorManager extends ItemBase {
@@ -66,7 +64,7 @@ public class ItemDoorManager extends ItemBase {
 			ItemStack heldItem = player.getHeldItemMainhand();
 			if (!(heldItem.getItem() instanceof ItemDoorManager))
 				return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
-			if (player.isSneaking()) { //perform actions on other stuff
+			if (player.isSneaking() || worldIn.getBlockState(pos).getBlock() instanceof BlockSectorController) { //perform actions on other stuff
 				return EnumActionResult.PASS;
 			} else {
 				return openMenu(heldItem, (EntityPlayerMP) player);

@@ -15,6 +15,7 @@ import net.minecraftforge.common.util.Constants;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 public class TileEntitySectorController extends TileEntity { //basic tile entity, so none of the device base stuff needed.
 	DoorHandler.DoorIdentifier ids = null;
@@ -104,6 +105,19 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		overrides = packet.overrides;
 		thisStatus = packet.thisStatus;
 		redstoneSignalRecieved(currentPower, true); //marks dirty in function
+	}
+
+	public boolean setFirstTime(UUID id){
+		if(this.ids != null || this.ids.ManagerID != null){
+			if(this.ids.ManagerID.equals(id))
+				return true;
+			else
+				return false;
+		}
+		this.ids = new DoorHandler.DoorIdentifier();
+		this.ids.ManagerID = id;
+		markDirty();
+		return true;
 	}
 
 	public NBTTagCompound pushMoreToUpdate(NBTTagCompound nbt){

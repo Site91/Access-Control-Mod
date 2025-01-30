@@ -1,38 +1,40 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.EditLinkBtn;
-import com.cadergator10.advancedbasesecurity.client.gui.components.ITooltip;
+import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
-import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiButtonImage;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiPageButtonList;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class DoorListGUI extends BaseGUI {
+public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
     UUID managerId;
     boolean isEdit = false;
     //data passed by packet
     List<DoorNamePacket.packetDoor> doors;
+    List<nameHeld> users;
     HashMap<UUID, String> groupNames;
     //button data
     ButtonImg closeButton;
@@ -40,6 +42,9 @@ public class DoorListGUI extends BaseGUI {
     ButtonImg userButton;
     ButtonImg sectorButton;
     EditLinkBtn modeButton;
+
+    GUITextFieldTooltip userName;
+    ButtonImg addUserName;
 //    ButtonImg upButton;
 //    ButtonImg downButton;
     ButtonImg newButton;
@@ -47,6 +52,7 @@ public class DoorListGUI extends BaseGUI {
 //    List<GuiButton> doorButtons;
 //    List<Integer> buttonLevel;
     DoorLister doorLists;
+    DoorLister userList;
     //other data
     int currPage = 1;
     int maxPageLength = 5;
@@ -55,10 +61,11 @@ public class DoorListGUI extends BaseGUI {
     static final int WIDTH = 175;
     static final int HEIGHT = 195;
 
-    public DoorListGUI(UUID managerId, List<DoorNamePacket.packetDoor> doors, HashMap<UUID, String> groupNames, boolean isEdit) {
+    public DoorListGUI(UUID managerId, List<DoorNamePacket.packetDoor> doors, List<nameHeld> users, HashMap<UUID, String> groupNames, boolean isEdit) {
         super(WIDTH, HEIGHT);
         this.managerId = managerId;
         this.doors = doors;
+        this.users = users;
         this.groupNames = groupNames;
         this.isEdit = isEdit;
     }
@@ -88,6 +95,9 @@ public class DoorListGUI extends BaseGUI {
         this.buttonList.add(userButton = new ButtonImg(id++, this.width / 2 - WIDTH / 6 - 4, botm, ButtonTooltip.EditUser));
         this.buttonList.add(passButton = new ButtonImg(id++, this.width / 2 + WIDTH / 6 - 4, botm, ButtonTooltip.EditPass));
         this.buttonList.add(sectorButton = new ButtonImg(id++, this.width / 2 + 8, botm, ButtonTooltip.SectorMenu));
+        this.buttonList.add(addUserName = new ButtonImg(id++, GUILeft + WIDTH - 20, GUITop + 114, ButtonTooltip.AddUser));
+        userName = new GUITextFieldTooltip(id++, mc.fontRenderer, this.width / 2 + 4, GUITop + 114, WIDTH / 2 - 8 - 20, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.usernamemanager"));
+        userName.setGuiResponder(this);
         if(!isEdit){
             userButton.enabled = false;
             passButton.enabled = false;
@@ -111,7 +121,8 @@ public class DoorListGUI extends BaseGUI {
 //                }
 //            }
 //        }
-        doorLists = new DoorLister(mc, WIDTH, 130, GUITop, GUILeft, width, height, doors);
+        doorLists = new DoorLister(mc, (WIDTH / 2) - 4, 130, GUITop, GUILeft + 2, width, height, doors);
+        userList = new DoorLister(mc, (WIDTH / 2) - 4, 110, GUITop, GUILeft + (WIDTH / 2) + 2, width, height, users, true);
         AdvBaseSecurity.instance.logger.info("Page size: " + ((doors.size() - 1) / maxPageLength));
     }
 
@@ -139,7 +150,31 @@ public class DoorListGUI extends BaseGUI {
         else if(doorLists != null){
             doorLists.drawScreen(mouseX, mouseY, partialTicks);
         }
+        if(users.isEmpty())
+            drawCenteredString("No users added yet", this.height / 2 + 40, 0xFFFFFF);
+        else if(userList != null){
+            userList.drawScreen(mouseX, mouseY, partialTicks);
+        }
+        userName.drawTextBox();
         super.drawScreen(mouseX, mouseY, partialTicks);
+        processField(userName, mouseX, mouseY);
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (keyCode != Keyboard.KEY_ESCAPE) {
+            if(userName.isFocused()) {
+                userName.textboxKeyTyped(typedChar, keyCode);
+            }
+        }
+        else
+            super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override
+    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
+        userName.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
@@ -179,6 +214,14 @@ public class DoorListGUI extends BaseGUI {
                 sectorButton.enabled = true;
             }
         }
+        else if(button == addUserName){
+            String input = userName.getText();
+            if(!input.isEmpty()){
+                DoorServerRequest packet = new DoorServerRequest(managerId, "addmanagermlayer", input);
+                AdvBaseSecurity.instance.network.sendToServer(packet);
+                userList.pck2.add(new nameHeld(UUID.randomUUID(), input + " (will be refreshed after gui reopened)"));
+            }
+        }
         else if(button == passButton){
             DoorServerRequest packet = new DoorServerRequest(managerId, "openpassmenu", "");
             AdvBaseSecurity.instance.network.sendToServer(packet);
@@ -209,33 +252,70 @@ public class DoorListGUI extends BaseGUI {
         }
         //TODO: Set this up to do stuff and modify a door table
     }
-    class DoorLister extends GuiScrollingList {
+
+    @Override
+    public void setEntryValue(int id, boolean value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, float value) {
+
+    }
+
+    @Override
+    public void setEntryValue(int id, String value) {
+
+    }
+
+    public class DoorLister extends GuiScrollingList {
+
         List<DoorNamePacket.packetDoor> pck;
+        List<nameHeld> pck2;
 
         private int hoveredSlot = -1;
         private int i = 0;
         private boolean isHovering = false;
+        private boolean isDoor = false;
 
         public DoorLister(Minecraft client, int width, int height, int top, int left, int screenWidth, int screenHeight, List<DoorNamePacket.packetDoor> pck) {
             super(client, width, height, top, top + height, left, 12, screenWidth, screenHeight);
             this.pck = pck;
+            this.pck2 = null;
+            isDoor = true;
+        }
+
+        public DoorLister(Minecraft client, int width, int height, int top, int left, int screenWidth, int screenHeight, List<nameHeld> pck2, boolean isDoor) {
+            super(client, width, height, top, top + height, left, 12, screenWidth, screenHeight);
+            this.pck = null;
+            this.pck2 = pck2;
+            this.isDoor = false;
         }
 
         @Override
         protected int getSize() {
-            return pck.size();
+            return isDoor ? pck.size() : pck2.size();
         }
 
         @Override
         protected void elementClicked(int index, boolean doubleClick) {
-            if(!modeButton.isEdit()) {
-                DoorServerRequest packet = new DoorServerRequest(managerId, "managerdoorlink", doors.get(index).id.toString());
-                AdvBaseSecurity.instance.network.sendToServer(packet);
-                mc.player.closeScreen();
+            if(isDoor) {
+                if (!modeButton.isEdit()) {
+                    DoorServerRequest packet = new DoorServerRequest(managerId, "managerdoorlink", doors.get(index).id.toString());
+                    AdvBaseSecurity.instance.network.sendToServer(packet);
+                    mc.player.closeScreen();
+                } else {
+                    DoorServerRequest packet = new DoorServerRequest(managerId, "editdoor", doors.get(index).id.toString());
+                    AdvBaseSecurity.instance.network.sendToServer(packet);
+                }
             }
             else{
-                DoorServerRequest packet = new DoorServerRequest(managerId, "editdoor", doors.get(index).id.toString());
+                nameHeld held = pck2.get(index);
+                if(held.name.contains("(will be refreshed after gui reopened)"))
+                    return;
+                DoorServerRequest packet = new DoorServerRequest(managerId, "removemanagerplayer", held.id.toString());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
+                pck2.remove(index);
             }
         }
 
@@ -254,7 +334,7 @@ public class DoorListGUI extends BaseGUI {
             //highlighted hovered slot
             if (mouseX >= left && mouseX <= entryRight && slotIndex >= 0 && slotIndex < getSize() && mouseY >= slotTop - 1 && mouseY <= slotTop + slotBuffer + 2) {
 
-                if (pck.get(slotIndex) != null) {
+                if ((isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.get(slotIndex) != null)) {
                     int min = left;
                     int max = entryRight + 1;
                     BufferBuilder bufferBuilder = tess.getBuffer();
@@ -289,8 +369,16 @@ public class DoorListGUI extends BaseGUI {
                 }
             }
 
-            if (slotIndex >= 0 && slotIndex < pck.size() && pck.get(slotIndex) != null)
-                fontRenderer.drawString(pck.get(slotIndex).name, width / 2 - fontRenderer.getStringWidth(pck.get(slotIndex).name) / 2, slotTop, 0xC6C6C6);
+            if (slotIndex >= 0 && slotIndex < pck.size() && (isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.get(slotIndex) != null))
+                fontRenderer.drawString(pck.get(slotIndex).name, width / 2 - fontRenderer.getStringWidth(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name) / 2, slotTop, 0xC6C6C6);
+        }
+    }
+    public static class nameHeld{
+        public UUID id;
+        public String name;
+        public nameHeld(UUID id, String name){
+            this.id = id;
+            this.name = name;
         }
     }
 }

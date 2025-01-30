@@ -1,7 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassGUI;
+import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassAndSectorGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -173,8 +173,8 @@ public class RequestPassesPacket implements IMessage {
                     if(mc.world.isRemote) {
                         //open up the GUI
                         GuiScreen screen = Minecraft.getMinecraft().currentScreen;
-                        if(screen instanceof EditDoorPassGUI){
-                            ((EditDoorPassGUI) screen).finishInit(message.isServer, message.passes);
+                        if(screen instanceof EditDoorPassAndSectorGUI){
+                            ((EditDoorPassAndSectorGUI) screen).finishInit(message.isServer, message.passes);
                         }
                         //Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(message.editValidator, message.door, message.groups));
                     }

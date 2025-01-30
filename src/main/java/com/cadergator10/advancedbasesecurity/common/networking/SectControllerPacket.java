@@ -1,7 +1,7 @@
 package com.cadergator10.advancedbasesecurity.common.networking;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
-import com.cadergator10.advancedbasesecurity.client.gui.SectorControllerGUI;
+import com.cadergator10.advancedbasesecurity.client.gui.EditDoorPassAndSectorGUI;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntitySectorController;
 import io.netty.buffer.ByteBuf;
@@ -171,7 +171,7 @@ public class SectControllerPacket implements IMessage {
                     Minecraft mc = Minecraft.getMinecraft();
                     if(mc.world.isRemote) {
                         //open up the GUI
-                        Minecraft.getMinecraft().displayGuiScreen(new SectorControllerGUI(message, message.pos, message.sectors));
+                        Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassAndSectorGUI(message, message.pos, message.sectors));
                     }
                     else{
                         //AdvBaseSecurity.instance.doorHandler.recievedUpdate(message.editValidator, message.door);
