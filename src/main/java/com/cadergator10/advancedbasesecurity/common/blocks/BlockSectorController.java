@@ -53,7 +53,7 @@ public class BlockSectorController extends Block implements ITileEntityProvider 
 				heldItem = playerIn.getHeldItemMainhand();
 			else
 				return false;
-			if(!heldItem.isEmpty()){
+			if(!heldItem.isEmpty() && playerIn.isSneaking()){
 				Item equipped = heldItem.getItem();
 				TileEntitySectorController te = (TileEntitySectorController) worldIn.getTileEntity(pos);
 				if(!worldIn.isRemote && te != null) {

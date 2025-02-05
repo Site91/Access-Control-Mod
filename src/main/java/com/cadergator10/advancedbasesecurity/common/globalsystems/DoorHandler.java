@@ -1887,13 +1887,19 @@ public class DoorHandler {
         public void readFromNBT(NBTTagCompound tag){
             if(tag.hasUniqueId("manager"))
                 ManagerID = tag.getUniqueId("manager");
+            else
+                ManagerID = null;
             if(tag.hasUniqueId("door"))
                 DoorID = tag.getUniqueId("door");
+            else
+                DoorID = null;
         }
 
         public NBTTagCompound writeToNBT(NBTTagCompound tag){
-            tag.setUniqueId("manager", ManagerID);
-            tag.setUniqueId("door", DoorID);
+            if(ManagerID != null)
+                tag.setUniqueId("manager", ManagerID);
+            if(DoorID != null)
+                tag.setUniqueId("door", DoorID);
             return tag;
         }
     }

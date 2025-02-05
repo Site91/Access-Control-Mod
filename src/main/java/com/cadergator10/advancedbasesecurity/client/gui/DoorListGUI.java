@@ -94,7 +94,7 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         this.buttonList.add(modeButton = new EditLinkBtn(id++, GUILeft + 3, GUITop + 133, isEdit));
         this.buttonList.add(userButton = new ButtonImg(id++, this.width / 2 - WIDTH / 6 - 4, botm, ButtonTooltip.EditUser));
         this.buttonList.add(passButton = new ButtonImg(id++, this.width / 2 + WIDTH / 6 - 4, botm, ButtonTooltip.EditPass));
-        this.buttonList.add(sectorButton = new ButtonImg(id++, this.width / 2 + 8, botm, ButtonTooltip.SectorMenu));
+        this.buttonList.add(sectorButton = new ButtonImg(id++, this.width / 2 - 8, botm, ButtonTooltip.SectorMenu));
         this.buttonList.add(addUserName = new ButtonImg(id++, GUILeft + WIDTH - 20, GUITop + 114, ButtonTooltip.AddUser));
         userName = new GUITextFieldTooltip(id++, mc.fontRenderer, this.width / 2 + 4, GUITop + 114, WIDTH / 2 - 8 - 20, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.usernamemanager"));
         userName.setGuiResponder(this);
@@ -146,12 +146,12 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         mc.getTextureManager().bindTexture(background);
         drawTexturedModalRect(GUILeft, GUITop, 0, 0, WIDTH, HEIGHT);
         if(doors.isEmpty())
-            drawCenteredString("No doors created yet", this.height / 2 + 40, 0xFFFFFF);
+            drawString("No doors yet", GUILeft + (WIDTH / 4), 80, 0xFFFFFF);
         else if(doorLists != null){
             doorLists.drawScreen(mouseX, mouseY, partialTicks);
         }
         if(users.isEmpty())
-            drawCenteredString("No users added yet", this.height / 2 + 40, 0xFFFFFF);
+            drawString("No users yet", GUILeft + WIDTH - (WIDTH / 4),80, 0xFFFFFF);
         else if(userList != null){
             userList.drawScreen(mouseX, mouseY, partialTicks);
         }
@@ -369,8 +369,8 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 }
             }
 
-            if (slotIndex >= 0 && slotIndex < pck.size() && (isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.get(slotIndex) != null))
-                fontRenderer.drawString(pck.get(slotIndex).name, width / 2 - fontRenderer.getStringWidth(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name) / 2, slotTop, 0xC6C6C6);
+            if (slotIndex >= 0 && slotIndex < (isDoor ? pck.size() : pck2.size()) && (isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.get(slotIndex) != null))
+                fontRenderer.drawString(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name, left + (listWidth / 2) - fontRenderer.getStringWidth(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name) / 2, slotTop, 0xC6C6C6);
         }
     }
     public static class nameHeld{

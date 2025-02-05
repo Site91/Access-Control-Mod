@@ -54,6 +54,8 @@ public class AdvBaseSecurity
             network.registerMessage(PassEditPacket.HandlerS.class, PassEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(SectControllerPacket.Handler.class, SectControllerPacket.class, packetID++, Side.CLIENT);
             network.registerMessage(SectControllerPacket.HandlerS.class, SectControllerPacket.class, packetID++, Side.SERVER);
+            network.registerMessage(SectorEditPacket.Handler.class, SectorEditPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(SectorEditPacket.HandlerS.class, SectorEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(ManagerNamePacket.Handler.class, ManagerNamePacket.class, packetID++, Side.CLIENT);
             network.registerMessage(OneDoorDataPacket.Handler.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
         }
@@ -67,6 +69,8 @@ public class AdvBaseSecurity
             network.registerMessage(PassEditPacket.HandlerS.class, PassEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(SectControllerPacket.HandlerS.class, SectControllerPacket.class, packetID++, Side.CLIENT);
             network.registerMessage(SectControllerPacket.HandlerS.class, SectControllerPacket.class, packetID++, Side.SERVER);
+            network.registerMessage(SectorEditPacket.HandlerS.class, SectorEditPacket.class, packetID++, Side.CLIENT);
+            network.registerMessage(SectorEditPacket.HandlerS.class, SectorEditPacket.class, packetID++, Side.SERVER);
             network.registerMessage(ManagerNamePacket.HandlerS.class, ManagerNamePacket.class, packetID++, Side.CLIENT);
             network.registerMessage(OneDoorDataPacket.HandlerS.class, OneDoorDataPacket.class, packetID++, Side.CLIENT);
         }

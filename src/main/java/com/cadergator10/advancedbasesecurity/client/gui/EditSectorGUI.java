@@ -16,10 +16,7 @@ import net.minecraft.util.text.translation.I18n;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
@@ -87,17 +84,27 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
             currentList = new LinkedList<>();
             cascade = false;
         }
-        for (UUID id : map.keySet()) {
-            DoorHandler.Doors.Groups currentOne = map.get(id);
-            if(!cascade || currentOne.id.equals(currentList.get(currentList.size() - 1))){
+        if(!cascade)
+            for (UUID id : map.keySet()) {
+                DoorHandler.Doors.Groups currentOne = map.get(id);
                 if(currentList.contains(currentOne.id))
                     return false;
                 List<UUID> newList = currentList.subList(0, currentList.size());
                 if (currentOne.parentID != null) {
-                    newList.add(currentOne.parentID);
+                    newList.add(currentOne.id);
                     if (!infiniteLoopCheck(map, newList))
                         return false;
                 }
+            }
+        else{
+            DoorHandler.Doors.Groups currentOne = map.get(currentList.get(currentList.size() - 1));
+            if(currentOne.parentID == null)
+                return true;
+            if(currentList.contains(currentOne.parentID))
+                return false;
+            else {
+                currentList.add(currentOne.parentID);
+                return infiniteLoopCheck(map, currentList.subList(0, currentList.size()));
             }
         }
         return true;
@@ -131,7 +138,7 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         else{
             AdvBaseSecurity.instance.logger.info("Enabled all sector editing");
             if(!safe)
-                sector = sectors.get(sectorList.getUUID() != null ? UUID.fromString(sectorList.getUUID()) : null);
+                sector = sectors.get(!Objects.equals(sectorList.getUUID(), "none") ? UUID.fromString(sectorList.getUUID()) : null);
             if (sector != null) {
                 if(!safe){
                     delSector.enabled = true;
@@ -229,10 +236,10 @@ public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiRespo
         }
         else if(button == parentInput){
             parentInput.onClick();
-            UUID id = parentInput.getUUID() != null ? UUID.fromString(parentInput.getUUID()) : null;
+            UUID id = !Objects.equals(parentInput.getUUID(), "none") ? UUID.fromString(parentInput.getUUID()) : null;
             if(id != null && UUID.fromString(sectorList.getUUID()).equals(id)){
                 parentInput.onClick();
-                id = parentInput.getUUID() != null ? UUID.fromString(parentInput.getUUID()) : null;
+                id = !Objects.equals(parentInput.getUUID(), "none") ? UUID.fromString(parentInput.getUUID()) : null;
             }
             sector.parentID = id;
             updateWithPasses(true);

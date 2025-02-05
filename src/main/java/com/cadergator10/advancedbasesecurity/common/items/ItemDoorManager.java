@@ -55,17 +55,17 @@ public class ItemDoorManager extends ItemBase {
 		ItemStack heldItem = player.getHeldItemMainhand();
 		if (!(heldItem.getItem() instanceof ItemDoorManager))
 			return super.onItemRightClick(worldIn, player, handIn);
-		return new ActionResult<ItemStack>(!worldIn.isRemote && player instanceof EntityPlayerMP ? openMenu(heldItem, (EntityPlayerMP) player) : EnumActionResult.SUCCESS,player.getHeldItem(handIn));
+		return new ActionResult<ItemStack>(!worldIn.isRemote && player instanceof EntityPlayerMP && player.isSneaking() ? openMenu(heldItem, (EntityPlayerMP) player) : EnumActionResult.PASS,player.getHeldItem(handIn));
 	}
 
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { //not actually called on server side LOOOL
 		if(!worldIn.isRemote && player instanceof EntityPlayerMP) {
 			ItemStack heldItem = player.getHeldItemMainhand();
 			if (!(heldItem.getItem() instanceof ItemDoorManager))
 				return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
-			if (player.isSneaking() || worldIn.getBlockState(pos).getBlock() instanceof BlockSectorController) { //perform actions on other stuff
-				return EnumActionResult.PASS;
+			if (!player.isSneaking() || worldIn.getBlockState(pos).getBlock() instanceof BlockSectorController) { //perform actions on other stuff
+				return EnumActionResult.SUCCESS;
 			} else {
 				return openMenu(heldItem, (EntityPlayerMP) player);
 			}
