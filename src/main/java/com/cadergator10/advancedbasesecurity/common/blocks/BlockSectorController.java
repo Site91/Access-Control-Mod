@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -46,6 +47,15 @@ public class BlockSectorController extends Block implements ITileEntityProvider 
 	}
 
 	@Override
+	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+		TileEntity te = worldIn.getTileEntity(pos);
+		if(!worldIn.isRemote && te instanceof TileEntitySectorController){
+			((TileEntitySectorController) te).first();
+		}
+	}
+
+	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		if(hand == EnumHand.MAIN_HAND){
 			ItemStack heldItem;
@@ -53,7 +63,7 @@ public class BlockSectorController extends Block implements ITileEntityProvider 
 				heldItem = playerIn.getHeldItemMainhand();
 			else
 				return false;
-			if(!heldItem.isEmpty() && playerIn.isSneaking()){
+			if(!heldItem.isEmpty() && !playerIn.isSneaking()){
 				Item equipped = heldItem.getItem();
 				TileEntitySectorController te = (TileEntitySectorController) worldIn.getTileEntity(pos);
 				if(!worldIn.isRemote && te != null) {
@@ -62,6 +72,10 @@ public class BlockSectorController extends Block implements ITileEntityProvider 
 						return false;
 					boolean good = te.setFirstTime(tag.managerID);
 					if(good) {
+						if(AdvBaseSecurity.instance.doorHandler.getDoorManager(tag.managerID).groups.isEmpty()){
+							playerIn.sendMessage(new TextComponentString("No sectors have been created! Cannot edit until one exists"));
+							return true;
+						}
 						SectControllerPacket packet = new SectControllerPacket(te);
 						AdvBaseSecurity.instance.network.sendTo(packet, (EntityPlayerMP) playerIn);
 						return true;

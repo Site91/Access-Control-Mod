@@ -110,7 +110,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 		this.managerId = packet.ids;
 		this.door = null;
 		formatGroups(sectors); //sets groups list.
-		overrides = packet.overrides;
+		overrides = packet.overrides != null ? packet.overrides : new LinkedList<>();
 		pushChildren = packet.pushToChildren;
 		toggle = packet.toggle;
 		this.pos = pos;
@@ -144,7 +144,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 		return -1;
 	}
 	DoorHandler.Doors.OneDoor.OnePass getDoorPass(UUID id){
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.id.equals(id))
 				return pass;
 		}
@@ -152,7 +152,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 	}
 	int getDoorPassIndex(UUID id){
 		int index = 0;
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.id.equals(id))
 				return index;
 			index++;
@@ -193,7 +193,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 	}
 	List<ButtonEnum.groupIndex> processAddPasses(){
 		List<ButtonEnum.groupIndex> btn = new LinkedList<>();
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.passType == DoorHandler.Doors.OneDoor.OnePass.type.Add)
 				btn.add(processDoorPass(pass, true));
 		}
@@ -201,6 +201,15 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 	}
 	List<ButtonEnum.groupIndex> processSectors(){
 		return groups;
+	}
+	int getSectorId(){
+		if(managerId.DoorID != null){
+			for(int i=0; i<groups.size(); i++){
+				if(groups.get(i).id.equals(managerId.DoorID.toString()))
+					return i;
+			}
+		}
+		return 0;
 	}
 
 	@Override
@@ -222,26 +231,28 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 
 
 		if(!finished) {
-			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, botm, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(), 0));
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, isDoor ? botm : GUITop + 73, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(), 0));
 			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, new LinkedList<>(),0));
 			passListButton.enabled = false;
 			addPass.enabled = false;
 		}
 		else{
-			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, isDoor ? botm : GUITop + 73, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, processDoorPasses(door.passes), 0));
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, isDoor ? botm : GUITop + 73, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, processDoorPasses(isDoor ? door.passes : overrides), 0));
 			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, processPass(passes),0));
 		}
 		this.buttonList.add(passValueG = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 23, 80, 16, null, false, new LinkedList<>(),0));
 		this.buttonList.add(addPassList = new ButtonSelect(id++, GUILeft + 3, GUITop + 53, WIDTH - 26, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.addpassselect"), new LinkedList<>(),0));
 		this.buttonList.add(selectAddPass = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 53, ButtonTooltip.SelectAddPass));
 		// if isDoor false, then its sector.
-		if(isDoor){
+		if(!isDoor){
+			if(managerId.DoorID == null)
+				managerId.DoorID = UUID.fromString(groups.get(0).id);
 			clean = true;
 			this.buttonList.add(saveButton = new ButtonImg(id++, GUILeft + 23, botm, ButtonTooltip.SaveSectors));
 			this.buttonList.add(pushChildButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 103, 80, 16, "push updates to all", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorpushchild"), pushChildren));
 			this.buttonList.add(toggleButton = new ButtonToggle(id++, GUILeft + WIDTH - 83, GUITop + 103, 80, 16, "toggle", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorconttoggle"), toggle));
-			this.buttonList.add(sectorButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 123, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorchoose"), false, processSectors(), 0));
-			this.buttonList.add(statusButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 123, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorstatusbtn"), false, Arrays.asList(new ButtonEnum.groupIndex("-2", "No Access"), new ButtonEnum.groupIndex("-1", "Lockdown"), new ButtonEnum.groupIndex("0", "Access"), new ButtonEnum.groupIndex("1", "Overridden Access"), new ButtonEnum.groupIndex("2", "All Access")), 0));
+			this.buttonList.add(sectorButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 123, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorchoose"), false, processSectors(), getSectorId()));
+			this.buttonList.add(statusButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 123, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorstatusbtn"), false, Arrays.asList(new ButtonEnum.groupIndex("-2", "No Access"), new ButtonEnum.groupIndex("-1", "Lockdown"), new ButtonEnum.groupIndex("0", "Access"), new ButtonEnum.groupIndex("1", "Overridden Access"), new ButtonEnum.groupIndex("2", "All Access")), thisStatus.getInt() + 2));
 		}
 
 		//set default while waiting for finish
@@ -298,7 +309,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 	}
 
 	private void updateWithPasses(){
-		if(passes.isEmpty()){
+		if(passes.isEmpty() || (isDoor && door.passes.isEmpty()) || (!isDoor && overrides.isEmpty())){
 			doorPass = null;
 			passButton.enabled = false;
 			typeButton.enabled = false;
@@ -312,7 +323,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 			addPassList.visible = false;
 			selectAddPass.enabled = false;
 			selectAddPass.visible = false;
-			if(isDoor) {
+			if(!isDoor) {
 				saveButton.enabled = false;
 				pushChildButton.enabled = false;
 				toggleButton.enabled = false;
@@ -325,7 +336,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 			//global stuff
 			delPass.enabled = currStatus;
 			//get current pass
-			doorPass = getDoorPass(UUID.fromString(passListButton.getUUID()));
+			doorPass = passListButton.getUUID() != "none" ? getDoorPass(UUID.fromString(passListButton.getUUID())) : null;
 			if (doorPass != null) {
 				passSelected = getPass(doorPass.passID);
 				passButton.changeIndex(getPassIndex(doorPass.passID));
@@ -400,16 +411,24 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 				managerId.DoorID = UUID.fromString(sectorButton.getUUID());
 
 		}
+		else{
+			saveButton.enabled = true;
+			pushChildButton.enabled = true;
+			toggleButton.enabled = true;
+			sectorButton.enabled = true;
+			statusButton.enabled = true;
+		}
 	}
 
 	public void finishInit(boolean worked, List<DoorHandler.Doors.PassValue> passes){
 		if(worked){
 			this.passes = passes;
 			//allow editing of all stuff now
-			passListButton.changeList(processDoorPasses(door.passes));
+			passListButton.changeList(isDoor ? processDoorPasses(door.passes) : processDoorPasses(overrides));
+			passListButton.changeIndex(0);
 			passButton.changeList(processPass(passes));
+			passButton.changeIndex(0);
 			//change enabled/disabled
-			passListButton.enabled = true;
 			addPass.enabled = true;
 			updateWithPasses();
 			finished = true;
@@ -420,6 +439,8 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 	}
 
 	private void lastMinuteUpdate(){ //updates values with textFieldInputs when leaving a screen
+		if(doorPass == null)
+			return;
 		DoorHandler.Doors.PassValue pass = getPass(doorPass.passID);
 		if(pass.passType == DoorHandler.Doors.PassValue.type.Text || pass.passType == DoorHandler.Doors.PassValue.type.MultiText){
 			doorPass.passValueS = passValueI.getText();
@@ -533,15 +554,25 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 				pass.addPasses = null;
 				pass.passValueI = -1;
 				pass.passValueS = null;
-				door.passes.add(pass);
-				passListButton.insertList(processDoorPass(pass, false));
-				passListButton.changeIndex(door.passes.size() - 1);
+				if(isDoor) {
+					door.passes.add(pass);
+					passListButton.insertList(processDoorPass(pass, false));
+					passListButton.changeIndex(door.passes.size() - 1);
+				}
+				else{
+					overrides.add(pass);
+					passListButton.insertList(processDoorPass(pass, false));
+					passListButton.changeIndex(overrides.size() - 1);
+				}
 				updateWithPasses();
 			}
 			else if(button == delPass){
 				int index = getDoorPassIndex(UUID.fromString(passListButton.getUUID()));
 				AdvBaseSecurity.instance.logger.info("id: " + passListButton.getUUID());
-				door.passes.remove(index);
+				if(isDoor)
+					door.passes.remove(index);
+				else
+					overrides.remove(index);
 				passListButton.removeList();
 				updateWithPasses();
 			}

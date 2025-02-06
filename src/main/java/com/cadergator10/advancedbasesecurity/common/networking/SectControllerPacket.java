@@ -50,6 +50,8 @@ public class SectControllerPacket implements IMessage {
     }
     private void writeOverrides(ByteBuf buf, List<DoorHandler.Doors.OneDoor.OnePass> rides){
         buf.writeInt(rides != null ? rides.size() : 0);
+        if(rides == null)
+            return;
         for(DoorHandler.Doors.OneDoor.OnePass pass : rides){
             ByteBufUtils.writeUTF8String(buf, pass.id.toString());
             ByteBufUtils.writeUTF8String(buf, pass.passID);
@@ -95,7 +97,7 @@ public class SectControllerPacket implements IMessage {
     }
 
     public static void writeList(ByteBuf buf, HashMap<UUID, DoorHandler.Doors.Groups> sectors){
-        buf.writeInt(sectors.size());
+        buf.writeInt(sectors != null ? sectors.size() : 0);
         BiConsumer<UUID, DoorHandler.Doors.Groups> biConsumer = (k,v) -> {
             ByteBufUtils.writeUTF8String(buf, v.id.toString());
             ByteBufUtils.writeUTF8String(buf, v.name.toString());
@@ -106,7 +108,8 @@ public class SectControllerPacket implements IMessage {
                 ByteBufUtils.writeUTF8String(buf, v.parentID.toString());
             }
         };
-        sectors.forEach(biConsumer);
+        if(sectors != null)
+            sectors.forEach(biConsumer);
     }
     public static HashMap<UUID, DoorHandler.Doors.Groups> readList(ByteBuf buf){
         HashMap<UUID, DoorHandler.Doors.Groups> passeder = new HashMap<>();

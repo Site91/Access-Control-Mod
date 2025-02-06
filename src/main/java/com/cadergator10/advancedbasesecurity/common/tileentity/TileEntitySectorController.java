@@ -28,8 +28,8 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
-		if(nbt.hasKey("id"))
-			ids = new DoorHandler.DoorIdentifier(nbt.getCompoundTag("id"));
+		if(nbt.hasKey("ids"))
+			ids = new DoorHandler.DoorIdentifier(nbt.getCompoundTag("ids"));
 		else
 			ids = null;
 		if(nbt.hasKey("overrides")){
@@ -77,7 +77,7 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
 		if(ids != null)
-			nbt.setTag("id", ids.writeToNBT(new NBTTagCompound()));
+			nbt.setTag("ids", ids.writeToNBT(new NBTTagCompound()));
 		if(overrides != null && !overrides.isEmpty() && nbt.hasKey("overrides")) { //make sure overrides not already done as well
 			//TODO: setup overrides in nbt
 			NBTTagList list = new NBTTagList();
@@ -98,6 +98,13 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return nbt;
 	}
 
+	public void first(){
+		thisStatus = DoorHandler.Doors.OneDoor.allDoorStatuses.ACCESS;
+		overrides = null;
+		ids = null;
+		markDirty();
+	}
+
 	public void newUpdate(SectControllerPacket packet){
 		ids = packet.ids;
 		pushToChildren = packet.pushToChildren;
@@ -108,7 +115,7 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 	}
 
 	public boolean setFirstTime(UUID id){
-		if(this.ids != null || this.ids.ManagerID != null){
+		if(this.ids != null && this.ids.ManagerID != null){
 			if(this.ids.ManagerID.equals(id))
 				return true;
 			else

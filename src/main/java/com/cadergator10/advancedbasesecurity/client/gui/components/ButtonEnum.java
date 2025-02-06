@@ -1,7 +1,5 @@
 package com.cadergator10.advancedbasesecurity.client.gui.components;
 
-import net.minecraftforge.fml.client.config.GuiButtonExt;
-
 import java.util.List;
 
 public class ButtonEnum extends GUIButtonTooltip{
@@ -11,7 +9,7 @@ public class ButtonEnum extends GUIButtonTooltip{
 	List<groupIndex> map;
 
 	public ButtonEnum(int buttonId, int x, int y, String tooltip, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, includeNone && !map.isEmpty() ? map.get(index).name : "none", tooltip);
+		super(buttonId, x, y, !map.isEmpty() && (index != 0 || !includeNone) ? map.get(includeNone ? index - 1 : index).name : "none", tooltip);
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;
@@ -19,7 +17,7 @@ public class ButtonEnum extends GUIButtonTooltip{
 	}
 
 	public ButtonEnum(int buttonId, int x, int y, int widthIn, int heightIn, String tooltip, boolean includeNone, List<groupIndex> map, int index) {
-		super(buttonId, x, y, widthIn, heightIn, includeNone && !map.isEmpty() ? map.get(index).name : "none", tooltip);
+		super(buttonId, x, y, widthIn, heightIn, !map.isEmpty() && (index != 0 || !includeNone) ? map.get(includeNone ? index - 1 : index).name : "none", tooltip);
 		this.includeNone = includeNone;
 		this.size = includeNone ? map.size() + 1 : map.size();
 		this.currentIndex = index;

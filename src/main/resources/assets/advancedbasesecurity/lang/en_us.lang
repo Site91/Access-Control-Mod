@@ -89,3 +89,5 @@ gui.tooltips.advancedbasesecurity.sectorconttoggle=Should this sector controller
 gui.tooltips.advancedbasesecurity.sectorchoose=Select the sector that should be updated on redstone signal recieved.
 gui.tooltips.advancedbasesecurity.sectorstatusbtn=Set the status the door should be put in on redstone signal/nNo Access: Absolutely no one can enter or exit/nLockdown: No one can enter except override passes set above/nAccess: Default door behavior/nOverridden Access: Default door passes + overridden passes set above have access/nAll Access: Doors locked open and anyone can go through
 gui.tooltips.advancedbasesecurity.usernamemanager=Input a user's username to add them to the manager allow list.
+gui.tooltips.advancedbasesecurity.doorpasseditselect=Select the pass on the device you want to edit
+
