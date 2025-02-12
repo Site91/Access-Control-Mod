@@ -45,7 +45,7 @@ public class ItemDoorManager extends ItemBase {
 			return EnumActionResult.FAIL;
 		}
 		//send door names
-		DoorNamePacket packet = new DoorNamePacket(door, tag.currentScanMode == 0);
+		DoorNamePacket packet = new DoorNamePacket(door, tag.currentScanMode == 0, door.allowedPlayers);
 		AdvBaseSecurity.instance.network.sendTo(packet, player);
 		return EnumActionResult.SUCCESS;
 	}

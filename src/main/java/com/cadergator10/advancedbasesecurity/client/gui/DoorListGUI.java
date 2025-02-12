@@ -217,7 +217,7 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         else if(button == addUserName){
             String input = userName.getText();
             if(!input.isEmpty()){
-                DoorServerRequest packet = new DoorServerRequest(managerId, "addmanagermlayer", input);
+                DoorServerRequest packet = new DoorServerRequest(managerId, "addmanagerplayer", input);
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 userList.pck2.add(new nameHeld(UUID.randomUUID(), input + " (will be refreshed after gui reopened)"));
             }
@@ -316,6 +316,8 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 DoorServerRequest packet = new DoorServerRequest(managerId, "removemanagerplayer", held.id.toString());
                 AdvBaseSecurity.instance.network.sendToServer(packet);
                 pck2.remove(index);
+                hoveredSlot = -1;
+                i = 0;
             }
         }
 
@@ -369,7 +371,7 @@ public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 }
             }
 
-            if (slotIndex >= 0 && slotIndex < (isDoor ? pck.size() : pck2.size()) && (isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.get(slotIndex) != null))
+            if (slotIndex >= 0 && slotIndex < (isDoor ? pck.size() : pck2.size()) && (isDoor && pck.get(slotIndex) != null) || (!isDoor && pck2.size() > slotIndex && pck2.get(slotIndex) != null))
                 fontRenderer.drawString(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name, left + (listWidth / 2) - fontRenderer.getStringWidth(isDoor ? pck.get(slotIndex).name : pck2.get(slotIndex).name) / 2, slotTop, 0xC6C6C6);
         }
     }

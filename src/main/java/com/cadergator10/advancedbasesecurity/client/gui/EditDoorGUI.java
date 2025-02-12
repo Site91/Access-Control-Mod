@@ -62,7 +62,7 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         this.groups = groups;
         if(door.groupID != null){
             for(int i=0; i<groups.size(); i++)
-                if(door.groupID.equals(groups.get(i).id)){
+                if(door.groupID.toString().equals(groups.get(i).id)){
                     groupIndex = i + 1;
                     break;
                 }

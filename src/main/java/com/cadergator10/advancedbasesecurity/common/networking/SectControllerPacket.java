@@ -57,8 +57,9 @@ public class SectControllerPacket implements IMessage {
             ByteBufUtils.writeUTF8String(buf, pass.passID);
             buf.writeShort(pass.priority);
             buf.writeInt(pass.addPasses != null ? pass.addPasses.size() : 0);
-            for(UUID id : pass.addPasses)
-                ByteBufUtils.writeUTF8String(buf, id.toString());
+            if(pass.addPasses != null)
+                for(UUID id : pass.addPasses)
+                    ByteBufUtils.writeUTF8String(buf, id.toString());
             buf.writeShort(pass.passType.getInt());
             int num = pass.passValueI != -1 ? 1 : pass.passValueS != null ? 2 : 0;
             buf.writeShort(num);

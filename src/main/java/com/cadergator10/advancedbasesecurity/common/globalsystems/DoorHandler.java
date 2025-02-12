@@ -745,7 +745,7 @@ public class DoorHandler {
                 }
                 else {
                     display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
-                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
+                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 2 : 6);
                     barColor = 0;
                 }
             }
@@ -773,7 +773,7 @@ public class DoorHandler {
             if(door.isDoorOpen == 1 && !timedDoors.contains(door)){
                 timedDoors.add(door);
             }
-            else{
+            else if(door.isDoorOpen != 1){
                 timedDoors.remove(door);
             }
             for(int i=0; i<userCache.size(); i++){ //clear cache of these door IDs

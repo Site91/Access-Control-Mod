@@ -78,7 +78,7 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		super.writeToNBT(nbt);
 		if(ids != null)
 			nbt.setTag("ids", ids.writeToNBT(new NBTTagCompound()));
-		if(overrides != null && !overrides.isEmpty() && nbt.hasKey("overrides")) { //make sure overrides not already done as well
+		if(overrides != null && !overrides.isEmpty() && !nbt.hasKey("overrides")) { //make sure overrides not already done as well
 			//TODO: setup overrides in nbt
 			NBTTagList list = new NBTTagList();
 			DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(ids);

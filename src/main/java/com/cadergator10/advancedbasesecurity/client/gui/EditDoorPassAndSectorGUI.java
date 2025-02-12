@@ -249,10 +249,10 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 				managerId.DoorID = UUID.fromString(groups.get(0).id);
 			clean = true;
 			this.buttonList.add(saveButton = new ButtonImg(id++, GUILeft + 23, botm, ButtonTooltip.SaveSectors));
-			this.buttonList.add(pushChildButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 103, 80, 16, "push updates to all", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorpushchild"), pushChildren));
-			this.buttonList.add(toggleButton = new ButtonToggle(id++, GUILeft + WIDTH - 83, GUITop + 103, 80, 16, "toggle", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorconttoggle"), toggle));
-			this.buttonList.add(sectorButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 123, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorchoose"), false, processSectors(), getSectorId()));
-			this.buttonList.add(statusButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 123, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorstatusbtn"), false, Arrays.asList(new ButtonEnum.groupIndex("-2", "No Access"), new ButtonEnum.groupIndex("-1", "Lockdown"), new ButtonEnum.groupIndex("0", "Access"), new ButtonEnum.groupIndex("1", "Overridden Access"), new ButtonEnum.groupIndex("2", "All Access")), thisStatus.getInt() + 2));
+			this.buttonList.add(pushChildButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 103, WIDTH - 6, 16, "push updates to all", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorpushchild"), pushChildren));
+			this.buttonList.add(toggleButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 123, WIDTH - 6, 16, "toggle", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorconttoggle"), toggle));
+			this.buttonList.add(sectorButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 143, WIDTH - 6, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorchoose"), false, processSectors(), getSectorId()));
+			this.buttonList.add(statusButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 163, WIDTH - 6, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorstatusbtn"), false, Arrays.asList(new ButtonEnum.groupIndex("-2", "No Access"), new ButtonEnum.groupIndex("-1", "Lockdown"), new ButtonEnum.groupIndex("0", "Access"), new ButtonEnum.groupIndex("1", "Overridden Access"), new ButtonEnum.groupIndex("2", "All Access")), thisStatus.getInt() + 2));
 		}
 
 		//set default while waiting for finish
@@ -412,6 +412,7 @@ public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonLi
 
 		}
 		else{
+			passListButton.enabled = overrides != null ? !overrides.isEmpty() : false;
 			saveButton.enabled = true;
 			pushChildButton.enabled = true;
 			toggleButton.enabled = true;

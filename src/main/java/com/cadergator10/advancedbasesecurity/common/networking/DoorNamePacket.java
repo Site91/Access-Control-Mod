@@ -55,9 +55,10 @@ public class DoorNamePacket implements IMessage {
     }
     public DoorNamePacket(DoorHandler.Doors door, boolean isEdit, List<UUID> users){
         this(door, isEdit);
-        for(UUID id : users){
-            this.users.add(new DoorListGUI.nameHeld(id, FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(id).getName()));
-        }
+        if(users != null)
+            for(UUID id : users){
+                this.users.add(new DoorListGUI.nameHeld(id, FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(id).getName()));
+            }
     }
 
     @Override

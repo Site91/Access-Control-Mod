@@ -23,7 +23,7 @@ public class ButtonSelect extends ButtonEnum{
     @Override
     protected void updateDisplay() {
         if(!map.isEmpty())
-            displayString = " (" + (isToggled.get(currentIndex) ? " )" : "X)") + map.get(currentIndex).name;
+            displayString = " (" + (isToggled.get(currentIndex) ? "X)" : "_)") + map.get(currentIndex).name;
         else
             displayString = "none";
     }
