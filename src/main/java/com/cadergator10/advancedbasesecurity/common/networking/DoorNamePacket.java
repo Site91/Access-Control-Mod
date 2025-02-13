@@ -6,6 +6,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -114,6 +116,29 @@ public class DoorNamePacket implements IMessage {
         users = new LinkedList<>();
         for(int i=0; i<size; i++){
             users.add(new DoorListGUI.nameHeld(UUID.fromString(ByteBufUtils.readUTF8String(buf)), ByteBufUtils.readUTF8String(buf)));
+        }
+    }
+
+    public static class Handler implements IMessageHandler<DoorNamePacket, IMessage> {
+        @Override
+        public IMessage onMessage(DoorNamePacket messaged, MessageContext ctx) {
+            if(messaged instanceof DoorNamePacket) {
+                DoorNamePacket message = (DoorNamePacket) messaged;
+                net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(() -> {
+                    net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+                    if (mc.world.isRemote)
+                        //open up the GUI
+                        mc.displayGuiScreen(new DoorListGUI(message.managerId, message.doors, message.users, message.groupNames, message.isEdit));
+                });
+            }
+            return null;
+        }
+    }
+
+    public class HandlerS implements IMessageHandler<DoorNamePacket, IMessage> {
+        @Override
+        public IMessage onMessage(DoorNamePacket messaged, MessageContext ctx) {
+            return null;
         }
     }
 }

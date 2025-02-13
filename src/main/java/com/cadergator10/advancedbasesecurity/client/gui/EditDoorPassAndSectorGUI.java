@@ -30,7 +30,7 @@ import java.util.function.BiConsumer;
 Edits both door passes (edit a door then its classes), and can also edit sector controller settings.
  */
 @SideOnly(Side.CLIENT)
-public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Edits both Door Passes (links with EditDoorGUI) or edits a sector controller. They share the same pass editing which is why they were combined.
 	UUID editValidator;
 	DoorHandler.DoorIdentifier managerId;
 	//if door

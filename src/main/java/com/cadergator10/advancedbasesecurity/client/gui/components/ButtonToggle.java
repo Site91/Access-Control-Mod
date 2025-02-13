@@ -1,10 +1,8 @@
 package com.cadergator10.advancedbasesecurity.client.gui.components;
 
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiButtonToggle;
 import net.minecraft.util.ResourceLocation;
 
-public class ButtonToggle extends GUIButtonTooltip {
+public class ButtonToggle extends GUIButtonTooltip { //A toggleable button (true/false)
     String buttonName;
     protected ResourceLocation resourceLocation;
     protected boolean stateTriggered;

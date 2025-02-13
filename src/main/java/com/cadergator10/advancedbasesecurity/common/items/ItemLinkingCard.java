@@ -1,13 +1,11 @@
 package com.cadergator10.advancedbasesecurity.common.items;
 
-import baubles.api.BaubleType;
-import baubles.api.IBauble;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.UUID;
-
+//No longer used: Depreciated
+@Deprecated
 public class ItemLinkingCard extends ItemBase {
 	public static final String NAME = "linking_card";
 	public static ItemStack DEFAULTSTACK;

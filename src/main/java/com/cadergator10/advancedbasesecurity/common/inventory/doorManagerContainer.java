@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 
 import java.util.UUID;
 
+//Container for the UserEditGUI
 public class doorManagerContainer extends Container {
     private InventoryDoorHandler doorManager;
     private ItemStack managerItem;
@@ -58,7 +59,7 @@ public class doorManagerContainer extends Container {
     }
 
     @Override
-    public void detectAndSendChanges() {//copy/pasted from super method
+    public void detectAndSendChanges() {//copy/pasted from super method.
         boolean mainInvChange = false;
         for (int i = 0; i < this.inventorySlots.size(); ++i)
         {
@@ -82,7 +83,7 @@ public class doorManagerContainer extends Container {
             }
         }
         if(mainInvChange)
-            managerItem.setTagCompound(doorManager.writeToNBT(managerItem.getTagCompound()));
+            managerItem.setTagCompound(doorManager.writeToNBT(managerItem.getTagCompound())); //Save the item NBT every time the main inventory changes (cards in the item, etc.)
     }
 
     public boolean writeCard(EntityPlayer player, DoorHandler.DoorIdentifier id, String displayName){

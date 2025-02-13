@@ -21,6 +21,14 @@ import net.minecraft.world.World;
 
 import java.util.UUID;
 
+/**
+ * Used to control ALL functions of the doormanager and therefore all doors.
+ * Sneak right click for global stuff.
+ * Right click on blocks to perform functions
+ * 		SectorController: change its settings
+ * 		linking: Reader/DoorController: link a door to the currently selected door.
+ * 		(soon) nonlinking: Reader/DoorController: edit a door that the device is linked to
+ */
 public class ItemDoorManager extends ItemBase {
 	public static final String NAME = "door_manager";
 	public static ItemStack DEFAULTSTACK;
@@ -29,7 +37,7 @@ public class ItemDoorManager extends ItemBase {
 		super(NAME);
 	}
 
-	private EnumActionResult openMenu(ItemStack heldItem, EntityPlayerMP player){
+	private EnumActionResult openMenu(ItemStack heldItem, EntityPlayerMP player){ //Performs checks whether the manager can be opened and is the right hand etc.
 		ManagerTag tag = new ManagerTag(heldItem);
 		if(tag.managerID == null){
 			ManagerNamePacket packet = new ManagerNamePacket(AdvBaseSecurity.instance.doorHandler.getAllowedManagers(player));
@@ -51,7 +59,7 @@ public class ItemDoorManager extends ItemBase {
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand handIn) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand handIn) { //When block right clicked in air or general.
 		ItemStack heldItem = player.getHeldItemMainhand();
 		if (!(heldItem.getItem() instanceof ItemDoorManager))
 			return super.onItemRightClick(worldIn, player, handIn);
@@ -59,7 +67,7 @@ public class ItemDoorManager extends ItemBase {
 	}
 
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { //not actually called on server side LOOOL
+	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { //When block right clicked on block.
 		if(!worldIn.isRemote && player instanceof EntityPlayerMP) {
 			ItemStack heldItem = player.getHeldItemMainhand();
 			if (!(heldItem.getItem() instanceof ItemDoorManager))

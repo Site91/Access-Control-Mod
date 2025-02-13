@@ -2,9 +2,8 @@ package com.cadergator10.advancedbasesecurity.client.gui.components;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.util.text.translation.I18n;
 
-public class GUITextFieldTooltip extends GuiTextField implements ITooltip {
+public class GUITextFieldTooltip extends GuiTextField implements ITooltip { //GUITextFields that can display tooltips
     String replacers;
     public GUITextFieldTooltip(int componentId, FontRenderer fontrendererObj, int x, int y, int par5Width, int par6Height, String tooltip) {
         super(componentId, fontrendererObj, x, y, par5Width, par6Height);

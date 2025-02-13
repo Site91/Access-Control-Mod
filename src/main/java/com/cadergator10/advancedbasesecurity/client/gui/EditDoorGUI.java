@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Edit a specific door.
     //data passed by packet
     DoorHandler.Doors.OneDoor door;
     List<ButtonEnum.groupIndex> groups;

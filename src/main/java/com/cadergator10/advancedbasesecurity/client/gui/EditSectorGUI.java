@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Add/Del Sectors on a doormanager
     UUID editValidator;
     UUID managerId;
     HashMap<UUID, DoorHandler.Doors.Groups> sectors;

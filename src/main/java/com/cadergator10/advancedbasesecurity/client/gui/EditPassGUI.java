@@ -5,21 +5,22 @@ import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import com.cadergator10.advancedbasesecurity.common.inventory.doorManagerContainer;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.PassEditPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.translation.I18n;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
-import java.security.acl.AclEntry;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class EditPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Edit the passes on a DoorManager.
     UUID editValidator;
     UUID managerId;
     HashMap<String, DoorHandler.Doors.PassValue> passes;

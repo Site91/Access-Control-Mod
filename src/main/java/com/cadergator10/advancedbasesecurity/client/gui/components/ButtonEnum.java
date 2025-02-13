@@ -2,7 +2,7 @@ package com.cadergator10.advancedbasesecurity.client.gui.components;
 
 import java.util.List;
 
-public class ButtonEnum extends GUIButtonTooltip{
+public class ButtonEnum extends GUIButtonTooltip{ //Button that clicking it changes what is selected and displayed.
 	int currentIndex = 0;
 	int size = 0;
 	boolean includeNone;

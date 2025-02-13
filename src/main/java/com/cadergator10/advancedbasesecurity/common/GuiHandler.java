@@ -10,10 +10,15 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 
 import javax.annotation.Nullable;
 
-public class GuiHandler implements IGuiHandler {
-    private static final int[] itemGUI = {1};
+/**
+ * Registers all GUIs that need parity between the client and server.
+ * ATM, only the user editing page needs it since that's the only one.
+ */
 
-    private boolean hasIndex(int index){
+public class GuiHandler implements IGuiHandler {
+    private static final int[] itemGUI = {1}; //All the GUIs that relate to an item
+
+    private boolean hasIndex(int index){ //get the index
         for(int i : itemGUI){
             if(i == index)
                 return true;
@@ -23,7 +28,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Nullable
     @Override
-    public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+    public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) { //return the Container to the server
         if(hasIndex(ID)){ //go off of item held instead
             ItemStack item = null;
             if(player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)
@@ -40,7 +45,7 @@ public class GuiHandler implements IGuiHandler {
 
     @Nullable
     @Override
-    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+    public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) { //return the GUIContainer to the Client.
         if(hasIndex(ID)){ //go off of item held instead
             ItemStack item = null;
             if(player.getHeldItemMainhand().getItem() instanceof ItemDoorManager)

@@ -15,18 +15,33 @@ import net.minecraft.util.text.TextComponentTranslation;
 
 import javax.annotation.Nonnull;
 
+/**
+ * Readers that scan the cards of players. Get the data off this card and send to the DoorHandler.
+ * Other readers need to extend this class as they have a different specialrenderer requiring a new tileentity.
+ * These card readers extend this class:
+ * @see TileEntityCardReaderSmall
+ * @see TileEntityCardReaderDouble
+ */
 public class TileEntityCardReader extends TileEntityDeviceBase implements IReader, ITickable {
-	public int lightFlag = 0;
-	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases.
-	public int tempTextDelay = 0;
-	public ReaderText currText = new ReaderText("ERROR", (byte)4);
-	public int tempLightFlag;
+	public int lightFlag = 0; //The light that should be shown on the bar. Binary counter: 1 = RED, 2 = YELLOW, 4 = GREEN
+	public ReaderText tempText = new ReaderText("ERROR", (byte)4); //text local to this reader alone for some cases. Disappears after a timer usually.
+	public int tempTextDelay = 0; //Delay to show tempText
+	public ReaderText currText = new ReaderText("ERROR", (byte)4); //Current text to display on the reader. tempText has priority when tempTextDelay above 0
+	public int tempLightFlag; //Temporary flag with priority over lightFlag. Same rules for light bar. Same rules when it comes to the delay.
 
 	public TileEntityCardReader(){
 		super();
 	}
 
+	/**
+	 * When the card is swiped, this is called.
+	 * @param itemStack the card item.
+	 * @param em the player
+	 * @param side the side clicked
+	 * @return technically never used. Just returns "access"
+	 */
 	public String readCard(@Nonnull ItemStack itemStack, EntityPlayer em, EnumFacing side) {
+		AdvBaseSecurity.LogDebug("Reader with deviceID " + deviceId + " clicked with card.");
 		if (door != null){
 			SwipeCard.CardTag cardTag = new SwipeCard.CardTag(itemStack);
 			if(cardTag.cardId == null)
@@ -50,6 +65,8 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 				setTempText(new ReaderText(new TextComponentTranslation("advancedbasesecurity.reader.text.error").getUnformattedText(), (byte) 4), 20 * 3, 7);
 			}
 		}
+		else
+			AdvBaseSecurity.LogDebug("no door has been set on reader with deviceID " + deviceId);
 		return "access";
 	}
 
@@ -69,6 +86,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	}
 
 	public void setTempText(ReaderText text, int ticks, int flag){
+		AdvBaseSecurity.LogDebug("Temporary Text of Reader " + deviceId + " being changed from " + tempText + " to " + text + " | also lightbar from " + tempLightFlag + " to " + flag);
 		tempText = text;
 		tempTextDelay = ticks;
 		tempLightFlag = flag;
@@ -159,7 +177,8 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 	}
 
 	@Override
-	public void updateVisuals(int light, ReaderText str) {
+	public void updateVisuals(int light, ReaderText str) { //When the base visuals need to be changed.
+		AdvBaseSecurity.LogDebug("Main Visuals of Reader " + deviceId + " being changed from " + currText + " to " + str + " | also lightbar from " + lightFlag + " to " + light);
 		lightFlag = light;
 		currText = str;
 		this.world.notifyBlockUpdate(this.pos, this.world.getBlockState(this.pos), this.world.getBlockState(this.pos), 2);
@@ -168,19 +187,19 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 		markDirty();
 	}
 
-	public IBlockState getFacing()
+	public IBlockState getFacing() //get dir the block is facing as a blockstate
 	{
 		return world.getBlockState(new BlockPos(this.getPos().getX(), this.getPos().getY(), this.getPos().getZ()));
 	}
 
-	public float getAngle()
+	public float getAngle() //Convert getFacing to a float
 	{
 		//this was getFacing()
 		return getFacing().getBlock().getMetaFromState(getFacing()) * 270;
 	}
 
 	@Override
-	public void update() {
+	public void update() { //every tick check the temporary text on the reader timer. Update blockstate if reaching 0 (if not already 0)
 		if(!getWorld().isRemote) //make sure not client, since this isn't necessary then
 			if(tempTextDelay > 0) {
 				tempTextDelay--;

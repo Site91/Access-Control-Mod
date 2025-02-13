@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class DoorListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Main DoorManager display. Shows list of doors, list of authorized users, and buttons to edit all sorts of stuff.
     UUID managerId;
     boolean isEdit = false;
     //data passed by packet

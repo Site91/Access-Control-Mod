@@ -24,6 +24,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+/**
+ * All content registration! This includes:
+ * 1. Blocks
+ * 2. Items
+ * 3. TileEntities
+ */
 @Mod.EventBusSubscriber
 public class ContentRegistry { //where all new items will be added
 
@@ -61,7 +67,7 @@ public class ContentRegistry { //where all new items will be added
 //        modItems.add(ItemMagCard.DEFAULTSTACK = new ItemStack(new ItemMagCard()));
         modItems.add(SwipeCard.DEFAULTSTACK = new ItemStack(new SwipeCard()));
         modItems.add(IDCard.DEFAULTSTACK = new ItemStack(new IDCard()));
-        modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
+        //modItems.add(ItemLinkingCard.DEFAULTSTACK = new ItemStack(new ItemLinkingCard()));
         modItems.add(ItemScrewdriver.DEFAULTSTACK = new ItemStack(new ItemScrewdriver()));
         modItems.add(ItemDoorManager.DEFAULTSTACK = new ItemStack(new ItemDoorManager()));
     }
@@ -69,6 +75,8 @@ public class ContentRegistry { //where all new items will be added
 
     @SubscribeEvent
     public static void addBlocks(RegistryEvent.Register<Block> event) {
+        AdvBaseSecurity.LogDebug("Beginning registration of blocks");
+        //Convenience :D
         for(Block block : modBlocks)
             event.getRegistry().register(block);
 
@@ -78,6 +86,8 @@ public class ContentRegistry { //where all new items will be added
         for(Block block : modBlocksWithItem.keySet())
             event.getRegistry().register(block);
 
+        //Register all tile entities and stoof
+        AdvBaseSecurity.LogDebug("Finished adding blocks: Registering TileEntities");
         registerTileEntity(TileEntityCardReader.class, BlockCardReader.NAME);
         registerTileEntity(TileEntityCardReaderSmall.class, BlockCardReaderSmall.NAME);
         registerTileEntity(TileEntityCardReaderDouble.class, BlockCardReaderDouble.NAME);
@@ -85,6 +95,7 @@ public class ContentRegistry { //where all new items will be added
         registerTileEntity(TileEntityDoorController.class, BlockDoorController.NAME);
         registerTileEntity(TileEntityDoor.class, BlockDoorBase.NAME);
         registerTileEntity(TileEntitySectorController.class, BlockSectorController.NAME);
+        AdvBaseSecurity.LogDebug("Finished registering tileentities");
     }
 
     private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {
@@ -95,6 +106,7 @@ public class ContentRegistry { //where all new items will be added
     @SuppressWarnings("ConstantConditions")
     @SubscribeEvent
     public static void addItems(RegistryEvent.Register<Item> event) {
+        AdvBaseSecurity.LogDebug("Beginning registration of items");
 
         for(Block block : modBlocks)
             event.getRegistry().register(new ItemBlock(block).setRegistryName(block.getRegistryName()));
@@ -107,5 +119,6 @@ public class ContentRegistry { //where all new items will be added
 
         for(ItemStack itemStack : modItems)
             event.getRegistry().register(itemStack.getItem());
+        AdvBaseSecurity.LogDebug("Finished registration of items");
     }
 }

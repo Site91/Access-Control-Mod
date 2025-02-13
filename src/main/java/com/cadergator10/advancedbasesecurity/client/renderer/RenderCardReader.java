@@ -1,8 +1,6 @@
 package com.cadergator10.advancedbasesecurity.client.renderer;
 
 import com.cadergator10.advancedbasesecurity.common.tileentity.TileEntityCardReader;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -15,6 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
+//Renders parts of the reader to make it BEAUTIFUL
 public class RenderCardReader  extends TileEntitySpecialRenderer<TileEntityCardReader> {
 
 	static float texPixel=1.0f/16f;

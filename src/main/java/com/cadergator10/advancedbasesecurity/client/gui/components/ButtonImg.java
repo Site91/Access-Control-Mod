@@ -1,19 +1,15 @@
 package com.cadergator10.advancedbasesecurity.client.gui.components;
 
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
+
+import java.util.regex.Pattern;
 
 //Credit to Applied Energistics
-public class ButtonImg extends GuiButton implements ITooltip {
+public class ButtonImg extends GuiButton implements ITooltip { //Button with a ICON that is displayed
     private static final Pattern COMPILE = Pattern.compile( "%s" );
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile( "\\n", Pattern.LITERAL );
     private boolean halfSize = false;

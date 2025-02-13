@@ -2,7 +2,6 @@ package com.cadergator10.advancedbasesecurity.common.items;
 
 import com.cadergator10.advancedbasesecurity.common.ContentRegistry;
 import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockGlassDoor;
-import com.cadergator10.advancedbasesecurity.common.blocks.doors.BlockMetalDoor;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -12,6 +11,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+//Look at ItemDoorFix
 public class ItemGlassDoor extends ItemDoorFix {
     public static ItemStack DEFAULTSTACK;
 

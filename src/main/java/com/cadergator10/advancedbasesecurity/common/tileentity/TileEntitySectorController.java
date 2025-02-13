@@ -18,12 +18,12 @@ import java.util.List;
 import java.util.UUID;
 
 public class TileEntitySectorController extends TileEntity { //basic tile entity, so none of the device base stuff needed.
-	DoorHandler.DoorIdentifier ids = null;
-	List<DoorHandler.Doors.OneDoor.OnePass> overrides = null;
-	public DoorHandler.Doors.OneDoor.allDoorStatuses thisStatus;
-	public boolean pushToChildren;
-	public boolean toggle;
-	boolean currentPower;
+	DoorHandler.DoorIdentifier ids = null; //managerId: manager, duh | doorId: the ID of the group itself.
+	List<DoorHandler.Doors.OneDoor.OnePass> overrides = null; //Passes to add to the door to allow overrides. Only on LOCKDOWN and OVERRIDDEN ACCESS.
+	public DoorHandler.Doors.OneDoor.allDoorStatuses thisStatus; //Status to change to when redstone output is true. If false, switches to ACCESS if toggle = true
+	public boolean pushToChildren; //If true, any sectors that are parented to the sector set in ids#doorId or children of children etc. are updated to the same status too.
+	public boolean toggle; //If true: turning redstone = false will set status to ACCESS. If false, does nothing when redstone = false.
+	boolean currentPower; //Current power detected. In case a neighbor is changed that is not redstone.
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
@@ -98,14 +98,14 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return nbt;
 	}
 
-	public void first(){
+	public void first(){ //When the block is first placed, initiate TE
 		thisStatus = DoorHandler.Doors.OneDoor.allDoorStatuses.ACCESS;
 		overrides = null;
 		ids = null;
 		markDirty();
 	}
 
-	public void newUpdate(SectControllerPacket packet){
+	public void newUpdate(SectControllerPacket packet){ //A new update recieved by the DoorManager. Change settings.
 		ids = packet.ids;
 		pushToChildren = packet.pushToChildren;
 		toggle = packet.toggle;
@@ -114,6 +114,11 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		redstoneSignalRecieved(currentPower, true); //marks dirty in function
 	}
 
+	/**
+	 * When right clicked by doorManager, this is called.
+	 * @param id The ID of the manager (in the doorManager)
+	 * @return whether the doorManager has access to the manager or not.
+	 */
 	public boolean setFirstTime(UUID id){
 		if(this.ids != null && this.ids.ManagerID != null){
 			if(this.ids.ManagerID.equals(id))
@@ -127,6 +132,7 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return true;
 	}
 
+	//called whenever sending NBT data to client. For stuff the Client should also get.
 	public NBTTagCompound pushMoreToUpdate(NBTTagCompound nbt){
 		nbt.setBoolean("toclient", true);
 		if(nbt.hasKey("overrides")){
@@ -149,6 +155,7 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return overrides;
 	}
 
+	//when a client requests NBT data for update.
 	@Override
 	public NBTTagCompound getUpdateTag() {
 		return pushMoreToUpdate(writeToNBT(super.getUpdateTag()));
@@ -170,28 +177,30 @@ public class TileEntitySectorController extends TileEntity { //basic tile entity
 		return (oldState.getBlock() != newState.getBlock());
 	}
 
+	//Easier to use. Sets the override to false by default
 	public void redstoneSignalRecieved(boolean signal){
 		redstoneSignalRecieved(signal, false);
 	}
 
+	//If redstone signal recieved and is different from currentPower, then change group status & all doors.
 	public void redstoneSignalRecieved(boolean signal, boolean override){
 		//TODO: actually recieve the signal. yes.
 		if(!world.isRemote) {
-			if(currentPower != signal || override) {
+			if(currentPower != signal || override) { //unless being overridden, check if currentPower is different from recieved signal. If true continue
 				DoorHandler.Doors manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(ids);
-				if (manager != null) {
+				if (manager != null) { //if managerID is correct (or manager exists)
 					DoorHandler.Doors.Groups group = manager.groups.get(ids.DoorID);
 					if (group == null)
 						return;
-					if (signal) {
+					if (signal) { //if true, change the status of the group to thisStatus var. Whatever the sectorcontroller is set to.
 						group.status = thisStatus;
-						if (Math.abs(thisStatus.getInt()) == 1)
+						if (Math.abs(thisStatus.getInt()) == 1) //-1 and 1 are LOCKDOWN and OVERRIDDEN ACCESS
 							group.override = overrides;
-					} else if (toggle) {
+					} else if (toggle) { //if toggle = true, when signal = false, set status to ACCESS.
 						group.status = DoorHandler.Doors.OneDoor.allDoorStatuses.ACCESS;
 						group.override = new LinkedList<>();
 					}
-					manager.updateGroups(group, pushToChildren);
+					manager.updateGroups(group, pushToChildren); //update the group to the DoorHandler, then change all Doors.
 				}
 				currentPower = signal;
 				markDirty();
