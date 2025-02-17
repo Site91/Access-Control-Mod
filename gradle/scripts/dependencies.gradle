@@ -40,6 +40,8 @@ dependencies {
 
     implementation rfg.deobf("curse.maven:bbl-227083:2518667")
 
+    implementation rfg.deobf(fileTree(dir: 'modlibs', include: '*.jar')) //Import mod file to do stuff
+
     //extraLibs files('Java-WebSocket-1.6.0-SNAPSHOT.jar')
 //    embed group: 'org.json', name: 'json', version: '20240303'
 //    embed 'com.google.code.gson:gson:2.11.0'
