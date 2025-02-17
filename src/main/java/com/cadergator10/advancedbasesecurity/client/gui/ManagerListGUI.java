@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiPageButtonList;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -24,11 +23,10 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
-public class ManagerListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class ManagerListGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Select the manager to link to a Doormanageritem
 
     //data passed by packet
     List<ManagerNamePacket.packetDoor> doors;

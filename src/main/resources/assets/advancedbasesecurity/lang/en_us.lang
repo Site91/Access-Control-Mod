@@ -77,3 +77,17 @@ gui.tooltips.advancedbasesecurity.passtype=The type of Pass/nPass: simple true/f
 gui.tooltips.advancedbasesecurity.allpasses=The currently selected pass you are editing/nclick to change the selection
 gui.tooltips.advancedbasesecurity.username=Set the name of this User
 gui.tooltips.advancedbasesecurity.managername=Set the name of the new Manager
+gui.tooltips.advancedbasesecurity.editsector=Edit the Sectors
+gui.tooltips.advancedbasesecurity.addsector=Add a new Sector
+gui.tooltips.advancedbasesecurity.delsector=Delete the current Sector
+gui.tooltips.advancedbasesecurity.savesectors=Save Sectors
+gui.tooltips.advancedbasesecurity.sectorname=Save the Sectors
+gui.tooltips.advancedbasesecurity.allsectors=Current sector you are editing/nClick to change which sector you would like to edit
+gui.tooltips.advancedbasesecurity.parentsector=The parent of this current sector/nClick to change the parent/nThe parent means if the parent (or a parent of the parent)/nhas a status change and cascade is enabled, it will/naffect this one and other children too.
+gui.tooltips.advancedbasesecurity.sectorpushchild=Whether, on toggle, the change will be pushed to all child Sectors of the currently selected sector.
+gui.tooltips.advancedbasesecurity.sectorconttoggle=Should this sector controller push a sector update both on on power on and off?/ntrue: push set update with redstone signal on. when off, sets back to ACCESS./nfalse: only pushes set status when redstone signal is on. Nothing on off.
+gui.tooltips.advancedbasesecurity.sectorchoose=Select the sector that should be updated on redstone signal recieved.
+gui.tooltips.advancedbasesecurity.sectorstatusbtn=Set the status the door should be put in on redstone signal/nNo Access: Absolutely no one can enter or exit/nLockdown: No one can enter except override passes set above/nAccess: Default door behavior/nOverridden Access: Default door passes + overridden passes set above have access/nAll Access: Doors locked open and anyone can go through
+gui.tooltips.advancedbasesecurity.usernamemanager=Input a user's username to add them to the manager allow list.
+gui.tooltips.advancedbasesecurity.doorpasseditselect=Select the pass on the device you want to edit
+

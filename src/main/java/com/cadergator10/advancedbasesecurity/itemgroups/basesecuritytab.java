@@ -6,7 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentTranslation;
 
-public class basesecuritytab extends CreativeTabs {
+public class basesecuritytab extends CreativeTabs { //The tab... das it
 
     public basesecuritytab() {
         super(getNextID(), "tabBaseSecurity");

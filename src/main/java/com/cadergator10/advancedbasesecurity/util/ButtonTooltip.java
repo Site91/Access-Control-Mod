@@ -1,10 +1,14 @@
 package com.cadergator10.advancedbasesecurity.util;
 
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import net.minecraft.util.text.translation.I18n;
 
-import java.util.Arrays;
-
-public enum ButtonTooltip{
+/**
+ * All the preset IconButtons
+ * Simply selects the icon to display on the button as well as the tooltip to select
+ * @see ButtonImg
+ */
+public enum ButtonTooltip{ //creates the complete button. Sets tooltip and chooses icontype
 
     AddDoor(icontype.GreenPlus,"newdoor"),
     AddManager(icontype.GreenPlus, "newmanager"),
@@ -26,13 +30,17 @@ public enum ButtonTooltip{
     WriteCard(icontype.WriteCard, "writecard"),
     ResetUUID(icontype.WhiteReset, "resetuuid"),
     SaveUsers(icontype.BlueDisc, "saveusers"),
+    SaveSectors(icontype.BlueDisc, "savesectors"),
     LinkDoor(icontype.Link, "linkdoor"),
     EditDoor(icontype.Pencil, "editdoor"),
+    SectorMenu(icontype.SectorOrange, "editsector"),
+    AddSector(icontype.WhitePlus, "addsector"),
+    DelSector(icontype.WhiteMinus, "delsector"),
     Add(icontype.WhitePlus, "add"),
     Delete(icontype.WhiteMinus, "delete"),
     Edit(icontype.Pencil, "edit");
 
-    public enum icontype {
+    public enum icontype { //specifies the actual icon type.
         GreenPlus(0,0),
         RedMinus(1,0),
         Pencil(2,0),
@@ -58,12 +66,13 @@ public enum ButtonTooltip{
         WhiteSelect(6,1),
         WriteCard(7,1),
         WhiteReset(8,1),
-        Link(9,1);
+        Link(9,1),
+        SectorOrange(10,1);
 
 
         private int x;
         private int y;
-        private icontype(int x, int y){
+        private icontype(int x, int y){ //x, y, is just the location on the texture. x * 16, y * 16
             this.x = x;
             this.y = y;
         }
@@ -73,8 +82,8 @@ public enum ButtonTooltip{
     };
 
     private final icontype icon;
-    private final String tooltip;
-    private final String root;
+    private final String tooltip; //the address to the tooltip in the localization
+    private final String root; //base of the localization name
     private ButtonTooltip(icontype icon, String tooltip){
         this.root = "gui.tooltips.advancedbasesecurity";
         this.icon = icon;
@@ -95,18 +104,18 @@ public enum ButtonTooltip{
         return tooltip;
     }
 
-    public String getLocal()
+    public String getLocal() //returns the translated text from currently selected localization
     {
         return I18n.translateToLocal( this.getUnlocalized() );
     }
-    public String getLocal(String[] replace)
+    public String getLocal(String[] replace) //same as above, except formatted (replaces [0] and [1] I believe in text with corresponding indexes in replace[])
     {
         String str = String.format(I18n.translateToLocal( this.getUnlocalized()), (Object) replace);
 
         return "";
     }
 
-    public String getUnlocalized()
+    public String getUnlocalized() //just returns the actual address to localization
     {
         return this.root + '.' + this.tooltip;
     }

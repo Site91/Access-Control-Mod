@@ -3,7 +3,6 @@ package com.cadergator10.advancedbasesecurity.common.tileentity;
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.CentralDoorNBT;
-import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.state.IBlockState;
@@ -12,6 +11,11 @@ import net.minecraft.util.SoundCategory;
 
 import java.util.UUID;
 
+/**
+ * Independent Door that is controlled by the TileEntityDoorController
+ * @see TileEntityDoorController
+ * Lot of mumbo jumbo stuff i'm bored. Not much will be commented as it prolly won't be needed
+ */
 public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 //	TileEntityDoorController currentDoor;
 	public boolean pushDoor; //if true, door must be right clicked to open/close.
@@ -96,6 +100,7 @@ public class TileEntityDoor extends TileEntityDeviceBase implements IDoor {
 	}
 
 	public void setDoorM(UUID managerId){
+		AdvBaseSecurity.LogDebug("Independent Door " + deviceId + " recieved communication with DoorController. Got managerID " + managerId);
 		this.managerId = managerId;
 		if(managerId != null)
 			door = AdvBaseSecurity.instance.doorHandler.getDoorManager(managerId);

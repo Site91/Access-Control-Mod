@@ -1,6 +1,5 @@
 package com.cadergator10.advancedbasesecurity.client.gui;
 
-import com.cadergator10.advancedbasesecurity.client.gui.components.GUITextFieldTooltip;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ITooltip;
 import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
@@ -11,7 +10,7 @@ import net.minecraft.util.text.TextFormatting;
 import java.util.Arrays;
 import java.util.List;
 
-public class BaseGUI extends GuiScreen {
+public class BaseGUI extends GuiScreen { //base normal GUI for all GUIs (apart from EditUserGUI as thats a container)
     private int wdth;
     private int hght;
     int GUILeft;

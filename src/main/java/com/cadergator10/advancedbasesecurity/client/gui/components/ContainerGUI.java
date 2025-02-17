@@ -6,7 +6,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 
-public abstract class ContainerGUI extends GuiContainer {
+public abstract class ContainerGUI extends GuiContainer { //A class to hold data that is used between multiple ContainerGUIs
     private static final int slotSize = 18;
 
     public ContainerGUI(Container inventorySlotsIn){

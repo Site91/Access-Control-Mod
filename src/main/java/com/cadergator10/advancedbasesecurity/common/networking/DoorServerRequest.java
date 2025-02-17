@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -19,12 +20,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.UUID;
 
+/**
+ * Most requests done from the client to the server. Does various things and often requires validators, managerId, etc.
+ */
 public class DoorServerRequest implements IMessage { //Request a GUI from the server
-    UUID editValidator;
-    UUID managerId;
-    String validatorID;
-    String request;
-    String requestData;
+    UUID editValidator; //A check to ensure the user actually can change things.
+    UUID managerId; //The ID of the doormanager itself.
+    String validatorID; //The code the editValidator is linked to. Not usually used most of the time.
+    String request; //The actual request itself.
+    String requestData; //Any data passed along with the request.
 
     public DoorServerRequest(){}
     public DoorServerRequest(UUID editValidator, String validatorID, UUID managerId, String request, String requestData){
@@ -83,21 +87,22 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
         @Override
         public IMessage onMessage(DoorServerRequest message, MessageContext ctx) {
             //server side only so all good
-            boolean canUse = false; //if true, they can edit stuff
+            boolean canUse = false; //if true, they can edit stuff. Only useful if ALL the vars are filled, which is barely any (most do their own check)
             DoorHandler.Doors manager = null;
             if(message.managerId != null){
-                manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId);
+                manager = AdvBaseSecurity.instance.doorHandler.getDoorManager(message.managerId); //auto grabs the manager for use.
                 if(manager != null) {
-                    if(message.editValidator != null && message.validatorID != null)
+                    if(message.editValidator != null && message.validatorID != null) //phase out. validatorID can be abused by a rogue client
                         canUse = manager.validator.hasPermissions(message.validatorID, message.editValidator);
                 }
             }
             EntityPlayerMP serverPlayer = ctx.getServerHandler().player;
-            if(message.request.equals("newdoor")){ //make new door
-                if(manager != null && manager.hasPerms(serverPlayer)){
+            AdvBaseSecurity.LogDebug("User " + serverPlayer.getName() + " and ID " + serverPlayer.getUniqueID() + " sent ServerRequest: request:" + message.request + " | requestData: " + message.requestData);
+            if(message.request.equals("newdoor")){ //Make a new door
+                if(manager != null && manager.hasPerms(serverPlayer)){ //Check if user has perms to do it. Either creator or given permission by creator. Not duplicating comment further down.
                     DoorHandler.Doors.OneDoor door = manager.addNewDoor();
                     UUID newid = UUID.randomUUID();
-                    boolean added = manager.validator.addPermissions("door:" + door.doorId.toString(), newid, true);
+                    boolean added = manager.validator.addPermissions("door:" + door.doorId.toString(), newid, true); //Get editValidator to send to client. Not duplicating comment further down.
                     if(added) {
                         OneDoorDataPacket doorPacket = new OneDoorDataPacket(newid, manager.id, door, true);
                         AdvBaseSecurity.instance.network.sendTo(doorPacket, serverPlayer);
@@ -125,13 +130,13 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 }
             }
             else if(message.request.equals("doorlist")){ //send them the door list (same as command)
-                if(manager != null) {
-                    DoorNamePacket packet = new DoorNamePacket(manager, true);
+                if(manager != null && manager.hasPerms(serverPlayer)) {
+                    DoorNamePacket packet = new DoorNamePacket(manager, true, manager.allowedPlayers);
                     AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                 }
             }
             else if(message.request.equals("linkdoormanager")){ //change manager ID of doormanager and open new gui
-                ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
+                ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> { //makes sure this runs on the tick. Not duplicating comment further down
                     ItemStack item = ctx.getServerHandler().player.getHeldItemMainhand();
                     if(item.getItem() instanceof ItemDoorManager){
                         DoorHandler.Doors door = AdvBaseSecurity.instance.doorHandler.getDoorManager(UUID.fromString(message.requestData));
@@ -169,17 +174,17 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                 });
                 return null;
             }
-            else if(message.request.equals("removeperm")){
+            else if(message.request.equals("removeperm")){ //Remove the permission of the manager if they have access.
                 if(manager != null && canUse){
                     manager.validator.removePerm(message.validatorID);
                 }
             }
-            else if(message.request.equals("openusermenu")){
+            else if(message.request.equals("openusermenu")){ //Opens the GUI on the clint for editing users.
                 ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
                     ctx.getServerHandler().player.openGui(AdvBaseSecurity.instance, 1, ctx.getServerHandler().player.world, 0, 0, 0);
                 });
             }
-            else if(message.request.equals("getuserdata")){
+            else if(message.request.equals("getuserdata")){ //Get all the users in a doorManager.
                 if(manager != null){
                     UUID eV = UUID.randomUUID(); //edit validator ID
                     boolean worked = manager.validator.addPermissions("useredit", eV, false);
@@ -212,11 +217,21 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     });
                 }
             }
-            else if(message.request.equals("openpassmenu")){
+            else if(message.request.equals("openpassmenu")){ //Open the Pass Editing GUI.
                 UUID id = UUID.randomUUID();
                 boolean worked = manager.validator.addPermissions("passes", id, false);
                 if(worked) {
                     PassEditPacket packet = new PassEditPacket(id, message.managerId, manager.passes);
+                    AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
+                }
+                else
+                    serverPlayer.sendMessage(new TextComponentString("You were not authorized to perform this command (session in progress)"));
+            }
+            else if(message.request.equals("opensectormenu")){ //Open the Sector Editing GUI.
+                UUID id = UUID.randomUUID();
+                boolean worked = manager.validator.addPermissions("sectors", id, false);
+                if(worked) {
+                    SectorEditPacket packet = new SectorEditPacket(id, message.managerId, manager.groups);
                     AdvBaseSecurity.instance.network.sendTo(packet, serverPlayer);
                 }
                 else
@@ -244,7 +259,7 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                     }
                 }
             }
-            else if(message.request.equals("modeButtonHit")){
+            else if(message.request.equals("modeButtonHit")){ //If the mode button was clicked on the DoorManager, this will reset linking if it was currently doing so.
                 if(manager != null && manager.hasPerms(serverPlayer) && message.requestData != null){ //manager always not null if canUse
                     String name = manager.name;
                     ctx.getServerHandler().player.getServerWorld().addScheduledTask(() -> {
@@ -259,6 +274,33 @@ public class DoorServerRequest implements IMessage { //Request a GUI from the se
                             }
                         }
                     });
+                }
+            }
+            else if(message.request.equals("removemanagerplayer") && message.requestData != null){ //Remove an authorized user from a doorManager
+                if(manager != null && manager.creator.equals(serverPlayer.getUniqueID())){
+                    UUID id = UUID.fromString(message.requestData);
+                    for(int i=0; i<manager.allowedPlayers.size(); i++){
+                        if(manager.allowedPlayers.get(i).equals(id)){
+                            manager.allowedPlayers.remove(i);
+                            manager.markDirty();
+                            return null;
+                        }
+                    }
+                }
+            }
+            else if(message.request.equals("addmanagerplayer") && message.requestData != null){ //Add an authorized user from a doorManager
+                if(manager != null && manager.creator.equals(serverPlayer.getUniqueID())){
+                    EntityPlayerMP play = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUsername(message.requestData);
+                    if(play == null)
+                        return null;
+                    UUID id = play.getUniqueID();
+                    for(int i=0; i<manager.allowedPlayers.size(); i++){
+                        if(manager.allowedPlayers.get(i).equals(id)){
+                            return null;
+                        }
+                    }
+                    manager.allowedPlayers.add(id);
+                    manager.markDirty();
                 }
             }
             return null;

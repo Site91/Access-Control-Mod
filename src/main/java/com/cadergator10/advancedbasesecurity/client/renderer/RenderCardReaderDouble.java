@@ -13,6 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
+//Renders parts of the reader to make it DOUBLEY BEAUTIFUL
 public class RenderCardReaderDouble extends TileEntitySpecialRenderer<TileEntityCardReader> {
 
 	static float texPixel=1.0f/16f;

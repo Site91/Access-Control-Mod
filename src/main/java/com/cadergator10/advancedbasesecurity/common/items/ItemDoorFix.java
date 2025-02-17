@@ -15,6 +15,10 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+/**
+ * Some issues arose with the regular ItemDoor, mainly that "onBlockPlacedBy" was NEVER EVER CALLED FOR SOME REASON MAAAAAAAN!!!
+ * Copy/Paste of ItemDoor but with fixes basically. That's it. Nothing else is done.
+ */
 public class ItemDoorFix extends ItemBlock
 {
 

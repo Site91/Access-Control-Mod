@@ -17,7 +17,12 @@ import net.minecraftforge.common.util.Constants;
 
 import java.util.*;
 
-//Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
+/**
+ * DoorController: Doors
+ * When door opens or closes, opens/closes the special doors added by this mod. Splendid!
+ * Also is Camo, so right clicking with nearly any block sets its texture to that.
+ * Heavy thanks to OpenSecurity. Their code really helped me set this all up and get it working!!!
+ */
 public class TileEntityDoorController extends TileEntityCamoBase implements IDoorControl {
 	boolean currentState = false;
 
@@ -79,6 +84,7 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 	}
 
 	public HashMap<BlockPos, BlockDoor> getDoors() {
+		AdvBaseSecurity.LogDebug("Beginning scan for all doors connected to device " + deviceId);
 		return getDoors(this.pos, true);
 	}
 	//TAKEN STRAIGHT FROM OPENSECURITY!
@@ -104,12 +110,12 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 					doors.putAll(getDoors(position, false));
 			}
 		}
-
 		return doors;
 	}
 
 	@Override
 	public void openDoor(boolean toggle) {
+		AdvBaseSecurity.LogDebug("DoorController of ID " + deviceId + " opening door: " + toggle);
 		if(door != null) {
 			door.toggleIndDoors(deviceId, toggle);
 			if (toggle != currentState) {
@@ -119,14 +125,14 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 		}
 	}
 
-	@Override
+	@Override //generally called at the very placement of the block. Initiates the tileentity
 	public void newId() {
 		currentState = false;
 		super.newId();
 	}
 
 	@Override
-	public String getDevType() {
+	public String getDevType() { //Check by DoorHandler to sort tileentities into the right lists
 		return "doorcontrol";
 	}
 
@@ -137,7 +143,8 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 			openDoor(door.getDoorState(deviceId));
 	}
 
-	public void linkDoors() {
+	public void linkDoors() { //When doorcontroller is right clicked with wrench. Resets door list and tries to link em.
+		AdvBaseSecurity.LogDebug("Linking Doors to this DoorController " + deviceId);
 		prevPos = new LinkedList<>();
 		HashMap<BlockPos, BlockDoor> dooreme = getDoors();
 		for(Map.Entry<BlockPos, BlockDoor> doorSet : dooreme.entrySet()){
@@ -149,6 +156,7 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 						doore.clonedId = deviceId;
 						doore.clonedManager = managerId;
 						prevPos.add(doore.deviceId);
+						AdvBaseSecurity.LogDebug("DoorController " + deviceId + "found and now attempting communication with Independent Door at " + doorSet.getKey().toString());
 						te.setDoorM(managerId);
 					}
 				}
@@ -158,7 +166,7 @@ public class TileEntityDoorController extends TileEntityCamoBase implements IDoo
 	}
 
 	@Override
-	public void onPlace() {
+	public void onPlace() { //called when first placed. Explanation same yada yada
 		//check if in list
 		if (!AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(this.deviceId))
 			AdvBaseSecurity.instance.doorHandler.allDoorControllers.put(this.deviceId, this);

@@ -1,11 +1,11 @@
 package com.cadergator10.advancedbasesecurity.common.items;
 
 import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
+import com.cadergator10.advancedbasesecurity.common.blocks.BlockSectorController;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.inventory.InventoryDoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorNamePacket;
 import com.cadergator10.advancedbasesecurity.common.networking.ManagerNamePacket;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -19,10 +19,16 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * Used to control ALL functions of the doormanager and therefore all doors.
+ * Sneak right click for global stuff.
+ * Right click on blocks to perform functions
+ * 		SectorController: change its settings
+ * 		linking: Reader/DoorController: link a door to the currently selected door.
+ * 		(soon) nonlinking: Reader/DoorController: edit a door that the device is linked to
+ */
 public class ItemDoorManager extends ItemBase {
 	public static final String NAME = "door_manager";
 	public static ItemStack DEFAULTSTACK;
@@ -31,7 +37,7 @@ public class ItemDoorManager extends ItemBase {
 		super(NAME);
 	}
 
-	private EnumActionResult openMenu(ItemStack heldItem, EntityPlayerMP player){
+	private EnumActionResult openMenu(ItemStack heldItem, EntityPlayerMP player){ //Performs checks whether the manager can be opened and is the right hand etc.
 		ManagerTag tag = new ManagerTag(heldItem);
 		if(tag.managerID == null){
 			ManagerNamePacket packet = new ManagerNamePacket(AdvBaseSecurity.instance.doorHandler.getAllowedManagers(player));
@@ -47,27 +53,27 @@ public class ItemDoorManager extends ItemBase {
 			return EnumActionResult.FAIL;
 		}
 		//send door names
-		DoorNamePacket packet = new DoorNamePacket(door, tag.currentScanMode == 0);
+		DoorNamePacket packet = new DoorNamePacket(door, tag.currentScanMode == 0, door.allowedPlayers);
 		AdvBaseSecurity.instance.network.sendTo(packet, player);
 		return EnumActionResult.SUCCESS;
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand handIn) {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand handIn) { //When block right clicked in air or general.
 		ItemStack heldItem = player.getHeldItemMainhand();
 		if (!(heldItem.getItem() instanceof ItemDoorManager))
 			return super.onItemRightClick(worldIn, player, handIn);
-		return new ActionResult<ItemStack>(!worldIn.isRemote && player instanceof EntityPlayerMP ? openMenu(heldItem, (EntityPlayerMP) player) : EnumActionResult.SUCCESS,player.getHeldItem(handIn));
+		return new ActionResult<ItemStack>(!worldIn.isRemote && player instanceof EntityPlayerMP && player.isSneaking() ? openMenu(heldItem, (EntityPlayerMP) player) : EnumActionResult.PASS,player.getHeldItem(handIn));
 	}
 
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) { //When block right clicked on block.
 		if(!worldIn.isRemote && player instanceof EntityPlayerMP) {
 			ItemStack heldItem = player.getHeldItemMainhand();
 			if (!(heldItem.getItem() instanceof ItemDoorManager))
 				return super.onItemUse(player, worldIn, pos, hand, facing, hitX, hitY, hitZ);
-			if (player.isSneaking()) { //perform actions on other stuff
-				return EnumActionResult.PASS;
+			if (!player.isSneaking() || worldIn.getBlockState(pos).getBlock() instanceof BlockSectorController) { //perform actions on other stuff
+				return EnumActionResult.SUCCESS;
 			} else {
 				return openMenu(heldItem, (EntityPlayerMP) player);
 			}

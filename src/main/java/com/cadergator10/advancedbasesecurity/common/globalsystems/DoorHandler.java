@@ -28,28 +28,31 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 public class DoorHandler {
-    public DoorData doorData;
-    public HashMap<UUID, Doors> DoorGroups;
-    public CentralDoorNBT IndDoors;
-    public boolean loaded = false;
+    public DoorData doorData; //Holds data about each specific door manager.
+    public HashMap<UUID, Doors> DoorGroups; //All the individual door managers that are loaded after doorData above
+    public CentralDoorNBT IndDoors; //The data for all Door blocks in the world.
+    public boolean loaded = false; //Whether the data has been loaded from the world
 
-    public HashMap<UUID, IReader> allReaders;
-    public HashMap<UUID, IDoorControl> allDoorControllers;
-    public HashMap<UUID, IDoor> allDoors;
+    public HashMap<UUID, IReader> allReaders; //All Readers currently chunk loaded.
+    public HashMap<UUID, IDoorControl> allDoorControllers; //All door controllers currently chunk loaded
+    public HashMap<UUID, IDoor> allDoors; //All individual doors that are currently chunkloaded
 
     public DoorHandler(){
         AdvBaseSecurity.instance.logger.info("Loaded DoorHandler!");
         //world.getMapStorage().getOrLoadData(Doors.class, DATA_NAME);
     }
 
+    /**
+     * Prepare vars and load from the world
+     */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onWorldLoad(WorldEvent.Load event){
-        doorTime = Integer.MIN_VALUE;
+        doorTime = Integer.MIN_VALUE; //Used by doors to count down when to close every second
         if(!event.getWorld().isRemote && !loaded) {
             doorData = DoorData.get(event.getWorld());
             AdvBaseSecurity.instance.logger.info("Found " + doorData.doors.size() + " doors to load!");
             DoorGroups = new HashMap<>();
-            for(UUID id : doorData.doors){
+            for(UUID id : doorData.doors){ //Read from doordata to get the IDs of all the other doors to load
                 Doors door = Doors.get(event.getWorld(), id.toString());
                 for (Doors.OneDoor doore : door.doors) {
                     if (doore.isDoorOpen == 1) { //any timed doors add to list
@@ -68,6 +71,9 @@ public class DoorHandler {
         }
     }
 
+    /**
+     * Unload data when world is being closed so that if another world is selected it is ready
+     */
     public void onWorldUnload(FMLServerStoppedEvent event){
         if(loaded) {
             AdvBaseSecurity.instance.logger.info("World unloading. Removing door stuff");
@@ -87,7 +93,7 @@ public class DoorHandler {
 
     public static int doorTime = Integer.MIN_VALUE;
 
-    static class cacheHolder{
+    static class cacheHolder{ //Used by
         public cacheHolder(){
 
         }
@@ -105,6 +111,9 @@ public class DoorHandler {
 
     public UUID editValidator;
 
+    /**
+     * Used to perform the functions on timedDoors. Ensures the doors will stay open only for so long then update.
+     */
     @SubscribeEvent
     public void onTick(TickEvent.ServerTickEvent event){
         if(event.phase == TickEvent.Phase.START) {
@@ -129,12 +138,16 @@ public class DoorHandler {
                         allDoorControllers.remove(dev.getId());
                     else if (dev.getDevType().equals("door"))
                         allDoors.remove(dev.getId());
+                    AdvBaseSecurity.LogDebug("Loaded device with ID " + dev.getId() + " at chunk x:" + event.getChunk().x + " z:" + event.getChunk().z);
                 }
             };
             map.forEach(biConsumer);
         }
     }
 
+    /**
+     * When a chunk is loaded, put all tile entities in that chunk in the list so that their functions can be called.
+     */
     @SubscribeEvent
     public void onChunkLoad(ChunkEvent.Load event){
         if(!event.getWorld().isRemote) {
@@ -148,6 +161,7 @@ public class DoorHandler {
                         allDoorControllers.put(dev.getId(), (IDoorControl) dev);
                     else if (dev.getDevType().equals("door"))
                         allDoors.put(dev.getId(), (IDoor) dev);
+                    AdvBaseSecurity.LogDebug("Unloaded device with ID " + dev.getId() + " at chunk x:" + event.getChunk().x + " z:" + event.getChunk().z);
                 }
             };
             map.forEach(biConsumer);
@@ -158,12 +172,17 @@ public class DoorHandler {
 //    public void serverSave(WorldEvent.Save event){
 //
 //    }
-    
 
+
+    /**
+     * Return the door manager with the ManagerID
+     * @param id
+     * @return
+     */
     public Doors getDoorManager(DoorIdentifier id){
         return getDoorManager(id.ManagerID);
     }
-    
+    //same as above
     public Doors getDoorManager(UUID id){
         if(id != null && DoorGroups.containsKey(id)){
             return DoorGroups.get(id);
@@ -171,6 +190,12 @@ public class DoorHandler {
         return null;
     }
 
+    /**
+     * Add a new door manager to the list. Adds the world data and sets certain values
+     * @param player used to add their ID to the creator value of the manager
+     * @param name name of the manager
+     * @return returns the new manager that was made
+     */
     public Doors addDoorManager(EntityPlayer player, String name){
         UUID id = UUID.randomUUID();
         Doors door = Doors.get(player.world, id.toString());
@@ -181,24 +206,33 @@ public class DoorHandler {
         door.name = name != null ? name : "new";
         door.markDirty();
         DoorGroups.put(id, door);
+        AdvBaseSecurity.Log("User " + player.getName() + " with ID:" + player.getUniqueID() + " made a new Door Manager with name " + name + " with ID " + id.toString());
         return door;
     }
 
 
     //region Reader/Door Management
+
+    /**
+     * When a device is right clicked with the door manager in linking mode, sets the device to the manager.
+     * @param devID the ID of the device
+     * @param doorID the ID of the manager & door
+     * @param isDoor Whether its a door or reader. True if door, false if reader
+     * @return true if saved to the system, false if either denied or already exists
+     */
     public boolean SetDevID(UUID devID, DoorIdentifier doorID, boolean isDoor){
         //make sure manager ID exists
-        if(!DoorGroups.containsKey(doorID.ManagerID))
+        if(!DoorGroups.containsKey(doorID.ManagerID)) //Check if it exists
             return false;
-        Doors manager = DoorGroups.get(doorID.ManagerID);
-        int foundRightOne = -1;
-        int index = 0;
+        Doors manager = DoorGroups.get(doorID.ManagerID); //get manager
+        int foundRightOne = -1; //-1 = not found: otherwise index in list
+        int index = 0; //counts up. Just the counter
         if(!isDoor) {
 
             for (Doors.OneDoor door : manager.doors) {
-                if (door.doorId.equals(doorID.DoorID)) {
-                    boolean contained = false;
-                    for(UUID id : door.Readers)
+                if (door.doorId.equals(doorID.DoorID)) { //If the door exists, will be true
+                    boolean contained = false; //contained means it already exists in the list
+                    for(UUID id : door.Readers) //loop checks if it exists already
                         if(id.equals(devID)){
                             contained = true;
                             break;
@@ -211,7 +245,7 @@ public class DoorHandler {
                 }
                 index++;
             }
-            if (foundRightOne != -1) {
+            if (foundRightOne != -1) { //If true, search all other doors for this device to remove it from them
                 index = 0;
                 for (Doors.OneDoor door : manager.doors) { //make sure no other door has this reader.
                     for(int j=0; j<door.Readers.size(); j++){
@@ -225,7 +259,7 @@ public class DoorHandler {
                 manager.markDirty();
             }
         }
-        else{
+        else{ //Not duplicating above comments as it's literally the same
             for (Doors.OneDoor door : manager.doors) {
                 if (door.doorId.equals(doorID.DoorID)) {
                     boolean contained = false;
@@ -273,6 +307,11 @@ public class DoorHandler {
 //        return door;
 //    }
 
+    /**
+     * Returns all managers this player can access
+     * @param player the player requesting the list
+     * @return list of managers
+     */
     public List<Doors> getAllowedManagers(EntityPlayer player){
         List<Doors> doors = new LinkedList<>();
         for(Doors door : DoorGroups.values()){
@@ -282,6 +321,7 @@ public class DoorHandler {
         return doors;
     }
 
+    //Same as above, but only returns the amount of managers this user has created (not including what they have access to)
     public int getManagerCount(EntityPlayer player){
         int count = 0;
         for(Doors door : DoorGroups.values()){
@@ -294,28 +334,31 @@ public class DoorHandler {
 
     //region Door save file
     public static class Doors extends WorldSavedData{
-        public int currentDoorVer = 0; //The version of the file. In case on the website it has been updated.
+        public int currentDoorVer = 0; //The version of the file. In case on the website it has been updated. Unused atm
 
         public static final String DATA_NAME = AdvBaseSecurity.MODID + "_doorid_";
 
-        public String name;
-        public UUID id;
-        public UUID creator;
-        public List<UUID> allowedPlayers = new LinkedList<>();
-        public List<OneDoor> doors = new LinkedList<>();
-        public HashMap<String, PassValue> passes = new HashMap<>();
-        public HashMap<UUID, Groups> groups = new HashMap<>();
-        public List<Users> users = new LinkedList<>();
+        public String name; //Name of door
+        public UUID id; //The ID yes
+        public UUID creator; //Whoever created the manager
+        public List<UUID> allowedPlayers = new LinkedList<>(); //All IDs of players that can access the manager
+        public List<OneDoor> doors = new LinkedList<>(); //The doors that have been created. Used by doors and users
+        public HashMap<String, PassValue> passes = new HashMap<>(); //The passes that have been created
+        public HashMap<UUID, Groups> groups = new HashMap<>(); //Groups/Sectors created. Doors link to em
+        public List<Users> users = new LinkedList<>(); //The users that have been created. Linked to ID cards
 
         //in-session stuff (not nbt)
         private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
 
 
 
-        public List<cacheHolder> userCache;
+        public List<cacheHolder> userCache; //Cache of user's swipes. So if they keep swiping on the same door it uses this instead to reduce the massive checks that were done
         
-        public ModifierValidation validator;
+        public ModifierValidation validator; //Ensures before changes are done that they got permission for it.
 
+        /**
+         * Used to just add STAFF pass directly in, since it's permanent and not saved in world save data
+         */
         void quickPassAdd(){
             PassValue tempPass = new PassValue("staff");
             tempPass.passName = "Staff";
@@ -323,7 +366,10 @@ public class DoorHandler {
             tempPass.groupNames = null;
             passes.put("staff", tempPass);
         }
-        
+
+        /**
+         * Called when door is loaded when save is loaded
+         */
         void firstTimeSetup(){
             timedDoors = new LinkedList<>();
             userCache = new LinkedList<>();
@@ -341,6 +387,12 @@ public class DoorHandler {
             firstTimeSetup();
         }
 
+        /**
+         * loads WorldSaveData
+         * @param world the world
+         * @param id ID of the data
+         * @return the entirety of this class instanc
+         */
         public static Doors get(World world, String id) {
             MapStorage storage = world.getMapStorage();
             AdvBaseSecurity.instance.logger.info("Reading or Creating door with ID " + id);
@@ -474,22 +526,27 @@ public class DoorHandler {
             return nbt;
         }
 
+        /**
+         * Every tick this is called. Does stuff to timed doors when their timers run out and also usercache
+         * @param timer timer of this world. Used for the user cache.
+         */
         public void onTick(TickEvent.ServerTickEvent event, int timer){
             try {
-                if (!timedDoors.isEmpty()) {
+                if (!timedDoors.isEmpty()) { //Lowers the current tick of each door
                     for (int i = 0; i < timedDoors.size(); i++) {
                         Doors.OneDoor door = timedDoors.get(i);
-                        if (door.isDoorOpen == 1) {
+                        if (door.isDoorOpen == 1) { //means a timed door
                             door.currTick--;
-                            if (door.currTick <= 0) {
+                            if (door.currTick <= 0) { //timer ran out
                                 door.isDoorOpen = 0;
-                                pushDoorUpdate(door);
+                                pushDoorUpdate(door); //update the door state
                                 markDirty();
                             }
                         }
 
-                        if (door.isDoorOpen == 0) {
+                        if (door.isDoorOpen == 0) { //remove from timed doors list
                             timedDoors.remove(door);
+                            AdvBaseSecurity.Log("Door with ID " + door.doorId + " and name " + door.doorName + " removed from TimedDoors.");
                         }
                     }
                 }
@@ -498,9 +555,11 @@ public class DoorHandler {
                 //nothing. Just in case above thing crashes
             }
             //cache
-            if (DoorConfig.cachetime != 0) {
+            if (DoorConfig.cachetime != 0) { //usercache disabled
                 for (int i = 0; i < userCache.size(); i++) {
-                    if (userCache.get(i).time <= timer) {
+                    cacheHolder cached = userCache.get(i);
+                    if (cached.time <= timer) { //timer reached end, so remove from list
+                        AdvBaseSecurity.LogDebug("Removing user ID " + cached.userID + " with door ID " + cached.doorID + " from the UserCache");
                         userCache.remove(i);
                         i--;
                     }
@@ -508,11 +567,22 @@ public class DoorHandler {
             }
         }
 
+        /**
+         * Checks whether they are the owner or have access to the door manager
+         * @param player the player checking for the perm
+         * @return whether they have access
+         */
         public boolean hasPerms(EntityPlayer player){
             return creator.equals(player.getUniqueID()) || allowedPlayers.contains(player.getUniqueID());
         }
 
         //region Door Controls
+
+        /**
+         * For all door controllers, update their state. NOT USED
+         * @param door the door specifically
+         */
+        @Deprecated
         private void updateDoorState(Doors.OneDoor door){ //update door state of all doors that are currently loaded.
             for(UUID dev : door.Doors){
                 if(AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(dev)){
@@ -520,18 +590,26 @@ public class DoorHandler {
                 }
             }
         }
-        //Check permissions list of a door
+
+        /**
+         * Check permission list of a door
+         * @param door The door that is being checked
+         * @param user The user on the card
+         * @return whether they have access
+         */
         private boolean checkPassList(List<Doors.OneDoor.OnePass> door, Doors.Users user){
+            if(door == null)
+                return false; //in case overrides is null
             for(int i=1; i<=5; i++){ //priorities
                 int isThrough = 0; //-1 = reject pass. 0 = nope. 1 = allowed base.
                 for(Doors.OneDoor.OnePass pass : door){
-                    if(pass.priority == i && pass.passType != Doors.OneDoor.OnePass.type.Add){
-                        boolean gotIt = !pass.passID.equals("staff") ? checkPass(pass, user.passes.get(pass.passID)) : user.staff;
-                        if(gotIt) {
-                            if (pass.passType == Doors.OneDoor.OnePass.type.Reject) {
+                    if(pass.priority == i && pass.passType != Doors.OneDoor.OnePass.type.Add){ //If priority is right and is not an ADD type
+                        boolean gotIt = !pass.passID.equals("staff") ? checkPass(pass, user.passes.get(pass.passID)) : user.staff; //Check if they had the perms.
+                        if(gotIt) { //Have access
+                            if (pass.passType == Doors.OneDoor.OnePass.type.Reject) { //Deny them access no matter the further perms found
                                 isThrough = -1;
                             }
-                            else if (pass.passType == Doors.OneDoor.OnePass.type.Supreme) {
+                            else if (pass.passType == Doors.OneDoor.OnePass.type.Supreme) { //Allow them access no matter the further perms found (overrides reject)
                                 isThrough = 1;
                                 break;
                             }
@@ -542,7 +620,7 @@ public class DoorHandler {
                                 //check all add passes
                                 isThrough = 1;
                                 if(!pass.addPasses.isEmpty()) {
-                                    for (Doors.OneDoor.OnePass addPass : door) {
+                                    for (Doors.OneDoor.OnePass addPass : door) { //Perform checks on all linked add passes. Not grant access if an add pass fails. Otherwise grant some access
                                         if (addPass.passType == Doors.OneDoor.OnePass.type.Add) {
                                             //check add passes
                                             boolean contained = false;
@@ -705,6 +783,7 @@ public class DoorHandler {
             Doors.OneDoor door = new Doors.OneDoor(true);
             doors.add(door);
             markDirty();
+            AdvBaseSecurity.LogDebug("Added a new door with ID " + door.doorId + " to the manager named " + name + " with ID " + id);
             return door;
         }
         //endregion
@@ -712,7 +791,9 @@ public class DoorHandler {
         //remove from timedDoors
         private void removeFromTimedDoors(UUID doorID){
             for (int i = 0; i < timedDoors.size(); i++) {
-                if (timedDoors.get(i).doorId.equals(doorID)) {
+                OneDoor door = timedDoors.get(i);
+                if (door.doorId.equals(doorID)) {
+                    AdvBaseSecurity.LogDebug("Removed door with name " + door.doorName + " and ID " + door.doorId + " from the TimedDoors List Manually");
                     timedDoors.remove(i);
                     break;
                 }
@@ -721,6 +802,7 @@ public class DoorHandler {
 
         //push update to existing tile entities
         private void pushDoorUpdate(Doors.OneDoor door){
+            AdvBaseSecurity.LogDebug("Pushing an update to door " + door.doorName + " ID: " + door.doorId + " | Door status:" + door.doorStatus.getInt() + " : " + door.toString());
             for(UUID id : door.Doors){
                 if(AdvBaseSecurity.instance.doorHandler.allDoorControllers.containsKey(id)){
                     AdvBaseSecurity.instance.doorHandler.allDoorControllers.get(id).openDoor(door.isDoorOpen != 0);
@@ -743,7 +825,7 @@ public class DoorHandler {
                 }
                 else {
                     display = new TextComponentTranslation("advancedbasesecurity.reader.text.idle").getUnformattedText();
-                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 14 : 6);
+                    color = (byte)(door.doorStatus == Doors.OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS ? 2 : 6);
                     barColor = 0;
                 }
             }
@@ -771,7 +853,7 @@ public class DoorHandler {
             if(door.isDoorOpen == 1 && !timedDoors.contains(door)){
                 timedDoors.add(door);
             }
-            else{
+            else if(door.isDoorOpen != 1){
                 timedDoors.remove(door);
             }
             for(int i=0; i<userCache.size(); i++){ //clear cache of these door IDs
@@ -828,6 +910,7 @@ public class DoorHandler {
             }
         }
 
+        //Called to change stuff in a door.
         public void changeDoorState(UUID doorID){ //use default value
             Doors.OneDoor door = getDoorFromID(doorID);
             if(door == null)
@@ -841,6 +924,9 @@ public class DoorHandler {
             changeDoorStateInternal(door, openState, ticks);
         }
 
+        /**
+         * Checks all user passes to ensure they are correctly set. Otherwise add or remove em
+         */
         public void verifyUserPasses(){
             List<String> exists = new LinkedList<>();
             BiConsumer<String, Doors.PassValue> bic = (s, passValue) -> exists.add(s);
@@ -864,7 +950,13 @@ public class DoorHandler {
             markDirty();
         }
 
+        /**
+         * Push a group's changes to all Doors linked to this group
+         * @param group The group you changed
+         * @param pushToChildren //Whether any groups that are parented to this one should also update
+         */
         public void updateGroups(Doors.Groups group, boolean pushToChildren){ //pushToChildren means if a change was made to a group, if it should update all child groups too (groups with parentID set to this groupID)
+            AdvBaseSecurity.LogDebug("Updates pushed to group " + group.name + " and ID " + group.id + ": Status: " + group.status.getInt());
             //group at this point has already been updated. this function simply pushes to doors and updates children groups
             List<UUID> groups = new LinkedList<>();
             groups.add(group.id);
@@ -943,6 +1035,11 @@ public class DoorHandler {
             }
         }
 
+        /**
+         * Return the light of a reader
+         * @param id The Device ID of the reader
+         * @return the light that should be shown
+         */
         public int getReaderLight(UUID id){
             for(Doors.OneDoor door : doors){
                 for(int i=0; i<door.Readers.size(); i++){
@@ -953,6 +1050,12 @@ public class DoorHandler {
             }
             return 0;
         }
+
+        /**
+         * Return the label that is displayed on the readers
+         * @param id the device ID
+         * @return the text & color of text to the reader
+         */
         public ReaderText getReaderLabel(UUID id){
             for(Doors.OneDoor door : doors){
                 for(int i=0; i<door.Readers.size(); i++){
@@ -964,6 +1067,12 @@ public class DoorHandler {
             }
             return new ReaderText("Disconnected", (byte) 4);
         }
+
+        /**
+         * Return whether a door is open or closed
+         * @param id the device ID of the doorcontroller
+         * @return true/false if door is open/closed
+         */
         public boolean getDoorState(UUID id){
             for(Doors.OneDoor door : doors){
                 for(int i=0; i<door.Doors.size(); i++){
@@ -974,6 +1083,12 @@ public class DoorHandler {
             }
             return false;
         }
+
+        /**
+         * Same as above, except that it is for individual doors.
+         * @param id the ID that the individual door cloned
+         * @return true/false if the door is open/closed
+         */
         public boolean getDoorStateFromDoor(UUID id){ //based on individual doors on load instead
             for(CentralDoorNBT.doorHoldr door : AdvBaseSecurity.instance.doorHandler.IndDoors.doors){
                 if(door.deviceId.equals(id)){
@@ -986,6 +1101,10 @@ public class DoorHandler {
             return false;
         }
 
+        /**
+         * Get a list of all usernames of the authorized users to a doormanager
+         * @return the list of nams as a list of strings
+         */
         public List<String> getUserNames(){
             List<String> names = new LinkedList<>();
             for(Doors.Users user : users){
@@ -994,6 +1113,10 @@ public class DoorHandler {
             return names;
         }
 
+        /**
+         * Get a list of all door names in this doormanager
+         * @return the list of names of all doors in the manager
+         */
         public List<String> getDoorNames(){
             List<String> names = new LinkedList<>();
             for(Doors.OneDoor dooor : doors){
@@ -1002,6 +1125,7 @@ public class DoorHandler {
             return names;
         }
 
+        //not gonna bother doubling up on comments. Group/sector names yes
         public List<String> getGroupNames(){
             List<String> names = new LinkedList<>();
             for(Doors.Groups dooor : groups.values()){
@@ -1010,6 +1134,7 @@ public class DoorHandler {
             return names;
         }
 
+        //Returns the door with the ID from the IndDoor holder
         public CentralDoorNBT.doorHoldr indDoorsContains(UUID id){
             for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
                 if(AdvBaseSecurity.instance.doorHandler.IndDoors.doors.get(i).deviceId.equals(id))
@@ -1018,6 +1143,7 @@ public class DoorHandler {
             return null;
         }
 
+        //Same as above but gets all that are linked to the clonedID
         public List<CentralDoorNBT.doorHoldr> getIndDoors(UUID clonedID){
             List<CentralDoorNBT.doorHoldr> doors = new LinkedList<>();
             for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
@@ -1026,7 +1152,7 @@ public class DoorHandler {
             }
             return doors;
         }
-
+        //Updates all IndDoors linked to the clonedID that are also chunkloaded
         public void toggleIndDoors(UUID clonedID, boolean toggle){
             List<UUID> doors = new LinkedList<>();
             for(int i=0; i<AdvBaseSecurity.instance.doorHandler.IndDoors.doors.size(); i++){
@@ -1041,7 +1167,7 @@ public class DoorHandler {
             AdvBaseSecurity.instance.doorHandler.allDoors.forEach(bic);
             AdvBaseSecurity.instance.doorHandler.IndDoors.markDirty();
         }
-
+        //Checks a user to a specific pass
         private boolean checkPass(Doors.OneDoor.OnePass pass, Doors.Users.UserPass user){
             AdvBaseSecurity.instance.logger.debug("Checking pass " + pass.passID);
             if(passes.containsKey(pass.passID)){
@@ -1079,6 +1205,14 @@ public class DoorHandler {
         0: access denied
         1: access granted
         2: access granted staff
+         */
+
+        /**
+         * When a user swipes the card this is called to check the User and the Reader. properChange is there in case just checking if they have the permission
+         * @param userID ID of the card swiped
+         * @param readerID ID of the reader the card was swiped in
+         * @param properChange true: change a door status if true. false: only return whether they were allowed or not.
+         * @return the above status
          */
         public int checkSwipe(UUID userID, UUID readerID, boolean properChange){ //properChange actually updates the door state.
             AdvBaseSecurity.instance.logger.debug("Checking ID " + userID + " in reader ID " + readerID);
@@ -1444,6 +1578,46 @@ public class DoorHandler {
                         else if(passMap.get(passID).passType == PassValue.type.Group || passMap.get(passID).passType == PassValue.type.Level){
                             passValueI = tag.getInteger("value");
                         }
+                    }
+                }
+
+                public OnePass(NBTTagCompound tag, PassValue.type typed){
+                    if(tag.hasUniqueId("id"))
+                        id = tag.getUniqueId("id");
+                    else
+                        id = UUID.randomUUID();
+                    if(tag.hasKey("passId"))
+                        passID = tag.getString("passId");
+                    else
+                        passID = "NAN";
+                    if(tag.hasKey("type"))
+                        passType = type.fromInt(tag.getShort("type"));
+                    else
+                        passType = type.Supreme;
+                    if(tag.hasKey("priority"))
+                        priority = (short)Math.max(1, Math.min(5, tag.getShort("priority"))); //clamp
+                    else
+                        priority = 1;
+                    //stuff that depends on prev values
+                    if(passType == type.Base){
+                        addPasses = new LinkedList<>();
+                        if(tag.hasKey("addPasses")){
+                            NBTTagList tlist = tag.getTagList("addPasses", Constants.NBT.TAG_STRING);
+                            for(int i=0; i<tlist.tagCount(); i++){
+                                addPasses.add(UUID.fromString(tlist.getStringTagAt(i)));
+                            }
+                        }
+                    }
+                    if(tag.hasKey("value")){
+                        if(typed == PassValue.type.Text || typed == PassValue.type.MultiText){
+                            passValueS = tag.getString("value");
+                            passValueI = -1;
+                        }
+                        else if(typed == PassValue.type.Group || typed == PassValue.type.Level){
+                            passValueI = tag.getInteger("value");
+                        }
+                        else
+                            passValueI = -1;
                     }
                 }
 
@@ -1845,13 +2019,19 @@ public class DoorHandler {
         public void readFromNBT(NBTTagCompound tag){
             if(tag.hasUniqueId("manager"))
                 ManagerID = tag.getUniqueId("manager");
+            else
+                ManagerID = null;
             if(tag.hasUniqueId("door"))
                 DoorID = tag.getUniqueId("door");
+            else
+                DoorID = null;
         }
 
         public NBTTagCompound writeToNBT(NBTTagCompound tag){
-            tag.setUniqueId("manager", ManagerID);
-            tag.setUniqueId("door", DoorID);
+            if(ManagerID != null)
+                tag.setUniqueId("manager", ManagerID);
+            if(DoorID != null)
+                tag.setUniqueId("door", DoorID);
             return tag;
         }
     }

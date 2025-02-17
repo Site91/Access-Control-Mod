@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @SideOnly(Side.CLIENT)
-public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Edit a specific door.
     //data passed by packet
     DoorHandler.Doors.OneDoor door;
     List<ButtonEnum.groupIndex> groups;
@@ -62,7 +62,7 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
         this.groups = groups;
         if(door.groupID != null){
             for(int i=0; i<groups.size(); i++)
-                if(door.groupID.equals(groups.get(i).id)){
+                if(door.groupID.toString().equals(groups.get(i).id)){
                     groupIndex = i + 1;
                     break;
                 }
@@ -205,7 +205,7 @@ public class EditDoorGUI extends BaseGUI implements GuiPageButtonList.GuiRespond
                 clean = true;
                 letPress = false;
                 door.doorName = !nameField.getText().isEmpty() ? nameField.getText() : "new door";
-                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassGUI(editValidator, managerId, door, groups));
+                Minecraft.getMinecraft().displayGuiScreen(new EditDoorPassAndSectorGUI(editValidator, managerId, door, groups));
             }
         }
     }

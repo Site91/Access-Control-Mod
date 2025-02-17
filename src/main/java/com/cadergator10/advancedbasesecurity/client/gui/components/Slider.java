@@ -5,13 +5,12 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiPageButtonList;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-public class Slider extends GuiButton {
+public class Slider extends GuiButton { //Slider pulled from SecurityCraft I think? Maybe appliedenergistics. Modified to allow vertical slider action!
     protected static final ResourceLocation BUTTON_TEXTURES2 = new ResourceLocation("advancedbasesecurity", "textures/gui/widgets.png");
 
     private float sliderPosition = 1.0F;

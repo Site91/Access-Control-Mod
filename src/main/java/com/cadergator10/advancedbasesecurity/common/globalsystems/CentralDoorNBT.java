@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-public class CentralDoorNBT extends WorldSavedData {
+public class CentralDoorNBT extends WorldSavedData { //World Save Data for the list of independent doors in the world. Doesn't do too much, just stores data
     public static CentralDoorNBT instance;
 
     public static final String DATA_NAME = AdvBaseSecurity.MODID + "_doornbt";

@@ -8,15 +8,13 @@ import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest
 import com.cadergator10.advancedbasesecurity.common.networking.UserEditPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import com.google.common.collect.Lists;
-import it.unimi.dsi.fastutil.Hash;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
-import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fml.client.GuiScrollingList;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
@@ -26,7 +24,7 @@ import java.io.IOException;
 import java.util.*;
 
 @SideOnly(Side.CLIENT)
-public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiResponder {
+public class EditUserGUI extends ContainerGUI implements GuiPageButtonList.GuiResponder { //Edit Users in a doormanager and write cards.
 
     UUID editValidator = null;
 

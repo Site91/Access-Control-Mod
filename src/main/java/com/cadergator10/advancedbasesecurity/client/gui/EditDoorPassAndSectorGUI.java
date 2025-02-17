@@ -4,13 +4,19 @@ import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonEnum;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonImg;
 import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonSelect;
+import com.cadergator10.advancedbasesecurity.client.gui.components.ButtonToggle;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.DoorServerRequest;
 import com.cadergator10.advancedbasesecurity.common.networking.RequestPassesPacket;
+import com.cadergator10.advancedbasesecurity.common.networking.SectControllerPacket;
 import com.cadergator10.advancedbasesecurity.util.ButtonTooltip;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -18,19 +24,35 @@ import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiConsumer;
 
+/*
+Edits both door passes (edit a door then its classes), and can also edit sector controller settings.
+ */
 @SideOnly(Side.CLIENT)
-public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiResponder {
+public class EditDoorPassAndSectorGUI extends BaseGUI implements GuiPageButtonList.GuiResponder { //Edits both Door Passes (links with EditDoorGUI) or edits a sector controller. They share the same pass editing which is why they were combined.
 	UUID editValidator;
-	UUID managerId;
+	DoorHandler.DoorIdentifier managerId;
+	//if door
 	DoorHandler.Doors.OneDoor door;
+	//if sector
+	BlockPos pos;
+	boolean pushChildren;
+	boolean toggle;
+	List<DoorHandler.Doors.OneDoor.OnePass> overrides;
+	DoorHandler.Doors.OneDoor.allDoorStatuses thisStatus;
+	//both
 	List<ButtonEnum.groupIndex> groups; //just used to preserve it for going back to the other door.
 	List<DoorHandler.Doors.PassValue> passes;
+
+	boolean isDoor; //true: door/ false: sectorcontroller
+
 	boolean finished = false;
 	boolean letPress = true;
 	boolean clean = false;
 	//buttons
 	int currentIndex;
+	//all buttons
 	ButtonImg backButton;
 	ButtonEnum typeButton;
 	ButtonEnum passButton;
@@ -43,6 +65,13 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	ButtonEnum passListButton;
 	ButtonImg addPass;
 	ButtonImg delPass;
+	//sector buttons
+	ButtonImg saveButton;
+	ButtonToggle pushChildButton;
+	ButtonToggle toggleButton;
+	ButtonEnum sectorButton;
+	ButtonEnum statusButton;
+
 	DoorHandler.Doors.PassValue passSelected;
 	private DoorHandler.Doors.OneDoor.OnePass doorPass;
 
@@ -54,13 +83,38 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 //	List<GuiButton> passList;
 //	List<HashMap<String, GuiButton>> allButtons = new LinkedList<>();
 
+	private void formatGroups(HashMap<UUID, DoorHandler.Doors.Groups> sect){
+		//use groups from doorhandler. DO NOT CHECK IF NOT SERVER
+		groups = new LinkedList<>();
+		BiConsumer<UUID, DoorHandler.Doors.Groups> grouper = (s, v) -> groups.add(new ButtonEnum.groupIndex(s.toString(), v.name));
+		sect.forEach(grouper);
+	}
 
-	public EditDoorPassGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
+	public EditDoorPassAndSectorGUI(UUID editValidator, UUID managerId, DoorHandler.Doors.OneDoor door, List<ButtonEnum.groupIndex> groups){
 		super(WIDTH, HEIGHT);
+		this.isDoor = true;
 		this.editValidator = editValidator;
-		this.managerId = managerId;
+		this.managerId = new DoorHandler.DoorIdentifier(managerId, door.doorId);
 		this.door = door;
 		this.groups = groups;
+		overrides = null;
+		pushChildren = false;
+		toggle = false;
+		this.pos = null;
+		this.thisStatus = null;
+	}
+	public EditDoorPassAndSectorGUI(SectControllerPacket packet, BlockPos pos, HashMap<UUID, DoorHandler.Doors.Groups> sectors){
+		super(WIDTH, HEIGHT);
+		this.isDoor = false;
+		this.editValidator = null;
+		this.managerId = packet.ids;
+		this.door = null;
+		formatGroups(sectors); //sets groups list.
+		overrides = packet.overrides != null ? packet.overrides : new LinkedList<>();
+		pushChildren = packet.pushToChildren;
+		toggle = packet.toggle;
+		this.pos = pos;
+		this.thisStatus = packet.thisStatus;
 	}
 
 	void drawString(String string, int x, int y, int color){
@@ -90,7 +144,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		return -1;
 	}
 	DoorHandler.Doors.OneDoor.OnePass getDoorPass(UUID id){
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.id.equals(id))
 				return pass;
 		}
@@ -98,7 +152,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	}
 	int getDoorPassIndex(UUID id){
 		int index = 0;
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.id.equals(id))
 				return index;
 			index++;
@@ -139,11 +193,23 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	}
 	List<ButtonEnum.groupIndex> processAddPasses(){
 		List<ButtonEnum.groupIndex> btn = new LinkedList<>();
-		for(DoorHandler.Doors.OneDoor.OnePass pass : door.passes){
+		for(DoorHandler.Doors.OneDoor.OnePass pass : isDoor ? door.passes : overrides){
 			if(pass.passType == DoorHandler.Doors.OneDoor.OnePass.type.Add)
 				btn.add(processDoorPass(pass, true));
 		}
 		return btn;
+	}
+	List<ButtonEnum.groupIndex> processSectors(){
+		return groups;
+	}
+	int getSectorId(){
+		if(managerId.DoorID != null){
+			for(int i=0; i<groups.size(); i++){
+				if(groups.get(i).id.equals(managerId.DoorID.toString()))
+					return i;
+			}
+		}
+		return 0;
 	}
 
 	@Override
@@ -160,28 +226,40 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		passValueI = new GuiTextField(id++, fontRenderer, GUILeft + WIDTH - 83, GUITop + 23, 80, 16);
 		passValueI.setGuiResponder(this);
 		//pass modify buttons
-		this.buttonList.add(addPass = new ButtonImg(id++, GUILeft + WIDTH - 39, botm, ButtonTooltip.AddDoorPass));
-		this.buttonList.add(delPass = new ButtonImg(id++, GUILeft + WIDTH - 19, botm, ButtonTooltip.DelDoorPass));
+		this.buttonList.add(addPass = new ButtonImg(id++, GUILeft + WIDTH - 39, isDoor ? botm : GUITop + 73, ButtonTooltip.AddDoorPass));
+		this.buttonList.add(delPass = new ButtonImg(id++, GUILeft + WIDTH - 19, isDoor ? botm : GUITop + 73, ButtonTooltip.DelDoorPass));
+
 
 		if(!finished) {
-			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, botm, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(), 0));
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, isDoor ? botm : GUITop + 73, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, new LinkedList<>(), 0));
 			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, new LinkedList<>(),0));
 			passListButton.enabled = false;
 			addPass.enabled = false;
 		}
 		else{
-			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, botm, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, processDoorPasses(door.passes), 0));
+			this.buttonList.add(passListButton = new ButtonEnum(id++, GUILeft + WIDTH - 152, isDoor ? botm : GUITop + 73, 109, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.doorpasseditselect"), false, processDoorPasses(isDoor ? door.passes : overrides), 0));
 			this.buttonList.add(passButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 3, 80, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.selectpass"), false, processPass(passes),0));
 		}
-
 		this.buttonList.add(passValueG = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 23, 80, 16, null, false, new LinkedList<>(),0));
 		this.buttonList.add(addPassList = new ButtonSelect(id++, GUILeft + 3, GUITop + 53, WIDTH - 26, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.addpassselect"), new LinkedList<>(),0));
 		this.buttonList.add(selectAddPass = new ButtonImg(id++, GUILeft + WIDTH - 19, GUITop + 53, ButtonTooltip.SelectAddPass));
+		// if isDoor false, then its sector.
+		if(!isDoor){
+			if(managerId.DoorID == null)
+				managerId.DoorID = UUID.fromString(groups.get(0).id);
+			clean = true;
+			this.buttonList.add(saveButton = new ButtonImg(id++, GUILeft + 23, botm, ButtonTooltip.SaveSectors));
+			this.buttonList.add(pushChildButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 103, WIDTH - 6, 16, "push updates to all", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorpushchild"), pushChildren));
+			this.buttonList.add(toggleButton = new ButtonToggle(id++, GUILeft + 3, GUITop + 123, WIDTH - 6, 16, "toggle", I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorconttoggle"), toggle));
+			this.buttonList.add(sectorButton = new ButtonEnum(id++, GUILeft + 3, GUITop + 143, WIDTH - 6, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorchoose"), false, processSectors(), getSectorId()));
+			this.buttonList.add(statusButton = new ButtonEnum(id++, GUILeft + WIDTH - 83, GUITop + 163, WIDTH - 6, 16, I18n.translateToLocal("gui.tooltips.advancedbasesecurity.sectorstatusbtn"), false, Arrays.asList(new ButtonEnum.groupIndex("-2", "No Access"), new ButtonEnum.groupIndex("-1", "Lockdown"), new ButtonEnum.groupIndex("0", "Access"), new ButtonEnum.groupIndex("1", "Overridden Access"), new ButtonEnum.groupIndex("2", "All Access")), thisStatus.getInt() + 2));
+		}
+
 		//set default while waiting for finish
 		updateWithPasses();
 		//send the packet to request PassValue
 		if(!finished) {
-			RequestPassesPacket packet = new RequestPassesPacket(editValidator, managerId, false);
+			RequestPassesPacket packet = new RequestPassesPacket(managerId.ManagerID, false);
 			AdvBaseSecurity.instance.network.sendToServer(packet);
 		}
 	}
@@ -200,8 +278,9 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 			drawCenteredString(passSelected.passName, 40, 0xFFFFFF);
 		}
 		passValueI.drawTextBox();
-		drawHorizontalLine(GUILeft + 2, GUILeft + WIDTH - 2, GUITop + HEIGHT - 22, 6052956); //5c5c5c
 		super.drawScreen(mouseX, mouseY, partialTicks);
+		drawHorizontalLine(GUILeft + 2, GUILeft + WIDTH - 2, GUITop + HEIGHT - 22, 6052956); //5c5c5c
+
 	}
 
 	@Override
@@ -209,7 +288,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 		super.onGuiClosed();
 		if(clean)
 			return;
-		DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId.toString(), managerId,"removeperm", "");
+		DoorServerRequest packet = new DoorServerRequest(editValidator, "door:" + door.doorId.toString(), managerId.ManagerID,"removeperm", "");
 		AdvBaseSecurity.instance.network.sendToServer(packet);
 	}
 
@@ -230,7 +309,7 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	}
 
 	private void updateWithPasses(){
-		if(passes.isEmpty()){
+		if(passes.isEmpty() || (isDoor && door.passes.isEmpty()) || (!isDoor && overrides.isEmpty())){
 			doorPass = null;
 			passButton.enabled = false;
 			typeButton.enabled = false;
@@ -244,64 +323,67 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 			addPassList.visible = false;
 			selectAddPass.enabled = false;
 			selectAddPass.visible = false;
+			if(!isDoor) {
+				saveButton.enabled = false;
+				pushChildButton.enabled = false;
+				toggleButton.enabled = false;
+				sectorButton.enabled = false;
+				statusButton.enabled = false;
+			}
 		}
 		else{
+			boolean currStatus = isDoor ? true : Math.abs(thisStatus.getInt()) == 1;
 			//global stuff
-			delPass.enabled = true;
+			delPass.enabled = currStatus;
 			//get current pass
-			doorPass = getDoorPass(UUID.fromString(passListButton.getUUID()));
-			if(doorPass != null){
+			doorPass = passListButton.getUUID() != "none" ? getDoorPass(UUID.fromString(passListButton.getUUID())) : null;
+			if (doorPass != null) {
 				passSelected = getPass(doorPass.passID);
 				passButton.changeIndex(getPassIndex(doorPass.passID));
-				passButton.enabled = true;
+				passButton.enabled = currStatus;
 				typeButton.changeIndex(doorPass.passType.getInt());
-				typeButton.enabled = true;
+				typeButton.enabled = currStatus;
 				priority.changeIndex(doorPass.priority - 1);
-				priority.enabled = true;
+				priority.enabled = currStatus;
 				DoorHandler.Doors.PassValue pass = getPass(doorPass.passID); //assumed not null
 				//handle the requirement to enter stuff.
-				if(pass.passType == DoorHandler.Doors.PassValue.type.Group){
+				if (pass.passType == DoorHandler.Doors.PassValue.type.Group) {
 					passValueI.setEnabled(false);
 					passValueI.setVisible(false);
 					passValueG.changeList(processGroup(pass));
 					passValueG.changeIndex(doorPass.passValueI);
-					passValueG.enabled = true;
-					passValueG.visible = true;
-				}
-				else{
-					passValueI.setVisible(true);
+					passValueG.enabled = currStatus;
+					passValueG.visible = currStatus;
+				} else {
+					passValueI.setVisible(currStatus);
 					passValueG.enabled = false;
 					passValueG.visible = false;
-					if(pass.passType == DoorHandler.Doors.PassValue.type.Pass){
+					if (pass.passType == DoorHandler.Doors.PassValue.type.Pass) {
 						passValueI.setEnabled(false);
 						passValueI.setText("no input needed");
-					}
-					else if(pass.passType == DoorHandler.Doors.PassValue.type.Level){
-						passValueI.setEnabled(true);
+					} else if (pass.passType == DoorHandler.Doors.PassValue.type.Level) {
+						passValueI.setEnabled(currStatus);
 						passValueI.setText(Integer.toString(doorPass.passValueI));
 						passValueI.setValidator((s) -> {
-							try{
-								if(!s.isEmpty()) {
+							try {
+								if (!s.isEmpty()) {
 									int i = Integer.parseInt(s);
 									return i >= 0 && i < 100;
-								}
-								else
+								} else
 									return true;
-							}
-							catch(Exception e){
+							} catch (Exception e) {
 								return false;
 							}
 						});
-					}
-					else{
-						passValueI.setEnabled(true);
+					} else {
+						passValueI.setEnabled(currStatus);
 						passValueI.setText(doorPass.passValueS);
 						passValueI.setValidator((s) -> true);
 					}
 				}
 				//handling add passes
-				if(doorPass.passType == DoorHandler.Doors.OneDoor.OnePass.type.Base) {
-					if(doorPass.addPasses == null)
+				if (doorPass.passType == DoorHandler.Doors.OneDoor.OnePass.type.Base) {
+					if (doorPass.addPasses == null)
 						doorPass.addPasses = new LinkedList<>();
 					List<ButtonEnum.groupIndex> btns = processAddPasses();
 					HashMap<String, Boolean> selected = new HashMap<>();
@@ -311,12 +393,11 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 					}
 					addPassList.changeList(btns, selected);
 					addPassList.changeIndex(0);
-					addPassList.enabled = true;
-					addPassList.visible = true;
-					selectAddPass.enabled = true;
-					selectAddPass.visible = true;
-				}
-				else{
+					addPassList.enabled = currStatus;
+					addPassList.visible = currStatus;
+					selectAddPass.enabled = currStatus;
+					selectAddPass.visible = currStatus;
+				} else {
 					doorPass.addPasses = null;
 					addPassList.enabled = false;
 					addPassList.visible = false;
@@ -325,17 +406,30 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 				}
 			}
 		}
+		if(isDoor){
+			if(managerId.DoorID == null)
+				managerId.DoorID = UUID.fromString(sectorButton.getUUID());
+
+		}
+		else{
+			passListButton.enabled = overrides != null ? !overrides.isEmpty() : false;
+			saveButton.enabled = true;
+			pushChildButton.enabled = true;
+			toggleButton.enabled = true;
+			sectorButton.enabled = true;
+			statusButton.enabled = true;
+		}
 	}
 
-	public void finishInit(boolean worked, UUID editValidator, List<DoorHandler.Doors.PassValue> passes){
+	public void finishInit(boolean worked, List<DoorHandler.Doors.PassValue> passes){
 		if(worked){
-			this.editValidator = editValidator;
 			this.passes = passes;
 			//allow editing of all stuff now
-			passListButton.changeList(processDoorPasses(door.passes));
+			passListButton.changeList(isDoor ? processDoorPasses(door.passes) : processDoorPasses(overrides));
+			passListButton.changeIndex(0);
 			passButton.changeList(processPass(passes));
+			passButton.changeIndex(0);
 			//change enabled/disabled
-			passListButton.enabled = true;
 			addPass.enabled = true;
 			updateWithPasses();
 			finished = true;
@@ -346,6 +440,8 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 	}
 
 	private void lastMinuteUpdate(){ //updates values with textFieldInputs when leaving a screen
+		if(doorPass == null)
+			return;
 		DoorHandler.Doors.PassValue pass = getPass(doorPass.passID);
 		if(pass.passType == DoorHandler.Doors.PassValue.type.Text || pass.passType == DoorHandler.Doors.PassValue.type.MultiText){
 			doorPass.passValueS = passValueI.getText();
@@ -361,8 +457,35 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 			if(button == backButton){
 				letPress = false;
 				clean = true;
+				if(isDoor) {
+					lastMinuteUpdate();
+					Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, managerId.ManagerID, door, groups));
+				}
+				else
+					mc.player.closeScreen();
+			}
+			else if(saveButton != null && button == saveButton){
+				letPress = false;
+				clean = true;
 				lastMinuteUpdate();
-				Minecraft.getMinecraft().displayGuiScreen(new EditDoorGUI(editValidator, managerId, door, groups));
+				SectControllerPacket packet = new SectControllerPacket(managerId, pos, overrides, pushChildren, toggle, thisStatus);
+				AdvBaseSecurity.instance.network.sendToServer(packet);
+				mc.player.closeScreen();
+			}
+			else if(pushChildButton != null && button == pushChildButton){
+				pushChildren = pushChildButton.onClick();
+			}
+			else if(toggleButton != null && button == toggleButton){
+				toggle = toggleButton.onClick();
+			}
+			else if(sectorButton != null && button == sectorButton){
+				sectorButton.onClick();
+				managerId.DoorID = UUID.fromString(sectorButton.getUUID());
+			}
+			else if(statusButton != null && button == statusButton){
+				statusButton.onClick();
+				thisStatus = DoorHandler.Doors.OneDoor.allDoorStatuses.fromInt(Integer.parseInt(statusButton.getUUID()));
+				updateWithPasses();
 			}
 			else if(button == typeButton){
 				typeButton.onClick();
@@ -432,15 +555,25 @@ public class EditDoorPassGUI extends BaseGUI implements GuiPageButtonList.GuiRes
 				pass.addPasses = null;
 				pass.passValueI = -1;
 				pass.passValueS = null;
-				door.passes.add(pass);
-				passListButton.insertList(processDoorPass(pass, false));
-				passListButton.changeIndex(door.passes.size() - 1);
+				if(isDoor) {
+					door.passes.add(pass);
+					passListButton.insertList(processDoorPass(pass, false));
+					passListButton.changeIndex(door.passes.size() - 1);
+				}
+				else{
+					overrides.add(pass);
+					passListButton.insertList(processDoorPass(pass, false));
+					passListButton.changeIndex(overrides.size() - 1);
+				}
 				updateWithPasses();
 			}
 			else if(button == delPass){
 				int index = getDoorPassIndex(UUID.fromString(passListButton.getUUID()));
 				AdvBaseSecurity.instance.logger.info("id: " + passListButton.getUUID());
-				door.passes.remove(index);
+				if(isDoor)
+					door.passes.remove(index);
+				else
+					overrides.remove(index);
 				passListButton.removeList();
 				updateWithPasses();
 			}

@@ -12,6 +12,7 @@ import net.minecraft.util.text.ITextComponent;
 
 import java.util.UUID;
 
+//Handler for the UserEditGUI. Just allows/disallows items and sends NBT to the server + allows the writing of cards.
 public class InventoryDoorHandler implements IInventory {
     public final NonNullList<ItemStack> inv = NonNullList.withSize(2, ItemStack.EMPTY);
     public final UUID managerID;

@@ -5,6 +5,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 
+/**
+ * CamoBase that extends the base DeviceBase. Just adds the functionality to rightclick with block and change what it looks like.
+ */
 public class TileEntityCamoBase extends TileEntityDeviceBase implements ICamo { //once again: pretty much OpenSecurity's implementation cause it works
     MimicBlock mimicBlock = new MimicBlock();
 

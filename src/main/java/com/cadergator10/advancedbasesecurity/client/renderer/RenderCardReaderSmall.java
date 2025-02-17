@@ -14,6 +14,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
+//Pretty much just handles the light bar. Simple really
 public class RenderCardReaderSmall extends TileEntitySpecialRenderer<TileEntityCardReaderSmall> {
 
 	static float texPixel=1.0f/16f;

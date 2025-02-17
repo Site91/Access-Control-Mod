@@ -1,13 +1,12 @@
 package com.cadergator10.advancedbasesecurity.common.inventory;
 
-import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IContainerListener;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 
+//Not used atm. Dunno why I got it XD
 public class ContainerSystemManager extends Container {
     private IInventory managerInv;
 

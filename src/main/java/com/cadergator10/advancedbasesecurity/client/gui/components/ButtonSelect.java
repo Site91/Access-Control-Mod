@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ButtonSelect extends ButtonEnum{
+public class ButtonSelect extends ButtonEnum{ //Button that can have multiple items selected in it and return the list.
     List<Boolean> isToggled;
 
     public ButtonSelect(int buttonId, int x, int y, String tooltip, List<groupIndex> map, int index) {
@@ -23,7 +23,7 @@ public class ButtonSelect extends ButtonEnum{
     @Override
     protected void updateDisplay() {
         if(!map.isEmpty())
-            displayString = " (" + (isToggled.get(currentIndex) ? " )" : "X)") + map.get(currentIndex).name;
+            displayString = " (" + (isToggled.get(currentIndex) ? "X)" : "_)") + map.get(currentIndex).name;
         else
             displayString = "none";
     }

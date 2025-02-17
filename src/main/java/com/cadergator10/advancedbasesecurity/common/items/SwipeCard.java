@@ -8,7 +8,8 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import java.util.UUID;
 
-public class SwipeCard extends ItemBase implements IBauble {
+//The card that is swiped on a reader.
+public class SwipeCard extends ItemBase implements IBauble { //
 	public static final String NAME = "swipe_card";
 	public static ItemStack DEFAULTSTACK;
 

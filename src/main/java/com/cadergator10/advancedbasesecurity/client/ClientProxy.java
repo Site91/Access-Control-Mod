@@ -1,5 +1,6 @@
 package com.cadergator10.advancedbasesecurity.client;
 
+import com.cadergator10.advancedbasesecurity.AdvBaseSecurity;
 import com.cadergator10.advancedbasesecurity.client.model.CamoflageBakedModel;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReader;
 import com.cadergator10.advancedbasesecurity.client.renderer.RenderCardReaderDouble;
@@ -39,13 +40,13 @@ public class ClientProxy extends CommonProxy {
 
 
     @Override
-    public World getWorld(int dimId) {
+    public World getWorld(int dimId) { //returns world to client. Make sure dimID is accurate
         World world = Minecraft.getMinecraft().world;
         return world.provider.getDimension() == dimId ? world : null;
     }
 
     @SubscribeEvent
-    public void colorHandlerEventBlock(ColorHandlerEvent.Block event){
+    public void colorHandlerEventBlock(ColorHandlerEvent.Block event){ //I believe it's to do with camo. Make sure it's all good.
         BlockDoorController.DEFAULTITEM.initColorHandler(event.getBlockColors());
     }
 
@@ -55,10 +56,11 @@ public class ClientProxy extends CommonProxy {
         //Config.clientPreInit();
 
         MinecraftForge.EVENT_BUS.register(this);
-        ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader());
+        ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader()); //load camouflage modeling.
 
         //ModelLoaderRegistry.registerLoader(new CamouflageBlockModelLoader());
 
+        //Bind all the TE's with special rendering. Mainly 3D models.
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReader.class, new RenderCardReader());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReaderSmall.class, new RenderCardReaderSmall());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityCardReaderDouble.class, new RenderCardReaderDouble());
@@ -69,7 +71,7 @@ public class ClientProxy extends CommonProxy {
         super.init(event);
         Minecraft mc = Minecraft.getMinecraft();
 
-        CamoflageBakedModel.initTextures();
+        CamoflageBakedModel.initTextures(); //Initiate the camoflage stuff
 //        mc.getItemColors().registerItemColorHandler(new CardColorHandler(), ItemRFIDCard.DEFAULTSTACK.getItem());
 //        mc.getItemColors().registerItemColorHandler(new CardColorHandler(), ItemMagCard.DEFAULTSTACK.getItem());
 
@@ -79,7 +81,8 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void registerModels() {
+    public void registerModels() { //Register all models
+        AdvBaseSecurity.LogDebug("Beginning registration of models");
         for(Block block : ContentRegistry.modBlocks)
             ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(block), 0, new ModelResourceLocation(block.getRegistryName().toString(), "inventory"));
 
@@ -98,9 +101,10 @@ public class ClientProxy extends CommonProxy {
         ModelLoader.setCustomStateMapper(BlockGlassDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
 //        ModelLoader.setCustomStateMapper(BlockSecurePrivateDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
 //        ModelLoader.setCustomStateMapper(BlockSecureMagDoor.DEFAULTITEM, new StateMap.Builder().ignore(BlockDoor.POWERED).build());
+        AdvBaseSecurity.LogDebug("Finished registration of models");
     }
 
-    private void listFilesForPath(final File path) {
+    private void listFilesForPath(final File path) { //used in registerSounds
 //        AlarmResource r = new AlarmResource();
 //        int i = 1;
 //
@@ -111,7 +115,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void registerSounds() {
+    public void registerSounds() { //Existed in OpenSecurity. Still here if I want to allow custom sounds.
 //        File alarmSounds = new File("./mods/OpenSecurity/assets/opensecurity/sounds/alarms");
 //
 //        if (!alarmSounds.exists())
