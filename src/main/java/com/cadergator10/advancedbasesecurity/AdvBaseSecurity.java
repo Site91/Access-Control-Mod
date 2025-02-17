@@ -4,8 +4,11 @@ import com.cadergator10.advancedbasesecurity.common.CommonProxy;
 import com.cadergator10.advancedbasesecurity.common.SoundHandler;
 import com.cadergator10.advancedbasesecurity.common.globalsystems.DoorHandler;
 import com.cadergator10.advancedbasesecurity.common.networking.*;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -86,6 +89,12 @@ public class AdvBaseSecurity
         proxy.init(event);
         doorHandler = new DoorHandler();
         MinecraftForge.EVENT_BUS.register(doorHandler);  //register all event handlers in the DoorHandler instance
+    }
+    @SubscribeEvent
+    public static void onPlayerJoin(EntityJoinWorldEvent event){
+        if(!event.getWorld().isRemote && event.getEntity() instanceof EntityPlayerMP){
+            ((EntityPlayerMP) event.getEntity()).sendMessage(new TextComponentString("Access Control mod created by Cadergator10\nPlease note this is VERY EARLY ACCESS so there will be many issues!\n1. There are no recipes yet\n2. Block breakability has not been worked on (anyone could break the blocks easily)\n3. Other issues may arise too\nCurrently this is working in a state good for Adventure mode (maps) and just for fun/amusement.\nEnjoy! :)"));
+        }
     }
     @SubscribeEvent
     public static void onRegisterModels(ModelRegistryEvent event) {
