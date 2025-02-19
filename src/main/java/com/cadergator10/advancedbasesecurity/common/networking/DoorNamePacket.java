@@ -135,7 +135,7 @@ public class DoorNamePacket implements IMessage {
         }
     }
 
-    public class HandlerS implements IMessageHandler<DoorNamePacket, IMessage> {
+    public static class HandlerS implements IMessageHandler<DoorNamePacket, IMessage> {
         @Override
         public IMessage onMessage(DoorNamePacket messaged, MessageContext ctx) {
             return null;
