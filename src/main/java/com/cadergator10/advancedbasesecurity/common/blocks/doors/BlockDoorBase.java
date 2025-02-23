@@ -58,7 +58,7 @@ public class BlockDoorBase extends BlockDoor implements ITileEntityProvider {
 
 	@Override
 	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
-		if(worldIn.isRemote) {
+		if(!worldIn.isRemote) {
 			AdvBaseSecurity.instance.logger.info("Deleting door block now!");
 			BlockPos blockpos = state.getValue(HALF) == BlockDoor.EnumDoorHalf.LOWER ? pos : pos.down();
 			IDoor te = (IDoor) worldIn.getTileEntity(blockpos);
