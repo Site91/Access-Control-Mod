@@ -7,6 +7,8 @@ import com.cadergator10.advancedbasesecurity.common.interfaces.IDevice;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoor;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IDoorControl;
 import com.cadergator10.advancedbasesecurity.common.interfaces.IReader;
+import com.cadergator10.advancedbasesecurity.common.interfaces.addons.IDMHandler;
+import com.cadergator10.advancedbasesecurity.common.interfaces.addons.IDoorManager;
 import com.cadergator10.advancedbasesecurity.util.ReaderText;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.*;
@@ -33,12 +35,15 @@ public class DoorHandler {
     public CentralDoorNBT IndDoors; //The data for all Door blocks in the world.
     public boolean loaded = false; //Whether the data has been loaded from the world
 
+    public static HashMap<String, IDMHandler> addonManagers;
+
     public HashMap<UUID, IReader> allReaders; //All Readers currently chunk loaded.
     public HashMap<UUID, IDoorControl> allDoorControllers; //All door controllers currently chunk loaded
     public HashMap<UUID, IDoor> allDoors; //All individual doors that are currently chunkloaded
 
     public DoorHandler(){
         AdvBaseSecurity.instance.logger.info("Loaded DoorHandler!");
+        addonManagers = new HashMap<>();
         //world.getMapStorage().getOrLoadData(Doors.class, DATA_NAME);
     }
 
@@ -210,6 +215,54 @@ public class DoorHandler {
         return door;
     }
 
+    /**
+     * Allows addon mods to add data to be stored on the DoorHandler NBT
+     * @param mng the data to be stored. Encoded (1 = global, 2 = Door, 4 = Pass, 8 = User, 16 = Sector). Binary (eg: Door + Global for SCP = SCP:3
+     * @return
+     */
+    public static boolean prepAddon(String mng, IDMHandler hndlr){
+        addonManagers.put(mng, hndlr);
+        return true;
+    }
+
+    /**
+     * Checks the string key's int to see if it supports a certain data point. If so, a door manager will be
+     * created for that part of the door manager and processed accordingly
+     * @param key the key listed in addonManagers (eg: SCP:21)
+     * @param type the type of doormanager that it is looking for
+     * @return whether it's flag is selected
+     */
+    public static boolean hasType(String key, IDoorManager.type type){
+        int flag = Integer.parseInt(key.split(":")[1]);
+        switch (type){
+            case GLOBAL:
+                return checkFlag(flag, 1);
+            case DOOR:
+                return checkFlag(flag, 2);
+            case PASS:
+                return checkFlag(flag, 3);
+            case USER:
+                return checkFlag(flag, 4);
+            case SECTOR:
+                return checkFlag(flag, 5);
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * A binary flag checker!
+     * @param flag the number being checked
+     * @param level the binary number from the right that is being checked (starting from 1)
+     * @return whether the flag is checked or not.
+     */
+    public static boolean checkFlag(int flag, int level){
+        for(int i=0; i<level - 1; i++){
+            flag /= 2;
+        }
+        return flag % 2 == 1;
+    }
+
 
     //region Reader/Door Management
 
@@ -347,6 +400,8 @@ public class DoorHandler {
         public HashMap<UUID, Groups> groups = new HashMap<>(); //Groups/Sectors created. Doors link to em
         public List<Users> users = new LinkedList<>(); //The users that have been created. Linked to ID cards
 
+        public List<IDoorManager> addons; //Addons from other mods if it requires global data storage
+
         //in-session stuff (not nbt)
         private List<Doors.OneDoor> timedDoors; //doors that are currently open on a timer. these are what it loops through every tick.
 
@@ -428,6 +483,17 @@ public class DoorHandler {
                     allowedPlayers.add(UUID.fromString(list.getStringTagAt(i)));
                 }
             }
+            
+            //if global data, read from that
+            addons = new LinkedList<>();
+            for(String str : DoorHandler.addonManagers.keySet()){
+                if(hasType(str, IDoorManager.type.GLOBAL)){
+                    String key = str.split(":")[0];
+                    IDoorManager mgr = DoorHandler.addonManagers.get(str).createNew(IDoorManager.type.GLOBAL);
+                    mgr.readFromNBT(nbt.hasKey("addon-" + key) ? nbt.getCompoundTag("addon-" + key) : new NBTTagCompound());
+                    addons.add(mgr);
+                }
+            }
 
             //read all pass data
             this.passes = new HashMap<>();
@@ -484,6 +550,10 @@ public class DoorHandler {
                 whitelist.appendTag(new NBTTagString(id.toString()));
             }
             nbt.setTag("whitelist", whitelist);
+            //write the addon data
+            for(IDoorManager add : addons){
+                nbt.setTag("addon-" + add.addonId(), add.writeToNBT(new NBTTagCompound()));
+            }
             //write all pass data
             if(this.passes != null){
                 NBTTagList list = new NBTTagList();
@@ -1319,6 +1389,8 @@ public class DoorHandler {
 
             public List<OnePass> passes; //All the passes that this door is linked to.
             public List<OnePass> override; //All the passes that this door is linked to under override accesses.
+            
+            public List<IDoorManager> addons; //In global class is info
 
             public UUID groupID; //if door is part of group, ID of it
             public int isDoorOpen = 0; //is the door open? 0 = no, 1 = yes (timed), 2 = toggled.
@@ -1405,6 +1477,16 @@ public class DoorHandler {
                     currTick = tag.getInteger("openTick");
                 else
                     currTick = 0;
+                //if global data, read from that
+                addons = new LinkedList<>();
+                for(String str : DoorHandler.addonManagers.keySet()){
+                    if(hasType(str, IDoorManager.type.DOOR)){
+                        String key = str.split(":")[0];
+                        IDoorManager mgr = DoorHandler.addonManagers.get(str).createNew(IDoorManager.type.DOOR);
+                        mgr.readFromNBT(tag.hasKey("addon-" + key) ? tag.getCompoundTag("addon-" + key) : new NBTTagCompound());
+                        addons.add(mgr);
+                    }
+                }
                 Doors = new LinkedList<>();
                 if(tag.hasKey("Doors")){
                     NBTTagList inDoorsList = tag.getTagList("Doors", Constants.NBT.TAG_STRING);
@@ -1458,6 +1540,10 @@ public class DoorHandler {
                 tag.setInteger("tickDefault", defaultTick);
                 tag.setInteger("doorOpen", isDoorOpen);
                 tag.setInteger("openTick", currTick);
+                //write the addon data
+                for(IDoorManager add : addons){
+                    tag.setTag("addon-" + add.addonId(), add.writeToNBT(new NBTTagCompound()));
+                }
                 if(Doors != null){
                     NBTTagList tagList = new NBTTagList();
                     for(UUID strong : Doors) {
@@ -1678,6 +1764,7 @@ public class DoorHandler {
                     }
                 }
             }
+            public List<IDoorManager> addons;
             public String passId;
             public String passName;
             public type passType;
@@ -1701,6 +1788,16 @@ public class DoorHandler {
                     passType = type.fromInt(nbt.getInteger("type"));
                 else
                     passType = type.Pass;
+                //if global data, read from that
+                addons = new LinkedList<>();
+                for(String str : DoorHandler.addonManagers.keySet()){
+                    if(hasType(str, IDoorManager.type.PASS)){
+                        String key = str.split(":")[0];
+                        IDoorManager mgr = DoorHandler.addonManagers.get(str).createNew(IDoorManager.type.PASS);
+                        mgr.readFromNBT(nbt.hasKey("addon-" + key) ? nbt.getCompoundTag("addon-" + key) : new NBTTagCompound());
+                        addons.add(mgr);
+                    }
+                }
                 groupNames = new LinkedList<>();
                 if(nbt.hasKey("groups"))
                 {
@@ -1732,6 +1829,10 @@ public class DoorHandler {
                     }
                     tag.setTag("groups", list);
                 }
+                //write the addon data
+                for(IDoorManager add : addons){
+                    tag.setTag("addon-" + add.addonId(), add.writeToNBT(new NBTTagCompound()));
+                }
                 return tag;
             }
         }
@@ -1743,6 +1844,7 @@ public class DoorHandler {
             public boolean staff;
             public boolean blocked;
             public HashMap<String, UserPass> passes;
+            public List<IDoorManager> addons;
             public Users(){
 
             }
@@ -1767,6 +1869,16 @@ public class DoorHandler {
                     blocked = tag.getBoolean("blocked");
                 else
                     blocked = false;
+                //if global data, read from that
+                addons = new LinkedList<>();
+                for(String str : DoorHandler.addonManagers.keySet()){
+                    if(hasType(str, IDoorManager.type.USER)){
+                        String key = str.split(":")[0];
+                        IDoorManager mgr = DoorHandler.addonManagers.get(str).createNew(IDoorManager.type.USER);
+                        mgr.readFromNBT(tag.hasKey("addon-" + key) ? tag.getCompoundTag("addon-" + key) : new NBTTagCompound());
+                        addons.add(mgr);
+                    }
+                }
                 passes = new HashMap<>();
                 if(tag.hasKey("passes")){
                     NBTTagList list = tag.getTagList("passes", Constants.NBT.TAG_COMPOUND);
@@ -1787,6 +1899,10 @@ public class DoorHandler {
                         tag.setString("name", name);
                     tag.setBoolean("staff", staff);
                     tag.setBoolean("blocked", blocked);
+                    //write the addon data
+                    for(IDoorManager add : addons){
+                        tag.setTag("addon-" + add.addonId(), add.writeToNBT(new NBTTagCompound()));
+                    }
                     if(passes != null){
                         NBTTagList list = new NBTTagList();
                         BiConsumer<String, UserPass> biConsumer = (k,v) -> {
@@ -1899,6 +2015,7 @@ public class DoorHandler {
             public UUID parentID;
             public OneDoor.allDoorStatuses status;
             public List<OneDoor.OnePass> override; //override passes that are passed onto doors when group status is pushed
+            public List<IDoorManager> addons;
             public Groups(){
 
             }
@@ -1917,6 +2034,16 @@ public class DoorHandler {
                     status = OneDoor.allDoorStatuses.fromInt(tag.getShort("status"));
                 else
                     status = OneDoor.allDoorStatuses.ACCESS;
+                //if global data, read from that
+                addons = new LinkedList<>();
+                for(String str : DoorHandler.addonManagers.keySet()){
+                    if(hasType(str, IDoorManager.type.SECTOR)){
+                        String key = str.split(":")[0];
+                        IDoorManager mgr = DoorHandler.addonManagers.get(str).createNew(IDoorManager.type.SECTOR);
+                        mgr.readFromNBT(tag.hasKey("addon-" + key) ? tag.getCompoundTag("addon-" + key) : new NBTTagCompound());
+                        addons.add(mgr);
+                    }
+                }
                 override = new LinkedList<>();
                 if(tag.hasKey("override") && (status == OneDoor.allDoorStatuses.OVERRIDDEN_ACCESS || status == OneDoor.allDoorStatuses.LOCKDOWN)){
                     NBTTagList thisList = tag.getTagList("override", Constants.NBT.TAG_COMPOUND);
@@ -1940,6 +2067,10 @@ public class DoorHandler {
                         tag.setShort("status", (short)status.getInt());
                     else
                         tag.setShort("status", (short)OneDoor.allDoorStatuses.ACCESS.getInt());
+                    //write the addon data
+                    for(IDoorManager add : addons){
+                        tag.setTag("addon-" + add.addonId(), add.writeToNBT(new NBTTagCompound()));
+                    }
                     if(override != null){
                         NBTTagList tagList = new NBTTagList();
                         for(OneDoor.OnePass strong : override) {
