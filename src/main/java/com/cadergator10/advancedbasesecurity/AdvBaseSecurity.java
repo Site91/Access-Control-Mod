@@ -27,7 +27,7 @@ public class AdvBaseSecurity
 {
     public static final String MODID = "advancedbasesecurity";
     public static final String NAME = "Advanced Base Security";
-    public static final String VERSION = "0.1.2";
+    public static final String VERSION = "0.1.3";
     @Mod.Instance(value = MODID)
     public static AdvBaseSecurity instance;
     @SidedProxy(clientSide = "com.cadergator10.advancedbasesecurity.client.ClientProxy", serverSide = "com.cadergator10.advancedbasesecurity.common.CommonProxy")

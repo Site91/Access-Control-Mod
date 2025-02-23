@@ -99,7 +99,7 @@ public class BlockCardReader extends Block implements ITileEntityProvider {
 
 	@Override
 	public void onBlockHarvested(World worldIn, BlockPos pos, IBlockState state, EntityPlayer player) {
-		if(worldIn.isRemote) {
+		if(!worldIn.isRemote) {
 			IReader te = (IReader) worldIn.getTileEntity(pos);
 			AdvBaseSecurity.instance.doorHandler.allReaders.remove(te.getId());
 		}
