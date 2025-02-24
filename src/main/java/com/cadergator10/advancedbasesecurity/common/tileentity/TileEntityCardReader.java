@@ -50,7 +50,7 @@ public class TileEntityCardReader extends TileEntityDeviceBase implements IReade
 				return "access";
 			}
 			//perform request to the global system
-			int value = door.checkSwipe(cardTag.cardId.DoorID, deviceId, true);
+			int value = door.checkSwipe(cardTag.cardId.DoorID, deviceId, em, true);
 			AdvBaseSecurity.instance.logger.debug("Received value of " + value);
 			//check values
 			if (value == -4) {

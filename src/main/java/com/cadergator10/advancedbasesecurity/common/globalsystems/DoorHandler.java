@@ -226,6 +226,19 @@ public class DoorHandler {
     }
 
     /**
+     * Get the IDMHandler by the ID
+     * @param ID the ID of the addon (eg: SCP)
+     * @return the handler
+     */
+    public static IDMHandler getAddonHandlerByID(String ID){
+        for(String str : addonManagers.keySet()){
+            if(str.split(":")[0].equals(ID))
+                return addonManagers.get(str);
+        }
+        return null;
+    }
+
+    /**
      * Checks the string key's int to see if it supports a certain data point. If so, a door manager will be
      * created for that part of the door manager and processed accordingly
      * @param key the key listed in addonManagers (eg: SCP:21)
@@ -1266,8 +1279,38 @@ public class DoorHandler {
             return false;
         }
 
+        private int preDoorStateChange(Users user, UUID doorID, EntityPlayer player, int grantedInt){
+            if(DoorConfig.firstLink){
+                if(user.owner == null){
+                    user.owner = player.getUniqueID();
+                    if(AdvBaseSecurity.isSCPInstalled){
+                        for(IDoorManager manager : addons)
+                            if(manager.addonId().equalsIgnoreCase("SCP"))
+                                manager.setString("lifeauto", player.getUniqueID().toString());
+                    }
+                    markDirty();
+                }
+            }
+            if(DoorConfig.universalCard || user.owner == null || user.owner == player.getUniqueID()){
+                if(AdvBaseSecurity.isSCPInstalled){
+                    for(IDoorManager manager : addons)
+                        if(manager.addonId().equalsIgnoreCase("SCP")) {
+                            if(manager.returnBool("rightlife")){
+                                changeDoorState(doorID);
+                                return grantedInt;
+                            }
+                            return -5;
+                        }
+                }
+                changeDoorState(doorID);
+                return grantedInt;
+            }
+            return -5;
+        }
+
         /*
         -400: error
+        -5: user is not authorized to the card
         -4: door doesn't exist
         -3: user doesn't exist
         -2: don't do anything
@@ -1281,10 +1324,11 @@ public class DoorHandler {
          * When a user swipes the card this is called to check the User and the Reader. properChange is there in case just checking if they have the permission
          * @param userID ID of the card swiped
          * @param readerID ID of the reader the card was swiped in
+         * @param player The player who swiped the card.
          * @param properChange true: change a door status if true. false: only return whether they were allowed or not.
          * @return the above status
          */
-        public int checkSwipe(UUID userID, UUID readerID, boolean properChange){ //properChange actually updates the door state.
+        public int checkSwipe(UUID userID, UUID readerID, EntityPlayer player, boolean properChange){ //properChange actually updates the door state.
             AdvBaseSecurity.instance.logger.debug("Checking ID " + userID + " in reader ID " + readerID);
             //get the door
             Doors.OneDoor door = getDoorFromReader(readerID);
@@ -1312,7 +1356,7 @@ public class DoorHandler {
                     AdvBaseSecurity.instance.logger.debug("Using cache value: " + cache.worked);
                     if(properChange){
                         if(cache.worked != 0){ //1 or 2
-                            changeDoorState(cache.doorID);
+                            return preDoorStateChange(user, cache.doorID, player, cache.worked);
                         }
                     }
                     return cache.worked;
@@ -1325,7 +1369,7 @@ public class DoorHandler {
                     if(DoorConfig.cachetime != 0)
                         userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), 1));
                     if(properChange)
-                        changeDoorState(door.doorId);
+                        return preDoorStateChange(user, door.doorId, player, 1);
                     return 1;
                 }
             }
@@ -1343,7 +1387,7 @@ public class DoorHandler {
             if(DoorConfig.cachetime != 0)
                 userCache.add(new cacheHolder(userID, door.doorId, doorTime + Math.abs(DoorConfig.cachetime), user.staff ? 2 : 0));
             if(properChange && user.staff)
-                changeDoorState(door.doorId);
+                return preDoorStateChange(user, door.doorId, player, 2);
             return user.staff ? 2 : 0;
 
             //return -400;

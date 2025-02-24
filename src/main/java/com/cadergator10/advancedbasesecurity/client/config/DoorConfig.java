@@ -16,4 +16,12 @@ public class DoorConfig {
     @Config.LangKey("advancedbasesecurity.gui.config.door.managerLimit")
     @Config.Comment("How many managers one user may have? Just prevents abuse by users just in case (as they cannot be deleted without editing nbt)")
     public static int managerLimit = 1;
+    @Config.Name("Universal card use")
+    @Config.LangKey("advancedbasesecurity.gui.config.door.universalcard")
+    @Config.Comment("If a user who does not own a card swipes the card, will it let them swipe it or not? true: anyone can use any card | false: only whoever's ID is linked to the card (or first swiper) can use the card")
+    public static boolean universalCard = true;
+    @Config.Name("Link User on first swipe")
+    @Config.LangKey("advancedbasesecurity.gui.config.door.firstswipe")
+    @Config.Comment("On the first swipe of a card if no user is linked, should it link that user?")
+    public static boolean firstLink = false;
 }
