@@ -37,6 +37,8 @@ repositories {
 dependencies {
     // Include StripLatestForgeRequirements by default for the dev env, saves everyone a hassle
     runtimeOnly 'com.cleanroommc:strip-latest-forge-requirements:1.0'
+    // Include OSXNarratorBlocker by default for the dev env, for M1+ Macs
+    runtimeOnly 'com.cleanroommc:osxnarratorblocker:1.0'
 
     implementation rfg.deobf("curse.maven:bbl-227083:2518667")
 
@@ -65,6 +67,7 @@ dependencies {
     // runtimeOnly = runtime dependency
     // compileOnly = compile time dependency
     // annotationProcessor = annotation processing dependencies
+    // embed = bundle dependencies into final output artifact (no relocation)
 
     // Transitive dependencies:
     // (Dependencies that your dependency depends on)
